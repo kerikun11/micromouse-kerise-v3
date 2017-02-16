@@ -1,0 +1,14 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP STM32F405RGTx
+D Core: ARM Cortex-M4 Package: LQFP64 Flash: 1024KB Ram: 128KB Frequency: 168MHz Voltage: 1.8..3.6V IO-pins: 51
+K ARM Cortex-M4 STM32F4 STM32F405/415
+F http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00037051.pdf
+$ENDCMP
+#
+$CMP Tactile_SW_4P
+D Push Button
+K Switch
+$ENDCMP
+#
+#End Doc Library

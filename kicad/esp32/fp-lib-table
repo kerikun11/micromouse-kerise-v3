@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name mouse)(type KiCad)(uri "$(KIPRJMOD)\\mouse.pretty")(options "")(descr ""))
+  (lib (name ESP32-footprints-Lib)(type KiCad)(uri C:\Users\kerikun11\GoogleDrive\KiCad\Libraries\ESP32-Footprints\ESP32-Footprints\ESP32-footprints-Lib.pretty)(options "")(descr ""))
+)
