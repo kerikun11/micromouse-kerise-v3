@@ -1,0 +1,232 @@
+
+(rules PCB KERISEv3
+  (snap_angle 
+    fortyfive_degree
+  )
+  (autoroute_settings
+    (fanout off)
+    (autoroute on)
+    (postroute on)
+    (vias on)
+    (via_costs 50)
+    (plane_via_costs 5)
+    (start_ripup_costs 100)
+    (start_pass_no 21870)
+    (layer_rule F.Cu
+      (active on)
+      (preferred_direction vertical)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 1.5)
+    )
+    (layer_rule B.Cu
+      (active on)
+      (preferred_direction horizontal)
+      (preferred_direction_trace_costs 1.0)
+      (against_preferred_direction_trace_costs 1.5)
+    )
+  )
+  (rule
+    (width 160.0)
+    (clear 160.2)
+    (clear 0.0 (type smd_to_turn_gap))
+    (clear 40.0 (type smd_smd))
+  )
+  (padstack "Via[0-1]_340:300_um"
+    (shape
+      (circle F.Cu 340.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 340.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (padstack "Via[0-1]_360:300_um"
+    (shape
+      (circle F.Cu 360.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 360.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (padstack "Via[0-1]_380:320_um"
+    (shape
+      (circle F.Cu 380.0 0.0 0.0)
+    )
+    (shape
+      (circle B.Cu 380.0 0.0 0.0)
+    )
+    (attach off)
+  )
+  (via 
+    "Via[0-1]_340:300_um" "Via[0-1]_340:300_um" default
+  )
+  (via 
+    "Via[0-1]_360:300_um" "Via[0-1]_360:300_um" default
+  )
+  (via 
+    "Via[0-1]_380:320_um" "Via[0-1]_380:320_um" default
+  )
+  (via 
+    "Via[0-1]_340:300_um-kicad_default" "Via[0-1]_340:300_um" "kicad_default"
+  )
+  (via 
+    "Via[0-1]_360:300_um-kicad_default" "Via[0-1]_360:300_um" "kicad_default"
+  )
+  (via 
+    "Via[0-1]_380:320_um-kicad_default" "Via[0-1]_380:320_um" "kicad_default"
+  )
+  (via 
+    "Via[0-1]_340:300_um-3.3V" "Via[0-1]_340:300_um" 3.3V
+  )
+  (via 
+    "Via[0-1]_360:300_um-3.3V" "Via[0-1]_360:300_um" 3.3V
+  )
+  (via 
+    "Via[0-1]_380:320_um-3.3V" "Via[0-1]_380:320_um" 3.3V
+  )
+  (via 
+    "Via[0-1]_340:300_um-BATT" "Via[0-1]_340:300_um" BATT
+  )
+  (via 
+    "Via[0-1]_360:300_um-BATT" "Via[0-1]_360:300_um" BATT
+  )
+  (via 
+    "Via[0-1]_380:320_um-BATT" "Via[0-1]_380:320_um" BATT
+  )
+  (via 
+    "Via[0-1]_340:300_um-GND" "Via[0-1]_340:300_um" GND
+  )
+  (via 
+    "Via[0-1]_360:300_um-GND" "Via[0-1]_360:300_um" GND
+  )
+  (via 
+    "Via[0-1]_380:320_um-GND" "Via[0-1]_380:320_um" GND
+  )
+  (via 
+    "Via[0-1]_340:300_um-LED" "Via[0-1]_340:300_um" LED
+  )
+  (via 
+    "Via[0-1]_360:300_um-LED" "Via[0-1]_360:300_um" LED
+  )
+  (via 
+    "Via[0-1]_380:320_um-LED" "Via[0-1]_380:320_um" LED
+  )
+  (via 
+    "Via[0-1]_340:300_um-Motor" "Via[0-1]_340:300_um" Motor
+  )
+  (via 
+    "Via[0-1]_360:300_um-Motor" "Via[0-1]_360:300_um" Motor
+  )
+  (via 
+    "Via[0-1]_380:320_um-Motor" "Via[0-1]_380:320_um" Motor
+  )
+  (via_rule
+    default "Via[0-1]_340:300_um"
+  )
+  (via_rule
+    "kicad_default" "Via[0-1]_340:300_um-kicad_default"
+  )
+  (via_rule
+    3.3V "Via[0-1]_360:300_um-3.3V"
+  )
+  (via_rule
+    BATT "Via[0-1]_380:320_um-BATT"
+  )
+  (via_rule
+    GND "Via[0-1]_380:320_um-GND"
+  )
+  (via_rule
+    LED "Via[0-1]_360:300_um-LED"
+  )
+  (via_rule
+    Motor "Via[0-1]_360:300_um-Motor"
+  )
+  (class default
+    (clearance_class default)
+    (via_rule default)
+    (rule
+      (width 160.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class "kicad_default"
+    "Net-(C8-Pad1)" ANT "VDD_SDIO" "Net-(C20-Pad2)" "/IR_RCV_FL/s_IR_RCV" "Net-(C23-Pad2)" "/IR_RCV_FR/s_IR_RCV" "/IR_RCV_SR/s_IR_RCV"
+    "/AXIS_SENSOR/AXIS_CAP" "Net-(D1-Pad2)" "/IR_RCV_FL/s_3.3V" "/IR_RCV_FR/s_3.3V" "/IR_RCV_SR/s_3.3V" "Net-(D10-Pad2)" "Net-(D11-Pad2)" "PR-LED-FR"
+    "PR-RCV-SL" "PR-LED-FL" "PR-RCV-FL" "/IR_RCV_FL/s_IR_LED" "PR-RCV-FR" "/IR_RCV_FR/s_IR_LED" "PR-RCV-SR" "/IR_RCV_SR/s_IR_LED"
+    "ENC_SCK" "/ENC_L/MISO" "ENC_~CS" "/ENC_L/s_VSS" "/ENC_L/s_3.3V" "/ENC_L/s_SCLK" "/ENC_L/s_MOSI" "/ENC_L/s_MISO"
+    "/ENC_L/s_CSn" "ENC_MISO" "/ENC_R/s_VSS" "/ENC_R/s_3.3V" "/ENC_R/s_SCLK" "/ENC_R/s_MOSI" "/ENC_R/s_MISO" "/ENC_R/s_CSn"
+    "UART-RX" "UART-TX" SPEAKER "Net-(Q5-Pad3)" FAN "BAT-VOL" "Net-(R8-Pad2)" "Net-(R14-Pad2)"
+    "Net-(R20-Pad2)" "Net-(R26-Pad2)" "LED_1" "LED_2" BUTTON "MT-IN-L1" "AXIS_~CS" "MT-IN-L2"
+    SHD/SD2 SWP/SD3 SCS/CMD SCK/CLK SDO/SD0 SDI/SD1 "MT-IN-R1" "AXIS_MOSI"
+    "MT-IN-R2" "AXIS_MISO" "AXIS_SCK" "/IR_RCV_SL/s_IR_RCV" "/IR_RCV_SL/s_3.3V" "/IR_RCV_SL/s_IR_LED" "Net-(C5-Pad1)" "Net-(C5-Pad2)"
+    "Net-(C7-Pad1)" "Net-(C17-Pad2)" "Net-(C14-Pad2)" "Net-(C15-Pad2)" "Net-(C18-Pad2)" "Net-(C21-Pad2)" "Net-(C24-Pad2)" "Net-(C28-Pad2)"
+    "Net-(R1-Pad1)"
+    (clearance_class "kicad_default")
+    (via_rule kicad_default)
+    (rule
+      (width 160.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class 3.3V
+    +3V3
+    (clearance_class 3.3V)
+    (via_rule 3.3V)
+    (rule
+      (width 238.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class BATT
+    +BATT
+    (clearance_class BATT)
+    (via_rule BATT)
+    (rule
+      (width 320.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class GND
+    GND
+    (clearance_class GND)
+    (via_rule GND)
+    (rule
+      (width 320.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class LED
+    "/IR_RCV_FL/LED_to_C" "/IR_RCV_FL/s_GND" "/IR_RCV_FR/LED_to_C" "/IR_RCV_FR/s_GND" "/IR_RCV_SR/LED_to_C" "/IR_RCV_SR/s_GND" "/IR_RCV_FL/LED_to_FET" "/IR_RCV_FR/LED_to_FET"
+    "/IR_RCV_SR/LED_to_FET" "/IR_RCV_SL/LED_to_C" "/IR_RCV_SL/s_GND" "/IR_RCV_SL/LED_to_FET"
+    (clearance_class LED)
+    (via_rule LED)
+    (rule
+      (width 240.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+  (class Motor
+    "/Motor/MT_OUT_L1" "/Motor/MT_OUT_L2" "/Motor/MT_OUT_R1" "/Motor/MT_OUT_R2" "/Fan/fan_to_fet"
+    (clearance_class Motor)
+    (via_rule Motor)
+    (rule
+      (width 300.0)
+    )
+    (circuit 
+      (use_layer F.Cu B.Cu)
+    )
+  )
+)

@@ -133,8 +133,7 @@ F1 "UI.sch" 60
 F2 "SPEAKER" I L 1500 1700 60 
 F3 "LED_1" I L 1500 1300 60 
 F4 "LED_2" I L 1500 1400 60 
-F5 "LED_3" I L 1500 1500 60 
-F6 "BUTTON" I R 2500 1300 60 
+F5 "BUTTON" I R 2500 1300 60 
 $EndSheet
 Text GLabel 2600 5100 2    50   Input ~ 0
 UART-RX
@@ -144,8 +143,6 @@ Text GLabel 1400 1300 0    50   Input ~ 0
 LED_1
 Text GLabel 1400 1400 0    50   Input ~ 0
 LED_2
-Text GLabel 1400 1500 0    50   Input ~ 0
-LED_3
 Text GLabel 2600 1300 2    50   Input ~ 0
 BUTTON
 Text GLabel 1400 1700 0    50   Input ~ 0
@@ -212,29 +209,29 @@ Text GLabel 2900 6400 2    50   Input ~ 0
 ENC_MISO
 Text GLabel 2900 5800 2    50   Input ~ 0
 ENC_~CS
-Text GLabel 5000 3100 0    50   Input ~ 0
-MT-IN-L1
-Text GLabel 5000 3200 0    50   Input ~ 0
-MT-IN-L2
 Text GLabel 5000 3300 0    50   Input ~ 0
-MT-IN-R1
+MT-IN-L1
+Text GLabel 5000 3800 0    50   Input ~ 0
+MT-IN-L2
 Text GLabel 5000 3400 0    50   Input ~ 0
+MT-IN-R1
+Text GLabel 5000 3700 0    50   Input ~ 0
 MT-IN-R2
-Text GLabel 4400 2600 0    50   Input ~ 0
+Text GLabel 4400 3000 0    50   Input ~ 0
 PR-LED-SL
-Text GLabel 4400 2800 0    50   Input ~ 0
+Text GLabel 4400 3200 0    50   Input ~ 0
 PR-LED-FL
-Text GLabel 4400 2700 0    50   Input ~ 0
+Text GLabel 4400 3100 0    50   Input ~ 0
 PR-LED-FR
-Text GLabel 4400 2900 0    50   Input ~ 0
+Text GLabel 4400 3300 0    50   Input ~ 0
 PR-LED-SR
-Text GLabel 5000 4600 0    50   Input ~ 0
+Text GLabel 5000 2700 0    50   Input ~ 0
 PR-RCV-SL
-Text GLabel 5000 4700 0    50   Input ~ 0
+Text GLabel 5000 2800 0    50   Input ~ 0
 PR-RCV-FL
-Text GLabel 5000 4800 0    50   Input ~ 0
+Text GLabel 5000 4400 0    50   Input ~ 0
 PR-RCV-FR
-Text GLabel 5000 5100 0    50   Input ~ 0
+Text GLabel 5000 4500 0    50   Input ~ 0
 PR-RCV-SR
 $Sheet
 S 1500 5000 1000 200 
@@ -253,7 +250,7 @@ F2 "Fan" I L 1500 6900 60
 $EndSheet
 Text GLabel 1400 6900 0    50   Input ~ 0
 FAN
-Text GLabel 5000 3700 0    50   Input ~ 0
+Text GLabel 5000 3000 0    50   Input ~ 0
 FAN
 Text GLabel 5000 3600 0    50   Input ~ 0
 SPEAKER
@@ -263,25 +260,21 @@ Text GLabel 5000 4100 0    50   Input ~ 0
 AXIS_SCK
 Text GLabel 5000 4200 0    50   Input ~ 0
 AXIS_MOSI
-Text GLabel 5000 4500 0    50   Input ~ 0
+Text GLabel 5000 4700 0    50   Input ~ 0
 AXIS_MISO
-Text GLabel 5000 4400 0    50   Input ~ 0
+Text GLabel 5000 4800 0    50   Input ~ 0
 BAT-VOL
 Text GLabel 5200 1500 0    50   Input ~ 0
 BUTTON
 Text GLabel 5000 1700 0    50   Input ~ 0
 LED_1
-Text GLabel 5000 1900 0    50   Input ~ 0
-LED_2
 Text GLabel 5000 2000 0    50   Input ~ 0
-LED_3
-Text GLabel 9500 3400 2    50   Input ~ 0
-RESET
-Text GLabel 5000 2900 0    50   Input ~ 0
+LED_2
+Text GLabel 5000 1900 0    50   Input ~ 0
 ENC_SCK
-Text GLabel 5000 3000 0    50   Input ~ 0
+Text GLabel 5000 4600 0    50   Input ~ 0
 ENC_MISO
-Text GLabel 5000 3800 0    50   Input ~ 0
+Text GLabel 5000 2900 0    50   Input ~ 0
 ENC_~CS
 $Comp
 L GND #PWR02
@@ -314,17 +307,6 @@ F 1 "RESET" H 9650 3600 50  0000 C CNN
 F 2 "Buttons_Switches_SMD:SW_SPST_KMR2" H 9400 3600 50  0001 C CNN
 F 3 "" H 9400 3600 50  0000 C CNN
 	1    9400 3600
-	1    0    0    -1  
-$EndComp
-$Comp
-L ESP32 U1
-U 1 1 58A3B0F8
-P 7200 3100
-F 0 "U1" H 7200 5150 60  0000 C CNN
-F 1 "ESP32" H 7200 5000 60  0000 C CNN
-F 2 "mouse:ESP32" H 7200 4900 60  0001 C CNN
-F 3 "" H 7350 4500 60  0001 C CNN
-	1    7200 3100
 	1    0    0    -1  
 $EndComp
 Text GLabel 5200 1600 0    50   Input ~ 0
@@ -524,148 +506,6 @@ F 3 "" H 10300 4850 60  0000 C CNN
 	1    10300 4850
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2600 5700 2600 6300
-Wire Wire Line
-	2500 5800 2900 5800
-Wire Wire Line
-	2500 6500 2800 6500
-Wire Wire Line
-	2600 6300 2500 6300
-Wire Wire Line
-	2500 5700 2600 5700
-Wire Wire Line
-	2500 6400 2900 6400
-Wire Wire Line
-	2500 6200 2700 6200
-Wire Wire Line
-	2500 5500 2900 5500
-Wire Wire Line
-	1500 4700 1400 4700
-Wire Wire Line
-	1400 4600 1500 4600
-Wire Wire Line
-	1500 1700 1400 1700
-Wire Wire Line
-	1400 3200 1500 3200
-Wire Wire Line
-	1500 3600 1400 3600
-Wire Wire Line
-	1400 4000 1500 4000
-Wire Wire Line
-	1400 2800 1500 2800
-Wire Wire Line
-	2500 1300 2600 1300
-Wire Wire Line
-	1400 1500 1500 1500
-Wire Wire Line
-	1500 1400 1400 1400
-Wire Wire Line
-	1400 1300 1500 1300
-Wire Wire Line
-	2600 900  2500 900 
-Wire Wire Line
-	2500 2400 2600 2400
-Wire Wire Line
-	2600 2300 2500 2300
-Wire Wire Line
-	2500 2200 2600 2200
-Wire Wire Line
-	2600 2100 2500 2100
-Wire Wire Line
-	2500 3600 2600 3600
-Wire Wire Line
-	2600 4000 2500 4000
-Wire Wire Line
-	2600 2800 2500 2800
-Wire Wire Line
-	2600 3200 2500 3200
-Wire Wire Line
-	1500 4500 1400 4500
-Wire Wire Line
-	1400 4400 1500 4400
-Wire Wire Line
-	1400 6900 1500 6900
-Wire Wire Line
-	2700 6200 2700 5500
-Wire Wire Line
-	2800 6500 2800 5800
-Connection ~ 2800 5800
-Connection ~ 2700 5500
-Wire Wire Line
-	2500 5600 2900 5600
-Connection ~ 9300 3400
-Wire Wire Line
-	9300 3300 9300 3500
-Wire Wire Line
-	9300 5300 9300 5200
-Wire Wire Line
-	9300 5200 9200 5200
-Wire Wire Line
-	9200 3400 9500 3400
-Wire Wire Line
-	1400 5100 1500 5100
-Wire Wire Line
-	2600 5100 2500 5100
-Wire Wire Line
-	9200 1500 9400 1500
-Wire Wire Line
-	9200 1700 9400 1700
-Connection ~ 9300 1500
-Wire Wire Line
-	9200 1900 9400 1900
-Connection ~ 9300 1700
-Connection ~ 9300 1900
-Connection ~ 9300 2100
-Wire Wire Line
-	9700 1900 9600 1900
-Connection ~ 9700 1900
-Connection ~ 9300 1300
-Wire Wire Line
-	9400 4000 9400 4100
-Wire Wire Line
-	9700 4000 9700 4100
-Connection ~ 9400 4000
-Wire Wire Line
-	9700 4400 9700 4300
-Wire Wire Line
-	9200 4400 9700 4400
-Wire Wire Line
-	9400 4400 9400 4300
-Connection ~ 9400 4400
-Wire Wire Line
-	10000 4400 10000 4300
-Wire Wire Line
-	10000 4000 10000 4100
-Connection ~ 9700 4000
-Wire Wire Line
-	9700 3200 9700 3300
-Wire Wire Line
-	9400 3300 9300 3300
-Wire Wire Line
-	9700 3300 9600 3300
-Wire Wire Line
-	9600 1500 9700 1500
-Wire Wire Line
-	9700 1700 9600 1700
-Connection ~ 9700 1700
-Wire Wire Line
-	5100 6000 5100 6100
-Wire Wire Line
-	5100 5700 6200 5700
-Wire Wire Line
-	5100 5700 5100 5800
-Wire Wire Line
-	5700 6000 5700 5700
-Connection ~ 5700 5700
-Wire Wire Line
-	5700 7100 5700 7000
-Wire Wire Line
-	9300 1200 9300 2500
-Wire Wire Line
-	9500 3700 9300 3700
-Wire Wire Line
-	9200 4000 10000 4000
 $Comp
 L C_Small C8
 U 1 1 58ADFB26
@@ -710,20 +550,6 @@ F 3 "" H 9700 5300 50  0000 C CNN
 	1    9700 5300
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	9700 5300 9700 5200
-Wire Wire Line
-	9500 5200 9500 5300
-Wire Wire Line
-	9500 5000 9500 4900
-Wire Wire Line
-	9200 4900 9800 4900
-Wire Wire Line
-	9700 5000 9700 4800
-Wire Wire Line
-	9200 4800 9800 4800
-Connection ~ 9700 4800
-Connection ~ 9500 4900
 $Comp
 L GND #PWR012
 U 1 1 58AE4207
@@ -750,50 +576,63 @@ Text GLabel 2600 7300 2    50   Input ~ 0
 ANT
 Text GLabel 5200 1300 0    50   Input ~ 0
 ANT
-Wire Wire Line
-	4400 2600 4500 2600
-Wire Wire Line
-	4400 2700 5200 2700
-Wire Wire Line
-	4500 2600 4500 2700
-Wire Wire Line
-	4400 2800 5200 2800
-Wire Wire Line
-	4500 2800 4500 2900
-Wire Wire Line
-	4500 2900 4400 2900
-Connection ~ 4500 2800
-Connection ~ 4500 2700
 NoConn ~ 5200 4900
 NoConn ~ 5200 5000
+$Sheet
+S 1500 7200 1000 200 
+U 58A6C6D7
+F0 "Antena" 60
+F1 "Antena.sch" 60
+F2 "Antena_IN" I R 2500 7300 60 
+$EndSheet
+NoConn ~ 5200 5100
+$Comp
+L ESP32 U1
+U 1 1 58A3B0F8
+P 7200 3100
+F 0 "U1" H 7200 5150 60  0000 C CNN
+F 1 "ESP32" H 7200 5000 60  0000 C CNN
+F 2 "mouse:ESP32" H 7200 4900 60  0001 C CNN
+F 3 "" H 7350 4500 60  0001 C CNN
+	1    7200 3100
+	1    0    0    -1  
+$EndComp
 Wire Wire Line
-	10800 4900 10900 4900
+	5000 3000 5200 3000
 Wire Wire Line
-	10900 4900 10900 5300
+	5000 4000 5200 4000
 Wire Wire Line
-	5200 1700 5000 1700
+	5200 4100 5000 4100
 Wire Wire Line
-	5200 2000 5000 2000
+	5000 4200 5200 4200
+Wire Wire Line
+	5000 4500 5200 4500
+Wire Wire Line
+	5200 4400 5000 4400
 Wire Wire Line
 	5000 1900 5200 1900
+Connection ~ 4500 3200
+Connection ~ 4500 3100
 Wire Wire Line
-	5200 5100 5000 5100
+	4500 3000 4400 3000
 Wire Wire Line
-	5000 4800 5200 4800
+	4500 3100 4500 3000
+Wire Wire Line
+	4500 3300 4500 3200
+Wire Wire Line
+	4400 3300 4500 3300
+Wire Wire Line
+	5200 2900 5000 2900
+Wire Wire Line
+	5200 2800 5000 2800
+Wire Wire Line
+	5000 2700 5200 2700
 Wire Wire Line
 	5200 4700 5000 4700
 Wire Wire Line
 	5000 4600 5200 4600
 Wire Wire Line
-	5200 4500 5000 4500
-Wire Wire Line
-	5000 4400 5200 4400
-Wire Wire Line
-	5200 4200 5000 4200
-Wire Wire Line
-	5000 4100 5200 4100
-Wire Wire Line
-	5200 4000 5000 4000
+	5200 4800 5000 4800
 Wire Wire Line
 	5000 3800 5200 3800
 Wire Wire Line
@@ -805,34 +644,185 @@ Wire Wire Line
 Wire Wire Line
 	5000 3300 5200 3300
 Wire Wire Line
-	5200 3200 5000 3200
+	4400 3200 5200 3200
 Wire Wire Line
-	5000 3100 5200 3100
+	4400 3100 5200 3100
 Wire Wire Line
-	5200 3000 5000 3000
+	5200 1700 5000 1700
 Wire Wire Line
-	5000 2900 5200 2900
+	5200 2000 5000 2000
 Wire Wire Line
-	9300 2500 9200 2500
+	9300 3400 9200 3400
 Wire Wire Line
-	9200 2300 9400 2300
-Connection ~ 9300 2300
+	2600 7300 2500 7300
+Connection ~ 9700 2300
 Wire Wire Line
-	9300 1300 9200 1300
-Wire Wire Line
-	9700 1500 9700 2600
+	9600 2300 9700 2300
 Wire Wire Line
 	9300 2100 9200 2100
 Wire Wire Line
-	9600 2300 9700 2300
-Connection ~ 9700 2300
-$Sheet
-S 1500 7200 1000 200 
-U 58A6C6D7
-F0 "Antena" 60
-F1 "Antena.sch" 60
-F2 "Antena_IN" I R 2500 7300 60 
-$EndSheet
+	9700 1500 9700 2600
 Wire Wire Line
-	2600 7300 2500 7300
+	9300 1300 9200 1300
+Connection ~ 9300 2300
+Wire Wire Line
+	9200 2300 9400 2300
+Wire Wire Line
+	9300 2500 9200 2500
+Wire Wire Line
+	10900 4900 10900 5300
+Wire Wire Line
+	10800 4900 10900 4900
+Connection ~ 9500 4900
+Connection ~ 9700 4800
+Wire Wire Line
+	9200 4800 9800 4800
+Wire Wire Line
+	9700 5000 9700 4800
+Wire Wire Line
+	9200 4900 9800 4900
+Wire Wire Line
+	9500 5000 9500 4900
+Wire Wire Line
+	9500 5200 9500 5300
+Wire Wire Line
+	9700 5300 9700 5200
+Wire Wire Line
+	9200 4000 10000 4000
+Wire Wire Line
+	9500 3700 9300 3700
+Wire Wire Line
+	9300 1200 9300 2500
+Wire Wire Line
+	5700 7100 5700 7000
+Connection ~ 5700 5700
+Wire Wire Line
+	5700 6000 5700 5700
+Wire Wire Line
+	5100 5700 5100 5800
+Wire Wire Line
+	5100 5700 6200 5700
+Wire Wire Line
+	5100 6000 5100 6100
+Connection ~ 9700 1700
+Wire Wire Line
+	9700 1700 9600 1700
+Wire Wire Line
+	9600 1500 9700 1500
+Wire Wire Line
+	9700 3300 9600 3300
+Wire Wire Line
+	9400 3300 9300 3300
+Wire Wire Line
+	9700 3200 9700 3300
+Connection ~ 9700 4000
+Wire Wire Line
+	10000 4000 10000 4100
+Wire Wire Line
+	10000 4400 10000 4300
+Connection ~ 9400 4400
+Wire Wire Line
+	9400 4400 9400 4300
+Wire Wire Line
+	9200 4400 9700 4400
+Wire Wire Line
+	9700 4400 9700 4300
+Connection ~ 9400 4000
+Wire Wire Line
+	9700 4000 9700 4100
+Wire Wire Line
+	9400 4000 9400 4100
+Connection ~ 9300 1300
+Connection ~ 9700 1900
+Wire Wire Line
+	9700 1900 9600 1900
+Connection ~ 9300 2100
+Connection ~ 9300 1900
+Connection ~ 9300 1700
+Wire Wire Line
+	9200 1900 9400 1900
+Connection ~ 9300 1500
+Wire Wire Line
+	9200 1700 9400 1700
+Wire Wire Line
+	9200 1500 9400 1500
+Wire Wire Line
+	2600 5100 2500 5100
+Wire Wire Line
+	1400 5100 1500 5100
+Wire Wire Line
+	9300 5200 9200 5200
+Wire Wire Line
+	9300 5300 9300 5200
+Wire Wire Line
+	9300 3300 9300 3500
+Connection ~ 9300 3400
+Wire Wire Line
+	2500 5600 2900 5600
+Connection ~ 2700 5500
+Connection ~ 2800 5800
+Wire Wire Line
+	2800 6500 2800 5800
+Wire Wire Line
+	2700 6200 2700 5500
+Wire Wire Line
+	1400 6900 1500 6900
+Wire Wire Line
+	1400 4400 1500 4400
+Wire Wire Line
+	1500 4500 1400 4500
+Wire Wire Line
+	2600 3200 2500 3200
+Wire Wire Line
+	2600 2800 2500 2800
+Wire Wire Line
+	2600 4000 2500 4000
+Wire Wire Line
+	2500 3600 2600 3600
+Wire Wire Line
+	2600 2100 2500 2100
+Wire Wire Line
+	2500 2200 2600 2200
+Wire Wire Line
+	2600 2300 2500 2300
+Wire Wire Line
+	2500 2400 2600 2400
+Wire Wire Line
+	2600 900  2500 900 
+Wire Wire Line
+	1400 1300 1500 1300
+Wire Wire Line
+	1500 1400 1400 1400
+Wire Wire Line
+	2500 1300 2600 1300
+Wire Wire Line
+	1400 2800 1500 2800
+Wire Wire Line
+	1400 4000 1500 4000
+Wire Wire Line
+	1500 3600 1400 3600
+Wire Wire Line
+	1400 3200 1500 3200
+Wire Wire Line
+	1500 1700 1400 1700
+Wire Wire Line
+	1400 4600 1500 4600
+Wire Wire Line
+	1500 4700 1400 4700
+Wire Wire Line
+	2500 5500 2900 5500
+Wire Wire Line
+	2500 6200 2700 6200
+Wire Wire Line
+	2500 6400 2900 6400
+Wire Wire Line
+	2500 5700 2600 5700
+Wire Wire Line
+	2600 6300 2500 6300
+Wire Wire Line
+	2500 6500 2800 6500
+Wire Wire Line
+	2500 5800 2900 5800
+Wire Wire Line
+	2600 5700 2600 6300
 $EndSCHEMATC
