@@ -49,21 +49,6 @@ class Buzzer : private TaskBase {
             ledcWriteNote(LEDC_BUZZER_CH, NOTE_B, 6);
             vTaskDelay(600 / portTICK_RATE_MS);
             ledcWrite(LEDC_BUZZER_CH, 0);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Eb, 6);
-            //            vTaskDelay(300 / portTICK_RATE_MS);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Eb, 5);
-            //            vTaskDelay(100 / portTICK_RATE_MS);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Bb, 5);
-            //            vTaskDelay(200 / portTICK_RATE_MS);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Gs, 5);
-            //            vTaskDelay(200 / portTICK_RATE_MS);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Eb, 5);
-            //            vTaskDelay(200 / portTICK_RATE_MS);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Eb, 6);
-            //            vTaskDelay(200 / portTICK_RATE_MS);
-            //            ledcWriteNote(LEDC_BUZZER_CH, NOTE_Bb, 5);
-            //            vTaskDelay(600 / portTICK_RATE_MS);
-            //            ledcWrite(LEDC_BUZZER_CH, 0);
             break;
           case LOW_BATTERY:
             ledcWriteNote(LEDC_BUZZER_CH, NOTE_C, 7);

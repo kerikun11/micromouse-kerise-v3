@@ -1,10 +1,7 @@
 /*
-
-   Sassor ELP with ESP32
-
-   Author:  kerikun11 (Github: kerikun11)
-   Date:    2017.02.24
-
+  KERISE v3
+  Author:  kerikun11 (Github: kerikun11)
+  Date:    2017.02.24
 */
 
 #include <WiFi.h>
@@ -14,13 +11,13 @@
 #include "buzzer.h"
 #include "motor.h"
 #include "mpu6500.h"
+#include "reflector.h"
 
 AS5145 as;
 Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
 Motor mt;
 MPU6500 mpu;
-
-#define LEDC_PR_CH 4
+Reflector ref;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
@@ -44,28 +41,20 @@ void setup() {
   }
   bz.play(Buzzer::BOOT);
 
-  ledcSetup(LEDC_PR_CH, 8000, 4);
-  ledcAttachPin(PR_TX_SL_FR_PIN, LEDC_PR_CH);
-  ledcWrite(LEDC_PR_CH, 4);
+  //  ledcSetup(LEDC_PR_CH, 2000, 4);
+  //  ledcAttachPin(PR_TX_SL_FR_PIN, LEDC_PR_CH);
+  //  ledcWrite(LEDC_PR_CH, 1);
 
-  //  ledcSetup(LEDC_FAN_CH, 880, 8);
-  //  ledcAttachPin(FAN_PIN, LEDC_FAN_CH);
-
-  mpu.init();
-  mpu.calibration();
-  as.init();
-  pinMode(12, OUTPUT);
-  digitalWrite(12, LOW);
+  //  mpu.init();
+  //  mpu.calibration();
+  //  as.init();
+  ref.init();
 }
 
 void loop() {
-  //  static uint32_t prev_ms;
-  //  uint32_t ms = millis();
-  //  if (ms > prev_ms + 100) {
-  //    prev_ms = ms;
-  //    mpu.print();
-  //    as.print();
-  //  }
-  //  printf("%d\n", analogRead(PR_RX_SL_PIN));
+  //  mpu.print();
+  //  as.print();
+  ref.print();
+  delay(100);
 }
 
