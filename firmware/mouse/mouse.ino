@@ -13,15 +13,23 @@
 #include "mpu6500.h"
 #include "reflector.h"
 
+extern AS5145 as;
+extern Buzzer bz;
+extern LED led;
+extern Motor mt;
+extern MPU6500 mpu;
+extern Reflector ref;
+
 AS5145 as;
 Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
+LED led(LED_L_PIN, LED_R_PIN);
 Motor mt;
 MPU6500 mpu;
 Reflector ref;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  printf("\n****** KERISE v3 ******\n");
+  printf("\n************ KERISE v3 ************\n");
   pinMode(LED_L_PIN, OUTPUT);
   pinMode(LED_R_PIN, OUTPUT);
 
@@ -31,19 +39,14 @@ void setup() {
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
     bz.play(Buzzer::LOW_BATTERY);
-    delay(2000);
+    delay(3000);
     esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
     esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
     esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
     esp_deep_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
-    //    esp_deep_sleep_enable_timer_wakeup(10 * 1000 * 1000);  // wakeup(restart) after 10secs
     esp_deep_sleep_start();
   }
   bz.play(Buzzer::BOOT);
-
-  //  ledcSetup(LEDC_PR_CH, 2000, 4);
-  //  ledcAttachPin(PR_TX_SL_FR_PIN, LEDC_PR_CH);
-  //  ledcWrite(LEDC_PR_CH, 1);
 
   //  mpu.init();
   //  mpu.calibration();
@@ -52,8 +55,8 @@ void setup() {
 }
 
 void loop() {
-  //  mpu.print();
-  //  as.print();
+  mpu.print();
+  as.print();
   ref.print();
   delay(100);
 }

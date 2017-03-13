@@ -90,7 +90,7 @@ class MPU6500: public TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil( &xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         update();
         velocity += (accel + accel_prev) / 2 * MPU6500_UPDATE_PERIOD_US / 1000000;
         accel_prev = accel;
@@ -104,18 +104,20 @@ class MPU6500: public TaskBase {
       tx.address = (uint32_t)reg << 24;
       tx.tx_data[0] = data;
       tx.length = 8;
-      ESP_ERROR_CHECK(spi_device_queue_trans(spi_handle, &tx, portMAX_DELAY));
-      static spi_transaction_t *rtrans;
-      ESP_ERROR_CHECK(spi_device_get_trans_result(spi_handle, &rtrans, portMAX_DELAY));
+      ESP_ERROR_CHECK(spi_device_transmit(spi_handle, &tx));
+      //      ESP_ERROR_CHECK(spi_device_queue_trans(spi_handle, &tx, portMAX_DELAY));
+      //      static spi_transaction_t *rtrans;
+      //      ESP_ERROR_CHECK(spi_device_get_trans_result(spi_handle, &rtrans, portMAX_DELAY));
     }
     void readReg(uint8_t reg, uint8_t *rx_buffer, int length) {
       static spi_transaction_t tx = {0};
       tx.address = (0x80 | reg) << 24;
       tx.rx_buffer = rx_buffer;
       tx.length = 8 * length;
-      ESP_ERROR_CHECK(spi_device_queue_trans(spi_handle, &tx, portMAX_DELAY));
-      static spi_transaction_t *rtrans;
-      ESP_ERROR_CHECK(spi_device_get_trans_result(spi_handle, &rtrans, portMAX_DELAY));
+      ESP_ERROR_CHECK(spi_device_transmit(spi_handle, &tx));
+      //      ESP_ERROR_CHECK(spi_device_queue_trans(spi_handle, &tx, portMAX_DELAY));
+      //      static spi_transaction_t *rtrans;
+      //      ESP_ERROR_CHECK(spi_device_get_trans_result(spi_handle, &rtrans, portMAX_DELAY));
     }
     void update() {
       union {
@@ -160,6 +162,4 @@ class MPU6500: public TaskBase {
       }
     }
 };
-
-extern MPU6500 mpu;
 

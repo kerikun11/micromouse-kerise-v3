@@ -10,10 +10,12 @@
 #define BUZZER_TASK_PRIORITY    1
 #define BUZZER_TASK_STACK_SIZE  512
 
+#define BUZZER_QUEUE_SIZE   5
+
 class Buzzer : private TaskBase {
   public:
     Buzzer(int pin, uint8_t channel): TaskBase("Buzzer Task", BUZZER_TASK_PRIORITY, BUZZER_TASK_STACK_SIZE), pin(pin), channel(channel) {
-      playList = xQueueCreate(3, sizeof(enum Music));
+      playList = xQueueCreate(BUZZER_QUEUE_SIZE, sizeof(enum Music));
     }
     virtual ~Buzzer() {
     }
@@ -75,5 +77,15 @@ class Buzzer : private TaskBase {
     }
 };
 
-extern Buzzer bz;
+#define LED_TASK_PRIORITY   1
+#define LED_STACK_SIZE      256
+
+class LED: TaskBase {
+  public:
+    LED(int pin1, int pin2): TaskBase("LED Task", LED_TASK_PRIORITY, LED_STACK_SIZE), pin1(pin1), pin2(pin2) {}
+    virtual ~LED() {}
+  private:
+    int pin1, pin2;
+    virtual void task() {}
+};
 

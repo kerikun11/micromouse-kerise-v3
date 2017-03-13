@@ -33,7 +33,7 @@ class AS5145: private TaskBase {
 
       static spi_device_interface_config_t as5145_dev_cfg = {0};
       as5145_dev_cfg.flags = 0;
-      as5145_dev_cfg.clock_speed_hz = 1000000;
+      as5145_dev_cfg.clock_speed_hz = 10000000;
       as5145_dev_cfg.mode = 4;
       as5145_dev_cfg.spics_io_num = AS5145_CS_PIN;
       as5145_dev_cfg.queue_size = 1;
@@ -53,22 +53,22 @@ class AS5145: private TaskBase {
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
 
-        static spi_transaction_t trans = {0};
-        trans.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
-        trans.tx_data[0] = 0xAA;
-        trans.tx_data[1] = 0xAA;
-        trans.tx_data[2] = 0xAA;
-        trans.tx_data[3] = 0xAA;
-        trans.length = 32;
-        ESP_ERROR_CHECK(spi_device_queue_trans(as5145_spi, &trans, portMAX_DELAY));
-
-        static spi_transaction_t *rtrans;
-        ESP_ERROR_CHECK(spi_device_get_trans_result(as5145_spi, &rtrans, portMAX_DELAY));
-        pulses[0] = ((uint16_t) rtrans->rx_data[0] << 4) | (rtrans->rx_data[1] >> 4);
-        pulses[1] = (0x0F80 & ((uint16_t) rtrans->rx_data[2] << 7)) | (rtrans->rx_data[3] >> 1);
+        static spi_transaction_t tx = {0};
+        tx.flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA;
+        tx.tx_data[0] = 0xAA;
+        tx.tx_data[1] = 0xAA;
+        tx.tx_data[2] = 0xAA;
+        tx.tx_data[3] = 0xAA;
+        tx.length = 32;
+        ESP_ERROR_CHECK(spi_device_transmit(as5145_spi, &tx));
+        pulses[0] = ((uint16_t) tx.rx_data[0] << 4) | (tx.rx_data[1] >> 4);
+        pulses[1] = (0x0F80 & ((uint16_t) tx.rx_data[2] << 7)) | (tx.rx_data[3] >> 1);
+        //        ESP_ERROR_CHECK(spi_device_queue_trans(as5145_spi, &tx, portMAX_DELAY));
+        //        static spi_transaction_t *rtrans;
+        //        ESP_ERROR_CHECK(spi_device_get_trans_result(as5145_spi, &rtrans, portMAX_DELAY));
+        //        pulses[0] = ((uint16_t) rtrans->rx_data[0] << 4) | (rtrans->rx_data[1] >> 4);
+        //        pulses[1] = (0x0F80 & ((uint16_t) rtrans->rx_data[2] << 7)) | (rtrans->rx_data[3] >> 1);
       }
     }
 };
-
-extern AS5145 as;
 
