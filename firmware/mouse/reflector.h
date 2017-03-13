@@ -17,12 +17,12 @@
 class Reflector: private TaskBase {
   public:
     Reflector(): TaskBase("Reflector Task", REFLECTOR_TASK_PRIORITY, REFLECTOR_TASK_STACK_SIZE) {
-      pinMode(PR_TX_SL_FR_PIN, OUTPUT);
-      pinMode(PR_TX_SR_FL_PIN, OUTPUT);
     }
     int value[4];
 
     void init() {
+      pinMode(PR_TX_SL_FR_PIN, OUTPUT);
+      pinMode(PR_TX_SR_FL_PIN, OUTPUT);
       calibration();
       create_task();
     }
@@ -36,7 +36,7 @@ class Reflector: private TaskBase {
         offset[i] = 0;
         for (int t = 0; t < ave_count; t++) {
           offset[i] += analogRead(pins[i]);
-          //          delay(1);
+          delay(1);
         }
         offset[i] /= ave_count;
         printf("%d\t", offset[i]);
@@ -50,43 +50,33 @@ class Reflector: private TaskBase {
     void task() {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
+      const int sample_wait_us = 10;
+      const int charging_wait_us = 120;
+      assert(adcAttachPin(PR_RX_SL_PIN));
+      assert(adcAttachPin(PR_RX_FR_PIN));
+      assert(adcAttachPin(PR_RX_FL_PIN));
+      assert(adcAttachPin(PR_RX_SR_PIN));
       while (1) {
-        const int sample_wait_us = 10;
-        const int charging_wait_us = 200;
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-
         digitalWrite(PR_TX_SL_FR_PIN, LOW);
         delayMicroseconds(charging_wait_us);
         digitalWrite(PR_TX_SL_FR_PIN, HIGH);
         delayMicroseconds(sample_wait_us);
-        value[0] = offset[0] - analogRead(PR_RX_SL_PIN);
-        //        digitalWrite(PR_TX_SL_FR_PIN, LOW);
+        assert(adcStart(PR_RX_SL_PIN));
+        assert(adcStart(PR_RX_FR_PIN));
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        value[0] = offset[0] - adcEnd(PR_RX_SL_PIN);
+        value[2] = offset[2] - adcEnd(PR_RX_FR_PIN);
 
         digitalWrite(PR_TX_SR_FL_PIN, LOW);
         delayMicroseconds(charging_wait_us);
         digitalWrite(PR_TX_SR_FL_PIN, HIGH);
         delayMicroseconds(sample_wait_us);
-        value[1] = offset[1] - analogRead(PR_RX_FL_PIN);
-        //        digitalWrite(PR_TX_SR_FL_PIN, LOW);
-
+        assert(adcStart(PR_RX_FL_PIN));
+        assert(adcStart(PR_RX_SR_PIN));
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-
-        digitalWrite(PR_TX_SL_FR_PIN, LOW);
-        delayMicroseconds(charging_wait_us);
-        digitalWrite(PR_TX_SL_FR_PIN, HIGH);
-        delayMicroseconds(sample_wait_us);
-        value[2] = offset[2] - analogRead(PR_RX_FR_PIN);
-        //        digitalWrite(PR_TX_SL_FR_PIN, LOW);
-
-        digitalWrite(PR_TX_SR_FL_PIN, LOW);
-        delayMicroseconds(charging_wait_us);
-        digitalWrite(PR_TX_SR_FL_PIN, HIGH);
-        delayMicroseconds(sample_wait_us);
-        value[3] = offset[3] - analogRead(PR_RX_SR_PIN);
-        //        digitalWrite(PR_TX_SR_FL_PIN, LOW);
+        value[1] = offset[1] - adcEnd(PR_RX_FL_PIN);
+        value[3] = offset[3] - adcEnd(PR_RX_SR_PIN);
       }
     }
 };
-
-extern Reflector ref;
 
