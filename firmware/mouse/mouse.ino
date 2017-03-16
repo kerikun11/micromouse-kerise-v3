@@ -8,13 +8,14 @@
 #include "esp_deep_sleep.h"
 
 #include "as5145.h"
-#include "buzzer.h"
+#include "UserInterface.h"
 #include "motor.h"
 #include "mpu6500.h"
 #include "reflector.h"
 
 extern AS5145 as;
 extern Buzzer bz;
+extern Button btn;
 extern LED led;
 extern Motor mt;
 extern MPU6500 mpu;
@@ -22,6 +23,7 @@ extern Reflector ref;
 
 AS5145 as;
 Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
+Button btn(BUTTON_PIN);
 LED led(LED_L_PIN, LED_R_PIN);
 Motor mt;
 MPU6500 mpu;
@@ -30,10 +32,11 @@ Reflector ref;
 void setup() {
   WiFi.mode(WIFI_OFF);
   printf("\n************ KERISE v3 ************\n");
-  pinMode(LED_L_PIN, OUTPUT);
-  pinMode(LED_R_PIN, OUTPUT);
+  led = 3;
 
   bz.init();
+  btn.init();
+  //  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
   float voltage = 3.02656f * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
   printf("Battery Voltage: %.3f\n", voltage);
   if (voltage < 3.8f) {
@@ -51,7 +54,7 @@ void setup() {
   //  mpu.init();
   //  mpu.calibration();
   //  as.init();
-  ref.init();
+  //  ref.init();
 }
 
 void loop() {

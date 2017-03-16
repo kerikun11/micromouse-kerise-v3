@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "task_base.h"
+#include "TaskBase.h"
 #include "driver/spi_master.h"
 #include "esp_err.h"
 #include "config.h"
@@ -33,7 +33,7 @@ class AS5145: private TaskBase {
 
       static spi_device_interface_config_t as5145_dev_cfg = {0};
       as5145_dev_cfg.flags = 0;
-      as5145_dev_cfg.clock_speed_hz = 10000000;
+      as5145_dev_cfg.clock_speed_hz = 1000000;
       as5145_dev_cfg.mode = 4;
       as5145_dev_cfg.spics_io_num = AS5145_CS_PIN;
       as5145_dev_cfg.queue_size = 1;

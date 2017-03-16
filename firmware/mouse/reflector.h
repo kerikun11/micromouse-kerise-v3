@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "task_base.h"
+#include "TaskBase.h"
 
 #define PR_TX_SL_FR_PIN     16
 #define PR_TX_SR_FL_PIN     17
@@ -51,7 +51,7 @@ class Reflector: private TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       const int sample_wait_us = 10;
-      const int charging_wait_us = 120;
+      const int charging_wait_us = 100;
       assert(adcAttachPin(PR_RX_SL_PIN));
       assert(adcAttachPin(PR_RX_FR_PIN));
       assert(adcAttachPin(PR_RX_FL_PIN));
