@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:KERISEv3-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -587,7 +588,7 @@ F2 "Antena_IN" I R 2500 7300 60
 $EndSheet
 NoConn ~ 5200 5100
 $Comp
-L ESP32 U1
+L ESP32-RESCUE-KERISEv3 U1
 U 1 1 58A3B0F8
 P 7200 3100
 F 0 "U1" H 7200 5150 60  0000 C CNN
