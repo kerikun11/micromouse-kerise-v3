@@ -9,35 +9,55 @@
 
 #include "as5145.h"
 #include "UserInterface.h"
+#include "Emergency.h"
+#include "debug.h"
+#include "logger.h"
 #include "motor.h"
 #include "mpu6500.h"
 #include "reflector.h"
+#include "WallDetector.h"
+#include "SpeedController.h"
+#include "MoveAction.h"
 
 extern AS5145 as;
 extern Buzzer bz;
 extern Button btn;
 extern LED led;
+extern Emergency em;
+extern ExternalController ec;
+extern Logger lg;
 extern Motor mt;
+extern Fan fan;
 extern MPU6500 mpu;
 extern Reflector ref;
+extern WallDetector wd;
+extern SpeedController sc;
 
 AS5145 as;
 Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
 Button btn(BUTTON_PIN);
 LED led(LED_L_PIN, LED_R_PIN);
+Emergency em;
+ExternalController ec;
+Logger lg;
 Motor mt;
+Fan fan;
 MPU6500 mpu;
 Reflector ref;
+WallDetector wd;
+SpeedController sc;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
+  pinMode(RX, INPUT_PULLUP);
+  Serial.begin(250000);
   printf("\n************ KERISE v3 ************\n");
   led = 3;
 
   bz.init();
   btn.init();
   //  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
-  float voltage = 3.02656f * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
+  float voltage = 3.32656f * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
   printf("Battery Voltage: %.3f\n", voltage);
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
@@ -51,16 +71,63 @@ void setup() {
   }
   bz.play(Buzzer::BOOT);
 
-  //  mpu.init();
-  //  mpu.calibration();
-  //  as.init();
-  //  ref.init();
+  //  WiFi.mode(WIFI_STA);
+  //  WiFi.begin("WiFi-2.4GHz", "kashimamerda");
+  //  printf("WiFi Connecting...");
+  //  while (WiFi.status() != WL_CONNECTED) {
+  //    delay(500);
+  //    printf("wait...\n");
+  //  }
+  //  printf("WiFi connected");
+  //  printf("IP address: %s", WiFi.localIP().toString().c_str());
+
+  delay(500);
+  em.init();
+  ec.init();
+  as.init();
+  mpu.init();
+  mpu.calibration();
+
+  ref.enable();
+  wd.enable();
 }
 
+bool en = false;
+
 void loop() {
-  mpu.print();
-  as.print();
-  ref.print();
-  delay(100);
+  //  mpu.print();
+  //  as.print();
+  //  printf("%f,%f\n", as.position(0), as.position(1));
+  //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
+  //  ref.print();
+  //  wd.print();
+  //  delay(100);
+  if (btn.pressed) {
+    btn.flags = 0;
+    //    bz.play(Buzzer::CONFIRM);
+    //    lg.start();
+    //    sc.enable();
+    //    sc.set_target(300, 0);
+    //    delay(1000);
+    //    bz.play(Buzzer::SELECT);
+    //    sc.set_target(0, 0);
+    //    delay(1000);
+    //    bz.play(Buzzer::CANCEL);
+    //    sc.disable();
+    //    lg.end();
+    en = !en;
+    if (en) {
+      bz.play(Buzzer::CONFIRM);
+      //      fan.drive(0.1);
+      sc.enable();
+    } else {
+      bz.play(Buzzer::CANCEL);
+      sc.disable();
+      //      fan.drive(0);
+    }
+  }
+  if (en) {
+    sc.set_target(0, -200 * mpu.angle.z);
+  }
 }
 

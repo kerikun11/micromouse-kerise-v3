@@ -5,10 +5,10 @@
 #include "config.h"
 
 #define BUZZER_PIN          21
-#define LEDC_BUZZER_CH      2
+#define LEDC_BUZZER_CH      4
 
 #define BUZZER_TASK_PRIORITY    1
-#define BUZZER_TASK_STACK_SIZE  512
+#define BUZZER_TASK_STACK_SIZE  1024
 
 #define BUZZER_QUEUE_SIZE   5
 
@@ -27,6 +27,7 @@ class Buzzer : private TaskBase {
       SELECT,
       CONFIRM,
       CANCEL,
+      SHORT,
     };
     void init() {
       ledcSetup(LEDC_BUZZER_CH, 880, 4);
@@ -51,7 +52,11 @@ class Buzzer : private TaskBase {
     virtual void task() {
       while (1) {
         Music music;
-        xQueueReceive(playList, &music, portMAX_DELAY);
+        if (xQueueReceive(playList, &music, (1000 - 100) / portTICK_RATE_MS) == pdFALSE) {
+          sound(NOTE_C, 7, 50);
+          mute(50);
+          continue;
+        }
         switch (music) {
           case BOOT:
             sound(NOTE_B, 5, 200);
@@ -102,6 +107,10 @@ class Buzzer : private TaskBase {
             sound(NOTE_C, 6, 100);
             mute(100);
             break;
+          case SHORT:
+            sound(NOTE_C, 7, 50);
+            mute(50);
+            break;
           default:
             sound(NOTE_C, 4, 1000);
             mute();
@@ -112,11 +121,14 @@ class Buzzer : private TaskBase {
 };
 
 #define LED_TASK_PRIORITY   1
-#define LED_STACK_SIZE      256
+#define LED_STACK_SIZE      1024
 
 class LED: TaskBase {
   public:
-    LED(int pin1, int pin2): TaskBase("LED Task", LED_TASK_PRIORITY, LED_STACK_SIZE), pin1(pin1), pin2(pin2) {}
+    LED(int pin1, int pin2): TaskBase("LED Task", LED_TASK_PRIORITY, LED_STACK_SIZE), pin1(pin1), pin2(pin2) {
+      pinMode(pin1, OUTPUT);
+      pinMode(pin2, OUTPUT);
+    }
     virtual ~LED() {}
     uint8_t operator=(uint8_t value) {
       digitalWrite(pin1, (value & 0x01) ? HIGH : LOW);
@@ -136,7 +148,7 @@ class LED: TaskBase {
 #define BUTTON_LONG_PRESS_LEVEL_3 500
 
 #define BUTTON_TASK_PRIORITY      1
-#define BUTTON_STACK_SIZE         256
+#define BUTTON_STACK_SIZE         1024
 
 class Button: TaskBase {
   public:
