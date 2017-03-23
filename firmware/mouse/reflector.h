@@ -18,8 +18,7 @@ class Reflector: private TaskBase {
   public:
     Reflector(): TaskBase("Reflector Task", REFLECTOR_TASK_PRIORITY, REFLECTOR_TASK_STACK_SIZE) {}
     virtual ~Reflector() {}
-    void enable() {
-      //      delete_task();
+    void init() {
       pinMode(PR_TX_SL_FR_PIN, OUTPUT);
       pinMode(PR_TX_SR_FL_PIN, OUTPUT);
       assert(adcAttachPin(PR_RX_SL_PIN));
@@ -27,6 +26,8 @@ class Reflector: private TaskBase {
       assert(adcAttachPin(PR_RX_FL_PIN));
       assert(adcAttachPin(PR_RX_SR_PIN));
       calibration();
+    }
+    void enable() {
       create_task(1);
     }
     void disable() {
@@ -72,7 +73,7 @@ class Reflector: private TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       const int sample_wait_us = 10;
-      const int charging_wait_us = 100;
+      const int charging_wait_us = 160;
       int temp;
       while (1) {
         digitalWrite(PR_TX_SL_FR_PIN, LOW);

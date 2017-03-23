@@ -16,7 +16,7 @@
 #define AS5145_DMA_CHAIN  1
 
 #define AS5145_TASK_PRIORITY    5
-#define AS5145_TASK_STACK_SIZE  2048
+#define AS5145_TASK_STACK_SIZE  1024
 
 #define AS5145_PULSES           4096
 
@@ -41,12 +41,13 @@ class AS5145: private TaskBase {
       //      as5145_dev_cfg.queue_size = 1;
       //      ESP_ERROR_CHECK(spi_bus_add_device(AS5145_SPI, &as5145_dev_cfg, &as5145_spi));
       spi.begin(AS5145_SCLK_PIN, AS5145_MISO_PIN, AS5145_MOSI_PIN, AS5145_CS_PIN);
+      spi.setDataMode(SPI_MODE2);
       digitalWrite(AS5145_CS_PIN, HIGH);
       pinMode(AS5145_CS_PIN, OUTPUT);
       create_task(1);
     }
     void print() {
-      printf("L: %d\tR: %d\n", pulses[0], pulses[1]);
+      printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
     }
     float position(uint8_t ch) {
       float value = ((float)pulses_ovf[ch] * AS5145_PULSES + pulses[ch]) * MACHINE_WHEEL_DIAMETER * M_PI * MACHINE_GEAR_RATIO / AS5145_PULSES;
@@ -55,6 +56,11 @@ class AS5145: private TaskBase {
     }
     int getPulses(uint8_t ch) {
       int value = pulses_ovf[ch] * AS5145_PULSES + pulses[ch];
+      if (ch == 0)value = -value;
+      return value;
+    }
+    int getRaw(uint8_t ch) {
+      int value = pulses[ch];
       if (ch == 0)value = -value;
       return value;
     }
@@ -84,11 +90,11 @@ class AS5145: private TaskBase {
         uint8_t rxbuf[5];
         digitalWrite(AS5145_CS_PIN, LOW);
         //        spi.beginTransaction(SPISettings(1000000, SPI_MSBFIRST, SPI_MODE0));
-        rxbuf[0] = spi.transfer(0xAA);
-        rxbuf[1] = spi.transfer(0xAA);
-        rxbuf[2] = spi.transfer(0xAA);
-        rxbuf[3] = spi.transfer(0xAA);
-        rxbuf[4] = spi.transfer(0xAA);
+        rxbuf[0] = spi.transfer(0xFF);
+        rxbuf[1] = spi.transfer(0xFF);
+        rxbuf[2] = spi.transfer(0xFF);
+        rxbuf[3] = spi.transfer(0xFF);
+        rxbuf[4] = spi.transfer(0xFF);
         //        spi.endTransaction();
         digitalWrite(AS5145_CS_PIN, HIGH);
         pulses[0] = ((0x1F & (uint16_t)rxbuf[2]) << 7) | (rxbuf[3] >> 1);

@@ -7,7 +7,7 @@
 #define BUZZER_PIN          21
 #define LEDC_BUZZER_CH      4
 
-#define BUZZER_TASK_PRIORITY    1
+#define BUZZER_TASK_PRIORITY    2
 #define BUZZER_TASK_STACK_SIZE  1024
 
 #define BUZZER_QUEUE_SIZE   5
@@ -27,6 +27,7 @@ class Buzzer : private TaskBase {
       SELECT,
       CONFIRM,
       CANCEL,
+      COMPLETE,
       SHORT,
     };
     void init() {
@@ -107,6 +108,17 @@ class Buzzer : private TaskBase {
             sound(NOTE_C, 6, 100);
             mute(100);
             break;
+          case COMPLETE:
+            sound(NOTE_C, 6, 100);
+            sound(NOTE_D, 6, 100);
+            sound(NOTE_E, 6, 100);
+            sound(NOTE_F, 6, 100);
+            sound(NOTE_G, 6, 100);
+            sound(NOTE_A, 6, 100);
+            sound(NOTE_B, 6, 100);
+            sound(NOTE_C, 7, 100);
+            mute(100);
+            break;
           case SHORT:
             sound(NOTE_C, 7, 50);
             mute(50);
@@ -120,7 +132,10 @@ class Buzzer : private TaskBase {
     }
 };
 
-#define LED_TASK_PRIORITY   1
+#define LED_L_PIN           5
+#define LED_R_PIN           2
+
+#define LED_TASK_PRIORITY   2
 #define LED_STACK_SIZE      1024
 
 class LED: TaskBase {
@@ -140,6 +155,8 @@ class LED: TaskBase {
     virtual void task() {}
 };
 
+#define BUTTON_PIN          0
+
 #define BUTTON_SAMPLING_MS        20
 
 #define BUTTON_PRESS_LEVEL        1
@@ -147,7 +164,7 @@ class LED: TaskBase {
 #define BUTTON_LONG_PRESS_LEVEL_2 100
 #define BUTTON_LONG_PRESS_LEVEL_3 500
 
-#define BUTTON_TASK_PRIORITY      1
+#define BUTTON_TASK_PRIORITY      2
 #define BUTTON_STACK_SIZE         1024
 
 class Button: TaskBase {

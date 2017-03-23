@@ -8,11 +8,11 @@
 extern Reflector ref;
 
 #define WALL_DETECTOR_TASK_PRIORITY 4
-#define WALL_DETECTOR_STACK_SIZE    1024
+#define WALL_DETECTOR_STACK_SIZE    2048
 
 #define WALL_DETECTOR_FLONT_RATIO   1.0f
-#define WALL_SIDE_DIV               1.5f
-#define WALL_FRONT_DIV              2.0f
+#define WALL_SIDE_DIV               1.8f  //< Response
+#define WALL_FRONT_DIV              2.3f  //< Response
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -21,17 +21,22 @@ class WallDetector : TaskBase {
     WallDetector() : TaskBase("Wall Detector Task", WALL_DETECTOR_TASK_PRIORITY, WALL_DETECTOR_STACK_SIZE), calibration_flag(false) {}
     virtual ~WallDetector() {}
     void enable() {
+      ref.enable();
       create_task();
     }
     void disable() {
       delete_task();
+      //      ref.disable();
     }
     void calibration(bool waitUntilTheEnd = true) {
       calibration_flag = true;
       if (waitUntilTheEnd) {
-        while (calibration_flag) {
-          vTaskDelay(1 / portTICK_RATE_MS);
-        }
+        calibrationWait();
+      }
+    }
+    void calibrationWait() {
+      while (calibration_flag) {
+        vTaskDelay(1 / portTICK_RATE_MS);
       }
     }
     void print() {
@@ -79,11 +84,19 @@ class WallDetector : TaskBase {
           _wall_difference.side[i] = (_wall_distance.side[i] - value) / _wall_distance.side[i];
         }
         for (int i = 0; i < 2; i++) {
-          int16_t value = ref.front(i);
+          int16_t value = (ref.front(0) + ref.front(1)) / 2;
           if (value > _wall_ref.front[i] * 1.02)
             _wall.front[i] = true;
           else if (value < _wall_ref.front[i] * 0.98)
             _wall.front[i] = false;
+          //          _wall_difference.front[i] = (_wall_distance.front[i] - value) / _wall_distance.front[i];
+        }
+        for (int i = 0; i < 2; i++) {
+          int16_t value = ref.front(i);
+          //          if (value > _wall_ref.front[i] * 1.02)
+          //            _wall.front[i] = true;
+          //          else if (value < _wall_ref.front[i] * 0.98)
+          //            _wall.front[i] = false;
           _wall_difference.front[i] = (_wall_distance.front[i] - value) / _wall_distance.front[i];
         }
 

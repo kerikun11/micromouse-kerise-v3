@@ -75,9 +75,12 @@ class MPU6500: public TaskBase {
     void calibration(bool waitUntilTheEnd = true) {
       calibration_flag = true;
       if (waitUntilTheEnd) {
-        while (calibration_flag) {
-          vTaskDelay(1 / portTICK_RATE_MS);
-        }
+        calibrationWait();
+      }
+    }
+    void calibrationWait() {
+      while (calibration_flag) {
+        vTaskDelay(1 / portTICK_RATE_MS);
       }
     }
     void print() {

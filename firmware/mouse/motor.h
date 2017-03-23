@@ -16,7 +16,7 @@
 #define MOTOR_CTRL_FREQUENCY  25000
 #define MOTOR_CTRL_BIT_NUM    10
 #define MOTOR_DUTY_MAX        1023 //< 2 ^ MOTOR_CTRL_BIT_NUM - 1
-
+#define MOTOR_DUTY_SAT        511
 class Motor {
   public:
     Motor() {
@@ -33,11 +33,11 @@ class Motor {
     }
     void left(int duty) {
       if (emergency) return;
-      if (duty > MOTOR_DUTY_MAX) {
+      if (duty > MOTOR_DUTY_SAT) {
         ledcWrite(LEDC_MOTOR_L_CTRL1_CH, 0);
-        ledcWrite(LEDC_MOTOR_L_CTRL2_CH, MOTOR_DUTY_MAX);
-      } else if (duty < -MOTOR_DUTY_MAX) {
-        ledcWrite(LEDC_MOTOR_L_CTRL1_CH, MOTOR_DUTY_MAX);
+        ledcWrite(LEDC_MOTOR_L_CTRL2_CH, MOTOR_DUTY_SAT);
+      } else if (duty < -MOTOR_DUTY_SAT) {
+        ledcWrite(LEDC_MOTOR_L_CTRL1_CH, MOTOR_DUTY_SAT);
         ledcWrite(LEDC_MOTOR_L_CTRL2_CH, 0);
       } else if (duty > 0) {
         ledcWrite(LEDC_MOTOR_L_CTRL1_CH, MOTOR_DUTY_MAX - duty);
@@ -49,11 +49,11 @@ class Motor {
     }
     void right(int duty) {
       if (emergency) return;
-      if (duty > MOTOR_DUTY_MAX) {
+      if (duty > MOTOR_DUTY_SAT) {
         ledcWrite(LEDC_MOTOR_R_CTRL1_CH, 0);
-        ledcWrite(LEDC_MOTOR_R_CTRL2_CH, MOTOR_DUTY_MAX);
-      } else if (duty < -MOTOR_DUTY_MAX) {
-        ledcWrite(LEDC_MOTOR_R_CTRL1_CH, MOTOR_DUTY_MAX);
+        ledcWrite(LEDC_MOTOR_R_CTRL2_CH, MOTOR_DUTY_SAT);
+      } else if (duty < -MOTOR_DUTY_SAT) {
+        ledcWrite(LEDC_MOTOR_R_CTRL1_CH, MOTOR_DUTY_SAT);
         ledcWrite(LEDC_MOTOR_R_CTRL2_CH, 0);
       } else if (duty > 0) {
         ledcWrite(LEDC_MOTOR_R_CTRL1_CH, MOTOR_DUTY_MAX - duty);
