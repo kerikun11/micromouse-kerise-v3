@@ -5,14 +5,13 @@
 #include "config.h"
 
 #include "reflector.h"
-extern Reflector ref;
 
 #define WALL_DETECTOR_TASK_PRIORITY 4
-#define WALL_DETECTOR_STACK_SIZE    2048
+#define WALL_DETECTOR_STACK_SIZE    4096
 
 #define WALL_DETECTOR_FLONT_RATIO   1.0f
-#define WALL_SIDE_DIV               1.8f  //< Response
-#define WALL_FRONT_DIV              2.3f  //< Response
+#define WALL_SIDE_DIV               2.6f  //< Response
+#define WALL_FRONT_DIV              3.2f  //< Response
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -21,12 +20,10 @@ class WallDetector : TaskBase {
     WallDetector() : TaskBase("Wall Detector Task", WALL_DETECTOR_TASK_PRIORITY, WALL_DETECTOR_STACK_SIZE), calibration_flag(false) {}
     virtual ~WallDetector() {}
     void enable() {
-      ref.enable();
       create_task();
     }
     void disable() {
       delete_task();
-      //      ref.disable();
     }
     void calibration(bool waitUntilTheEnd = true) {
       calibration_flag = true;
@@ -129,4 +126,6 @@ class WallDetector : TaskBase {
       }
     }
 };
+
+extern WallDetector wd;
 

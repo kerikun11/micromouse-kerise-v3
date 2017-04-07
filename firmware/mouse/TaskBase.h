@@ -19,7 +19,7 @@ class TaskBase {
     }
     void create_task(const BaseType_t xCoreID = tskNO_AFFINITY) {
       if (handle != NULL) {
-        return;
+        vTaskDelete(handle);
       }
       //      xTaskCreate(task_entry_point, name, stack_size, this, priority, &handle);
       xTaskCreatePinnedToCore(task_entry_point, name, stack_size, this, priority, &handle, xCoreID);

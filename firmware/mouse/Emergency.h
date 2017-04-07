@@ -10,20 +10,8 @@
 #include "MoveAction.h"
 #include "MazeSolver.h"
 
-extern Buzzer bz;
-extern Button btn;
-extern LED led;
-extern Motor mt;
-extern Fan fan;
-extern MPU6500 mpu;
-extern Reflector ref;
-extern WallDetector wd;
-extern SpeedController sc;
-extern MoveAction ma;
-extern MazeSolver ms;
-
 #define EMERGENCY_TASK_PRIORITY 4
-#define EMERGENCY_STACK_SIZE    1024
+#define EMERGENCY_STACK_SIZE    2048
 
 class Emergency: TaskBase {
   public:
@@ -55,6 +43,7 @@ class Emergency: TaskBase {
               btn.flags = 0;
               bz.play(Buzzer::BOOT);
               ms.terminate();
+              ma.disable();
               mt.emergency_release();
               break;
             }
@@ -63,4 +52,6 @@ class Emergency: TaskBase {
       }
     }
 };
+
+extern Emergency em;
 

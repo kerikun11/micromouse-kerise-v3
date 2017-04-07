@@ -23,22 +23,8 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "MoveAction.h"
-#include "MazeSolver.h"
 
-extern AS5145 as;
-extern Buzzer bz;
-extern Button btn;
-extern LED led;
-extern Logger lg;
-extern Motor mt;
-extern Fan fan;
-extern MPU6500 mpu;
-extern Reflector ref;
-extern WallDetector wd;
-extern SpeedController sc;
-extern MoveAction ma;
-
-#define MAZE_SOLVER_TASK_PRIORITY 1
+#define MAZE_SOLVER_TASK_PRIORITY 2
 #define MAZE_SOLVER_STACK_SIZE    4096
 
 class MazeSolver: TaskBase {
@@ -74,9 +60,7 @@ class MazeSolver: TaskBase {
           pos.x++;
           dir = EAST;
         } else if (nextDir == SOUTH) {
-          ma.set_action(MoveAction::STOP);
-          ma.set_action(MoveAction::RETURN);
-          ma.set_action(MoveAction::GO_HALF);
+          ma.set_action(MoveAction::TURN_BACK);
           pos.y--;
           dir = SOUTH;
         } else if (nextDir == WEST) {
@@ -98,17 +82,13 @@ class MazeSolver: TaskBase {
           pos.y--;
           dir = SOUTH;
         } else if (nextDir == WEST) {
-          ma.set_action(MoveAction::STOP);
-          ma.set_action(MoveAction::RETURN);
-          ma.set_action(MoveAction::GO_HALF);
+          ma.set_action(MoveAction::TURN_BACK);
           pos.x--;
           dir = WEST;
         }
       } else if (dir == SOUTH) {
         if (nextDir == NORTH) {
-          ma.set_action(MoveAction::STOP);
-          ma.set_action(MoveAction::RETURN);
-          ma.set_action(MoveAction::GO_HALF);
+          ma.set_action(MoveAction::TURN_BACK);
           pos.y++;
           dir = NORTH;
         } else if (nextDir == EAST) {
@@ -130,9 +110,7 @@ class MazeSolver: TaskBase {
           pos.y++;
           dir = NORTH;
         } else if (nextDir == EAST) {
-          ma.set_action(MoveAction::STOP);
-          ma.set_action(MoveAction::RETURN);
-          ma.set_action(MoveAction::GO_HALF);
+          ma.set_action(MoveAction::TURN_BACK);
           pos.x++;
           dir = EAST;
         } else if (nextDir == SOUTH) {
@@ -207,52 +185,43 @@ class MazeSolver: TaskBase {
       }
       return wall;
     }
-    IndexVec getRobotPosion() {
-      return pos;
-    }
     void search_run() {
       maze = maze_backup;
       dir = NORTH;
       pos = IndexVec(0, 0);
-      Direction wallData = 0xfe;    //< センサから取得した壁情報を入れる
-      IndexVec robotPos = pos;  //< ロボットの座標を取得
-      agent.update(robotPos, wallData);   //< 壁情報を更新 次に進むべき方向を計算
+      Direction wallData = 0xFE;
+      agent.update(pos, wallData);
 
-      if (agent.getState() == Agent::FINISHED || agent.getState() == Agent::BACK_TO_START)
-        return; //Agentの状態を確認 FINISHEDになったら計測走行にうつる
+      if (agent.getState() == Agent::FINISHED || agent.getState() == Agent::BACK_TO_START) return;
 
       ma.set_action(MoveAction::START_STEP);
       pos = IndexVec(0, 1);
 
-      mpu.calibration(false);
-      wd.calibration(false);
-      mpu.calibrationWait();
-      wd.calibrationWait();
+      mpu.calibration();
       bz.play(Buzzer::CONFIRM);
-      //      delay(200);
       ma.enable();
       while (1) {
-        while (ma.actions()) {
-          delay(1);
-        }
+        ma.waitForEnd();
 
-        Direction wallData = getWallData();   //< センサから取得した壁情報を入れる
-        IndexVec robotPos = getRobotPosion(); //< ロボットの座標を取得
-        printf("Vec:\t(%d, %d)\tWall:\t%X\n", (int) robotPos.x, (int) robotPos.y, (int) wallData);
+        delay(100); /* debug */
+        Direction wallData = getWallData();
+        printf("Vec:\t(%d, %d)\tWall:\t0x%X\n", pos.x, pos.y, (int)wallData);
 
-        agent.update(robotPos, wallData);   //< 壁情報を更新 次に進むべき方向を計算
+        agent.update(pos, wallData);
         printf("State: %d\n", agent.getState());
-        if (agent.getState() == Agent::FINISHED)
-          break;  //Agentの状態を確認 FINISHEDになったら計測走行にうつる
-
-        //ゴールにたどり着いた瞬間に一度だけmazeのバックアップをとる
-        //Mazeクラスはoperator=が定義してあるからa = bでコピーできる
+        if (agent.getState() == Agent::FINISHED) {
+          // スタートまで戻って来て，探索終了
+          maze_backup = maze;
+          break;
+        }
         if (prevState != Agent::SEARCHING_REACHED_GOAL && agent.getState() == Agent::SEARCHING_REACHED_GOAL) {
+          // 追加探索
           printf("maze_backup 1\n");
           maze_backup = maze;
           bz.play(Buzzer::CONFIRM);
         }
         if (prevState != Agent::BACK_TO_START && agent.getState() == Agent::BACK_TO_START) {
+          // スタートへ戻る
           printf("maze_backup 2\n");
           maze_backup = maze;
           bz.play(Buzzer::COMPLETE);
@@ -260,28 +229,23 @@ class MazeSolver: TaskBase {
         prevState = agent.getState();
 
         Direction nextDir = agent.getNextDirection();     //< Agentの状態が探索中の場合は次に進むべき方向を取得する
+        delay(100); /* debug */
         printf("NextDir: %X\n", (int) nextDir);
         if (nextDir == 0) {
           bz.play(Buzzer::ERROR);
           ma.set_action(MoveAction::STOP);
+          ma.waitForEnd();
           ma.disable();
           while (1) {
-            delay(100);
+            delay(1000);
           }
         }
         robotMove(nextDir);  //< robotMove関数はDirection型を受け取ってロボットをそっちに動かす関数
       }
       ma.set_action(MoveAction::START_INIT);
-      while (ma.actions()) {
-        delay(1);
-      }
+      ma.waitForEnd();
       ma.disable();
       bz.play(Buzzer::COMPLETE);
-
-      //      maze.printWall();
-      //      delay(100);
-
-      maze_backup = maze;
     }
     void fast_run() {
       printf("agent.calcRunSequence();\n");
@@ -289,17 +253,10 @@ class MazeSolver: TaskBase {
       const OperationList &runSequence = agent.getRunSequence();
       printf("runSequence.size() => %d\n", runSequence.size());
       if (runSequence.size() == 0) {
+        printf("Couldn't solve the maze!\n");
         bz.play(Buzzer::ERROR);
-        while (1) {
-          delay(100);
-        }
+        return;
       }
-      bz.play(Buzzer::CONFIRM);
-      delay(500);
-
-      dir = NORTH;
-      pos = IndexVec(0, 0);
-
       for (size_t i = 0; i < runSequence.size(); i++) {
         printf("runSequence[%d].n => %d, runSequence[%d].op => %d\n", i, runSequence[i].n, i, runSequence[i].op);
         const Operation& op = runSequence[i];
@@ -323,23 +280,21 @@ class MazeSolver: TaskBase {
               break;
           }
         }
-        delay(1);
       }
 
       // start drive
+      bz.play(Buzzer::CONFIRM);
       mpu.calibration();
-      fan.drive(0.5);
-      delay(100);
       ma.enable();
-      while (ma.actions()) {
-        delay(1);
-      }
-      fan.drive(0);
+      ma.waitForEnd();
+      ma.disable();
       bz.play(Buzzer::COMPLETE);
       // end drive
+      delay(2000);
 
       // back to start
       printf("Back to Start\n");
+      ma.setPosition();
       ma.set_action(MoveAction::RETURN);
       ma.set_action(MoveAction::GO_HALF);
       for (size_t i = 0; i < runSequence.size(); i++) {
@@ -364,27 +319,23 @@ class MazeSolver: TaskBase {
               break;
           }
         }
-        delay(1);
       }
-
       ma.set_action(MoveAction::START_INIT);
-      ma.enable(300);
-      while (ma.actions()) {
-        delay(1);
-      }
-
+      ma.enable();
+      ma.waitForEnd();
       ma.disable();
-      bz.play(Buzzer::COMPLETE);
+      bz.play(Buzzer::CANCEL);
     }
     virtual void task() {
+      delay(500);
       search_run();
-      delay(2000);
+      delay(3000);
+      fast_run();
       while (1) {
-        printf("Fast Run\n");
-        fast_run();
-        delay(2000);
-        ma.set_params_relative(200);
+        delay(1000);
       }
     }
 };
+
+extern MazeSolver ms;
 

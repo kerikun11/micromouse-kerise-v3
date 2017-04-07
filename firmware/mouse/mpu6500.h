@@ -20,13 +20,33 @@
 #define MPU6500_GYRO_FACTOR       16.3835f
 
 #define MPU6500_TASK_PRIORITY   5
-#define MPU6500_TASK_STACK_SIZE 1024
+#define MPU6500_TASK_STACK_SIZE 4096
 
 class MPU6500: public TaskBase {
   public:
-    MPU6500(): TaskBase("MPU6500 Task", MPU6500_TASK_PRIORITY, MPU6500_TASK_STACK_SIZE), spi(VSPI) {
-    }
-    virtual ~MPU6500() {
+    MPU6500(): TaskBase("MPU6500 Task", MPU6500_TASK_PRIORITY, MPU6500_TASK_STACK_SIZE), spi(VSPI) {}
+    virtual ~MPU6500() {}
+    void init() {
+      //      static spi_bus_config_t bus_cfg = {0};
+      //      bus_cfg.mosi_io_num = MPU6500_MOSI_PIN;
+      //      bus_cfg.miso_io_num = MPU6500_MISO_PIN;
+      //      bus_cfg.sclk_io_num = MPU6500_SCLK_PIN;
+      //      bus_cfg.quadwp_io_num = -1;
+      //      bus_cfg.quadhd_io_num = -1;
+      //      ESP_ERROR_CHECK(spi_bus_initialize(MPU6500_SPI, &bus_cfg, MPU6500_DMA_CHAIN));
+      //      static spi_device_interface_config_t device_cfg = {0};
+      //      device_cfg.address_bits = 8;
+      //      device_cfg.mode = 0;
+      //      device_cfg.clock_speed_hz = 10000000;
+      //      device_cfg.spics_io_num = MPU6500_CS_PIN;
+      //      device_cfg.queue_size = 1;
+      //      ESP_ERROR_CHECK(spi_bus_add_device(MPU6500_SPI, &device_cfg, &spi_handle));
+
+      spi.begin(MPU6500_SCLK_PIN, MPU6500_MISO_PIN, MPU6500_MOSI_PIN, MPU6500_CS_PIN);
+      pinMode(MPU6500_CS_PIN, OUTPUT);
+      digitalWrite(MPU6500_CS_PIN, HIGH);
+
+      create_task();
     }
     struct Parameter {
       float x, y, z;
@@ -50,28 +70,6 @@ class MPU6500: public TaskBase {
       }
     };
     Parameter accel, velocity, gyro, angle;
-    void init() {
-      //      static spi_bus_config_t bus_cfg = {0};
-      //      bus_cfg.mosi_io_num = MPU6500_MOSI_PIN;
-      //      bus_cfg.miso_io_num = MPU6500_MISO_PIN;
-      //      bus_cfg.sclk_io_num = MPU6500_SCLK_PIN;
-      //      bus_cfg.quadwp_io_num = -1;
-      //      bus_cfg.quadhd_io_num = -1;
-      //      ESP_ERROR_CHECK(spi_bus_initialize(MPU6500_SPI, &bus_cfg, MPU6500_DMA_CHAIN));
-      //      static spi_device_interface_config_t device_cfg = {0};
-      //      device_cfg.address_bits = 8;
-      //      device_cfg.mode = 0;
-      //      device_cfg.clock_speed_hz = 10000000;
-      //      device_cfg.spics_io_num = MPU6500_CS_PIN;
-      //      device_cfg.queue_size = 1;
-      //      ESP_ERROR_CHECK(spi_bus_add_device(MPU6500_SPI, &device_cfg, &spi_handle));
-
-      spi.begin(MPU6500_SCLK_PIN, MPU6500_MISO_PIN, MPU6500_MOSI_PIN, MPU6500_CS_PIN);
-      pinMode(MPU6500_CS_PIN, OUTPUT);
-      digitalWrite(MPU6500_CS_PIN, HIGH);
-
-      create_task(1);
-    }
     void calibration(bool waitUntilTheEnd = true) {
       calibration_flag = true;
       if (waitUntilTheEnd) {
@@ -99,6 +97,7 @@ class MPU6500: public TaskBase {
       writeReg(0x19, 0x07);
       writeReg(0x1b, 0x18);
       writeReg(0x1c, 0x18);
+      delay(100);
 
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
@@ -182,4 +181,6 @@ class MPU6500: public TaskBase {
       }
     }
 };
+
+extern MPU6500 mpu;
 

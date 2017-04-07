@@ -6,6 +6,7 @@
 #include "TaskBase.h"
 #include "config.h"
 
+#include "logger.h"
 #include "as5145.h"
 #include "motor.h"
 #include "mpu6500.h"
@@ -13,50 +14,17 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-extern AS5145 as;
-extern Motor mt;
-extern MPU6500 mpu;
-extern Reflector ref;
-extern WallDetector wd;
-extern SpeedController sc;
-
 #define WALL_ATTACH_ENABLED     false
-#define WALL_AVOID_ENABLED      true
-
-#define LOOK_AHEAD_UNIT         3
-#define TRAJECTORY_PROP_GAIN    120
-#define TRAJECTORY_INT_GAIN     0
+#define WALL_AVOID_ENABLED      false
 #define WALL_AVOID_GAIN         0.0001f
 
-class Timer {
-  public:
-    Timer(): start_us(0), active(false) {}
-    void start() {
-      if (!active) {
-        start_us = micros();
-        active = true;
-      }
-    }
-    void reset() {
-      start_us = micros();
-    }
-    float read() {
-      return (float)(micros() - start_us) / 1000000;
-    }
-    uint32_t read_ms() {
-      return (micros() - start_us) / 1000;
-    }
-    uint32_t read_us() {
-      return micros() - start_us;
-    }
-  private:
-    uint32_t start_us;
-    bool active;
-};
+#define LOOK_AHEAD_UNIT         5
+#define LOOK_AHEAD_UNIT_SUCTION 5
+#define TRAJECTORY_PROP_GAIN    150
 
 class Trajectory {
   public:
-    Trajectory() {
+    Trajectory(bool suction) {
       reset();
     }
     virtual ~Trajectory() {
@@ -66,7 +34,9 @@ class Trajectory {
     }
     Position getNextDir(const Position &cur, float velocity) {
       int index_cur = getNextIndex(cur);
-      int look_ahead = LOOK_AHEAD_UNIT * (1.0f + pow(velocity / 600, 2));
+      //      int look_ahead = LOOK_AHEAD_UNIT * (1.0f + pow(velocity / 600, 2));
+      int look_ahead = LOOK_AHEAD_UNIT;
+      if (suction)look_ahead = LOOK_AHEAD_UNIT_SUCTION;
       Position dir = (getPosition(index_cur + look_ahead) - cur).rotate(-cur.theta);
       dir.theta = atan2f(dir.y, dir.x);
       return dir;
@@ -80,6 +50,7 @@ class Trajectory {
   protected:
     int last_index;
     const float interval = 2.0f;
+    bool suction;
     virtual int size() const {
       return 180;
     }
@@ -107,10 +78,8 @@ class Trajectory {
 
 class Curve90: public Trajectory {
   public:
-    Curve90(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
-    const float velocity = 260.0f;
+    Curve90(bool mirror = false) : Trajectory(false), mirror(mirror) {}
+    const float velocity = 200.0f;
     const float straight = 15.0f;
   private:
     bool mirror;
@@ -125,9 +94,7 @@ class Curve90: public Trajectory {
         ret = Position(0 + interval * index, 0, 0);
       } else if (index > size() - 1) {
         Position end(data[size()][0], data[size()][1], data[size()][2]);
-        ret = end
-              + Position((index - size()) * interval * cos(end.theta),
-                         (index - size()) * interval * sin(end.theta), 0);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
       } else {
         ret = Position(data[index][0], data[index][1], data[index][2]);
       }
@@ -139,9 +106,7 @@ class Curve90: public Trajectory {
 
 class C30: public Trajectory {
   public:
-    C30(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
+    C30(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     const float velocity = 761.5056368240381;
   private:
     bool mirror;
@@ -156,9 +121,7 @@ class C30: public Trajectory {
         ret = Position(0 + interval * index, 0, 0);
       } else if (index > size() - 1) {
         Position end(data[size()][0], data[size()][1], data[size()][2]);
-        ret = end
-              + Position((index - size()) * interval * cos(end.theta),
-                         (index - size()) * interval * sin(end.theta), 0);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
       } else {
         ret = Position(data[index][0], data[index][1], data[index][2]);
       }
@@ -170,9 +133,7 @@ class C30: public Trajectory {
 
 class C60: public Trajectory {
   public:
-    C60(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
+    C60(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     const float velocity = 530.4534632991004f;
     const float straight1 = 30.0f;
     const float straight2 = 17.942286340599491f;
@@ -189,9 +150,7 @@ class C60: public Trajectory {
         ret = Position(0 + interval * index, 0, 0);
       } else if (index > size() - 1) {
         Position end(data[size()][0], data[size()][1], data[size()][2]);
-        ret = end
-              + Position((index - size()) * interval * cos(end.theta),
-                         (index - size()) * interval * sin(end.theta), 0);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
       } else {
         ret = Position(data[index][0], data[index][1], data[index][2]);
       }
@@ -203,9 +162,7 @@ class C60: public Trajectory {
 
 class C90: public Trajectory {
   public:
-    C90(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
+    C90(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     const float velocity = 514.3419901132443f;
   private:
     bool mirror;
@@ -234,9 +191,7 @@ class C90: public Trajectory {
 
 class C120: public Trajectory {
   public:
-    C120(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
+    C120(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     const float velocity = 704.6972922783409f;
   private:
     bool mirror;
@@ -251,9 +206,7 @@ class C120: public Trajectory {
         ret = Position(0 + interval * index, 0, 0);
       } else if (index > size() - 1) {
         Position end(data[size()][0], data[size()][1], data[size()][2]);
-        ret = end
-              + Position((index - size()) * interval * cos(end.theta),
-                         (index - size()) * interval * sin(end.theta), 0);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
       } else {
         ret = Position(data[index][0], data[index][1], data[index][2]);
       }
@@ -265,9 +218,7 @@ class C120: public Trajectory {
 
 class C150: public Trajectory {
   public:
-    C150(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
+    C150(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     const float velocity = 740.2288193534528f;
     const float straight1 = 25.0f;
     const float straight2 = 4.115427290353293f;
@@ -284,9 +235,7 @@ class C150: public Trajectory {
         ret = Position(0 + interval * index, 0, 0);
       } else if (index > size() - 1) {
         Position end(data[size()][0], data[size()][1], data[size()][2]);
-        ret = end
-              + Position((index - size()) * interval * cos(end.theta),
-                         (index - size()) * interval * sin(end.theta), 0);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
       } else {
         ret = Position(data[index][0], data[index][1], data[index][2]);
       }
@@ -298,11 +247,8 @@ class C150: public Trajectory {
 
 class C180: public Trajectory {
   public:
-    C180(bool mirror = false) :
-      Trajectory(), mirror(mirror) {
-    }
+    C180(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     const float velocity = 818.9712226221780f;
-    //  const float velocity = 600.0f;
     const float straight = 20.0f;
   private:
     bool mirror;
@@ -317,9 +263,7 @@ class C180: public Trajectory {
         ret = Position(0 + interval * index, 0, 0);
       } else if (index > size() - 1) {
         Position end(data[size()][0], data[size()][1], data[size()][2]);
-        ret = end
-              + Position((index - size()) * interval * cos(end.theta),
-                         (index - size()) * interval * sin(end.theta), 0);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
       } else {
         ret = Position(data[index][0], data[index][1], data[index][2]);
       }
@@ -330,21 +274,20 @@ class C180: public Trajectory {
 };
 
 #define MOVE_ACTION_TASK_PRIORITY   3
-#define MOVE_ACTION_STACK_SIZE      4096
+#define MOVE_ACTION_STACK_SIZE      8192
 
 #define MOVE_ACTION_PERIOD          1000
 
 class MoveAction: TaskBase {
   public:
     MoveAction() : TaskBase("Move Action Task", MOVE_ACTION_TASK_PRIORITY, MOVE_ACTION_STACK_SIZE) {
-      set_params(600);
+      xLastWakeTime = xTaskGetTickCount();
     }
     virtual ~MoveAction() {}
     enum ACTION {
-      START_STEP, START_INIT, GO_STRAIGHT, GO_HALF, TURN_LEFT_90, TURN_RIGHT_90, RETURN, STOP,
+      START_STEP, START_INIT, GO_STRAIGHT, GO_HALF, TURN_LEFT_90, TURN_RIGHT_90, TURN_BACK, RETURN, STOP,
     };
-    enum FAST_ACTION
-      : char {
+    enum FAST_ACTION : char {
       FAST_GO_STRAIGHT = 's',
       FAST_GO_HALF = 'x',
       FAST_TURN_LEFT_30 = 'w',
@@ -370,22 +313,17 @@ class MoveAction: TaskBase {
     };
     const char* action_string(enum ACTION action) {
       static const char name[][32] =
-      { "start_step", "start_init", "go_straight", "go_half", "turn_left_90", "turn_right_90", "return", "stop", };
+      { "start_step", "start_init", "go_straight", "go_half", "turn_left_90", "turn_right_90", "turn_back", "return", "stop", };
       return name[action];
     }
-    void enable(const float speed = 200) {
+    void enable() {
       printf("Move Action Enabled\n");
-      if (path.length() > 0) {
-        this->fast_speed = speed;
-      } else {
-        this->search_speed = speed;
-      }
+      delete_task();
       create_task();
     }
     void disable() {
       delete_task();
       sc.disable();
-      ref.disable();
       while (q.size()) {
         q.pop();
       }
@@ -404,31 +342,30 @@ class MoveAction: TaskBase {
       operation.num = num;
       q.push(operation);
     }
-    void set_params(float fast_speed) {
-      this->fast_speed = fast_speed;
-    }
-    void set_params_relative(float add) {
-      this->fast_speed += add;
-    }
     int actions() const {
       return q.size() + path.length();
     }
-    void printPosition(const char* name) {
+    void waitForEnd() const {
+      while (actions()) {
+        delay(1);
+      }
+    }
+    void printPosition(const char* name) const {
       printf("%s\t", name);
       //    printf("Ori:(%06.1f, %06.1f, %06.3f)\t", origin.x, origin.y, origin.theta);
       //    printf("Abs:(%06.1f, %06.1f, %06.3f)\t", sc.getPosition().x, sc.getPosition().y,
       //        sc.getPosition().theta);
-      printf("Rel:(%06.1f, %06.1f, %06.3f)\t", getRelativePosition().x, getRelativePosition().y,
-             getRelativePosition().theta);
+      printf("Rel:(%06.1f, %06.1f, %06.3f)\t", getRelativePosition().x, getRelativePosition().y, getRelativePosition().theta);
       printf("\n");
     }
-    Position getRelativePosition() {
+    Position getRelativePosition() const {
       return (sc.getPosition() - origin).rotate(-origin.theta);
     }
     void updateOrigin(Position passed) {
       origin += passed.rotate(origin.theta);
     }
-    void setPosition(Position pos = Position(SEGMENT_WIDTH / 2, WALL_THICKNESS / 2 + MACHINE_TAIL_LENGTH, M_PI / 2)) {
+    //    void setPosition(Position pos = Position(SEGMENT_WIDTH / 2, WALL_THICKNESS / 2 + MACHINE_TAIL_LENGTH, M_PI / 2)) {
+    void setPosition(Position pos = Position(0, 0, 0)) {
       origin = pos;
       sc.getPosition() = pos;
     }
@@ -438,11 +375,10 @@ class MoveAction: TaskBase {
   private:
     portTickType xLastWakeTime;
     float fast_speed;
-    float search_speed;
     Position origin;
     std::queue<struct Operation> q;
     String path;
-    Timer timer;
+    //    Timer timer;
 
     void wall_avoid() {
 #if WALL_AVOID_ENABLED
@@ -462,8 +398,7 @@ class MoveAction: TaskBase {
           float trans = wd->wall_difference().flont[0] + wd->wall_difference().flont[1];
           float rot = wd->wall_difference().flont[1] - wd->wall_difference().flont[0];
           sc.set_target(trans * 100, rot * 10);
-          if (fabs(trans) < 0.1f && fabs(rot) < 0.1f)
-            break;
+          if (fabs(trans) < 0.1f && fabs(rot) < 0.1f) break;
           delay(1);
         }
         sc.set_target(0, 0);
@@ -491,29 +426,30 @@ class MoveAction: TaskBase {
     void turn(const float angle) {
       const float speed = 3 * M_PI;
       const float accel = 48 * M_PI;
-      timer.reset();
-      timer.start();
+      const float back_gain = 300.0f;
+      uint32_t ms = 0;
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-        if (fabs(sc.actual.rot) > speed)
-          break;
+        if (fabs(sc.actual.rot) > speed) break;
+        float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
         if (angle > 0) {
-          sc.set_target(0, timer.read() * accel);
+          sc.set_target(-delta * back_gain, ms / 1000.0f * accel);
         } else {
-          sc.set_target(0, -timer.read() * accel);
+          sc.set_target(-delta * back_gain, -ms / 1000.0f * accel);
         }
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        ms++;
       }
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-        if (fabs(sc.actual.rot) < 0.2)
-          break;
+        if (fabs(sc.actual.rot) < 0.2) break;
         float extra = angle - getRelativePosition().theta;
         float target_speed = sqrt(2 * accel * fabs(extra));
+        float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
         target_speed = (target_speed > speed) ? speed : target_speed;
         if (extra > 0) {
-          sc.set_target(0, target_speed);
+          sc.set_target(-delta * back_gain, target_speed);
         } else {
-          sc.set_target(0, -target_speed);
+          sc.set_target(-delta * back_gain, -target_speed);
         }
       }
       updateOrigin(Position(0, 0, angle));
@@ -521,86 +457,65 @@ class MoveAction: TaskBase {
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid = true) {
       const float accel = 9000;
       const float decel = 6000;
-      timer.reset();
-      timer.start();
+      uint32_t ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
       while (1) {
         Position cur = getRelativePosition();
-        if (cur.x > distance - 5.0f)
-          break;
-        if (v_end < 1.0f && cur.x > distance - 10.0f && sc.actual.trans < 1.0f)
-          break;
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        if (cur.x > distance - 5.0f) break;
+        if (v_end < 1.0f && cur.x > distance - 10.0f && sc.actual.trans < 1.0f) break;
         float extra = distance - cur.x;
-        float velocity_a = v_start
-                           + (v_max - v_start) * 6.0f
-                           * (-1.0f / 3 * pow(timer.read() / T, 3) + 1.0f / 2 * pow(timer.read() / T, 2));
+        float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
         float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
         float velocity = v_max;
-        if (velocity > velocity_d)
-          velocity = velocity_d;
-        if (timer.read() < T && velocity > velocity_a)
-          velocity = velocity_a;
-#define LOOK_AHEAD_UNIT_ST    10
-#define TRAJECTORY_PROP_GAIN_ST 40
-        float theta = atan2f(-cur.y, 10 + LOOK_AHEAD_UNIT_ST * pow(velocity / 900, 2)) - cur.theta;
-        sc.set_target(velocity, TRAJECTORY_PROP_GAIN_ST * theta);
-        if (avoid)
-          wall_avoid();
+        if (velocity > velocity_d) velocity = velocity_d;
+        if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
+        float theta = atan2f(-cur.y, 2 * LOOK_AHEAD_UNIT) - cur.theta;
+        sc.set_target(velocity, TRAJECTORY_PROP_GAIN * theta);
+        if (avoid) wall_avoid();
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        ms++;
       }
       sc.set_target(v_end, 0);
-      //    printPosition("Straight");
       updateOrigin(Position(distance, 0, 0));
     }
     template<class C>
     void trace(C tr, const float velocity) {
-      int cnt = 0;
-      float integral = 0;
       while (1) {
-        if (tr.getRemain() < 5.0f)
-          break;
+        if (tr.getRemain() < 5.0f) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         Position dir = tr.getNextDir(getRelativePosition(), velocity);
-        integral += dir.theta * TRAJECTORY_INT_GAIN * MOVE_ACTION_PERIOD / 1000000;
-        sc.set_target(velocity, (dir.theta + integral) * TRAJECTORY_PROP_GAIN);
-        if (cnt++ % 20 == 0) {
-          //        printf("%.1f\t%.3f\n", dir.x, dir.theta);
-        }
+        sc.set_target(velocity, dir.theta * TRAJECTORY_PROP_GAIN);
       }
       sc.set_target(velocity, 0);
       updateOrigin(tr.getEndPosition());
     }
     virtual void task() {
-      ref.enable();
-      sc.enable();
       if (path.length() > 0) {
         fastRun();
       } else {
         searchRun();
       }
-      //      disable();
       while (1) {
-        delay(1);
+        delay(1000);
       }
     }
     void searchRun() {
-      const float velocity = 240;
-      xLastWakeTime = xTaskGetTickCount();
+      const float velocity = 200;
+      const float ahead_length = 10.0f;
+      sc.enable();
       while (1) {
         while (q.empty()) {
-          Curve90 tr;
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+          Curve90 tr;
           Position cur = getRelativePosition();
           const float decel = 6000;
-          float extra = tr.straight - cur.x;
+          float extra = tr.straight - ahead_length - cur.x;
           float v = sqrt(2 * decel * fabs(extra));
-          if (v > velocity)
-            v = velocity;
-          if (extra < 0)
-            v = -v;
-          float theta = atan2f(-cur.y, 10 + LOOK_AHEAD_UNIT_ST * pow(v / 1200, 2)) - cur.theta;
-          sc.set_target(v, TRAJECTORY_PROP_GAIN_ST * theta);
+          if (v > velocity) v = velocity;
+          if (extra < 0) v = -v;
+          float theta = atan2f(-cur.y, LOOK_AHEAD_UNIT) - cur.theta;
+          sc.set_target(v, TRAJECTORY_PROP_GAIN * theta);
           //        wall_avoid();
         }
         struct Operation operation = q.front();
@@ -611,29 +526,29 @@ class MoveAction: TaskBase {
         switch (action) {
           case START_STEP:
             setPosition();
-            straight_x(SEGMENT_WIDTH - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, velocity);
+            straight_x(SEGMENT_WIDTH - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2 + ahead_length, velocity, velocity);
             break;
           case START_INIT:
-            straight_x(SEGMENT_WIDTH / 2, velocity, 0);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
             wall_attach();
             turn(M_PI / 2);
             wall_attach();
             turn(M_PI / 2);
-            for (int i = 0; i < 100; i++) {
-              sc.set_target(-i, 0);
+            for (int i = 0; i < 160; i++) {
+              sc.set_target(-i, -getRelativePosition().theta * 100.0f);
               delay(1);
             }
-            delay(400);
+            delay(200);
             sc.disable();
             mt.drive(-60, -60);
             delay(400);
-            mt.drive(0, 0);
+            mt.free();
             while (q.size()) {
               q.pop();
             }
             return;
           case GO_STRAIGHT:
-            straight_x(SEGMENT_WIDTH * num, 360, velocity);
+            straight_x(SEGMENT_WIDTH * num, velocity, velocity);
             break;
           case GO_HALF:
             straight_x(SEGMENT_WIDTH / 2 * num, velocity, velocity);
@@ -641,18 +556,33 @@ class MoveAction: TaskBase {
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               Curve90 tr(false);
-              straight_x(tr.straight, velocity, tr.velocity);
+              straight_x(tr.straight - ahead_length, velocity, tr.velocity);
               trace(tr, tr.velocity);
-              straight_x(tr.straight, tr.velocity, velocity);
+              straight_x(tr.straight + ahead_length, tr.velocity, velocity);
             }
             break;
           case TURN_RIGHT_90:
             for (int i = 0; i < num; i++) {
               Curve90 tr(true);
-              straight_x(tr.straight, velocity, tr.velocity);
+              straight_x(tr.straight - ahead_length, velocity, tr.velocity);
               trace(tr, tr.velocity);
-              straight_x(tr.straight, tr.velocity, velocity);
+              straight_x(tr.straight + ahead_length, tr.velocity, velocity);
             }
+            break;
+          case TURN_BACK:
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
+            if (mpu.angle.z > 0) {
+              wall_attach();
+              turn(-M_PI / 2);
+              wall_attach();
+              turn(-M_PI / 2);
+            } else {
+              wall_attach();
+              turn(M_PI / 2);
+              wall_attach();
+              turn(M_PI / 2);
+            }
+            straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, 0);
             break;
           case RETURN:
             if (mpu.angle.z > 0) {
@@ -668,7 +598,7 @@ class MoveAction: TaskBase {
             }
             break;
           case STOP:
-            straight_x(SEGMENT_WIDTH / 2, velocity, 0);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
             wall_attach();
             break;
         }
@@ -711,12 +641,16 @@ class MoveAction: TaskBase {
       path.replace("ll", "L");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 3000;
-      const float curve_gain = 1.0f;
+      const float v_max = 500;
+      const float curve_gain = 0.5f;
+      //      sc.enable(true);
+      sc.enable(false);
       setPosition();
       printPosition("S");
       int path_index = 0;
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
+      //      fan.drive(0.8);
+      delay(200);
       while (1) {
         if (path_index > (int) path.length() - 1)
           break;
@@ -894,6 +828,7 @@ class MoveAction: TaskBase {
         }
         path_index++;
       }
+      fan.drive(0);
 
       printPosition("E");
       if (straight > 1.0f) {
@@ -905,9 +840,10 @@ class MoveAction: TaskBase {
       sc.set_target(0, 0);
       delay(100);
       sc.disable();
-      ref.disable();
       path = "";
       printPosition("E");
     }
 };
+
+extern MoveAction ma;
 

@@ -1,10 +1,3 @@
-/*
-   SpeedController.h
-
-    Created on: 2016/10/28
-        Author: kerikun11
-*/
-
 #pragma once
 
 #include <Arduino.h>
@@ -14,10 +7,6 @@
 #include "as5145.h"
 #include "motor.h"
 #include "mpu6500.h"
-
-extern AS5145 as;
-extern Motor mt;
-extern MPU6500 mpu;
 
 class Position {
   public:
@@ -104,11 +93,15 @@ class Position {
 };
 
 #define SPEED_CONTROLLER_TASK_PRIORITY  4
-#define SPEED_CONTROLLER_STACK_SIZE     2048
+#define SPEED_CONTROLLER_STACK_SIZE     4096
 
-#define SPEED_CONTROLLER_KP   3.4f
-#define SPEED_CONTROLLER_KI   1.8f
-#define SPEED_CONTROLLER_KD   0.002f
+#define SPEED_CONTROLLER_KP   1.2f
+#define SPEED_CONTROLLER_KI   4.0f
+#define SPEED_CONTROLLER_KD   0.004f
+
+#define SPEED_CONTROLLER_KP_SUCTION 1.6f
+#define SPEED_CONTROLLER_KI_SUCTION 2.8f
+#define SPEED_CONTROLLER_KD_SUCTION 0.002f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -149,7 +142,16 @@ class SpeedController : TaskBase {
       actual_prev.rot = 0;
       position.reset();
     }
-    void enable() {
+    void enable(bool suction = false) {
+      if (suction) {
+        Kp = SPEED_CONTROLLER_KP_SUCTION;
+        Ki = SPEED_CONTROLLER_KI_SUCTION;
+        Kd = SPEED_CONTROLLER_KD_SUCTION;
+      } else {
+        Kp = SPEED_CONTROLLER_KP;
+        Ki = SPEED_CONTROLLER_KI;
+        Kd = SPEED_CONTROLLER_KD;
+      }
       reset();
       create_task();
       printf("Speed Controller Enabled\n");
@@ -166,6 +168,7 @@ class SpeedController : TaskBase {
     Position& getPosition() {
       return position;
     }
+    //    WheelParameter real;  /* debug */
     WheelParameter target;
     WheelParameter actual;
     WheelParameter integral;
@@ -200,36 +203,33 @@ class SpeedController : TaskBase {
           sum_accel += accel[j];
         }
         for (int i = 0; i < 2; i++) {
-          //          actual.wheel[i] = (wheel_position[0][i] - wheel_position[1][i]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
-          actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / ave_num * 1000000 / SPEED_CONTROLLER_PERIOD_US;
-          //          actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / ave_num * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
+          actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
         }
         actual.wheel2pole();
-        //        actual.trans = mpu.velocity.y;
         actual.rot = mpu.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         }
-        differential.trans = mpu.accel.y;
+        //        differential.trans = mpu.accel.y;
+        differential.trans = (accel[0] + accel[1] + accel[2] + accel[3]) / 4;
         differential.rot = 0;
         differential.pole2wheel();
         float pwm_value[2];
         for (int i = 0; i < 2; i++) {
-          pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Kp * Ki * (0 - integral.wheel[i])
-                         + Kp * Kd * (0 - differential.wheel[i]);
+          pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Kp * Ki * (0 - integral.wheel[i]) + Kp * Kd * (0 - differential.wheel[i]);
         }
         mt.drive(pwm_value[0], pwm_value[1]);
 
         position.theta += (actual_prev.rot + actual.rot) / 2 * SPEED_CONTROLLER_PERIOD_US / 1000000;
-        position.x += (actual_prev.trans + actual.trans) / 2 * cos(position.theta) * SPEED_CONTROLLER_PERIOD_US
-                      / 1000000;
-        position.y += (actual_prev.trans + actual.trans) / 2 * sin(position.theta) * SPEED_CONTROLLER_PERIOD_US
-                      / 1000000;
+        position.x += (actual_prev.trans + actual.trans) / 2 * cos(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;
+        position.y += (actual_prev.trans + actual.trans) / 2 * sin(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;
 
         actual_prev.trans = actual.trans;
         actual_prev.rot = actual.rot;
       }
     }
 };
+
+extern SpeedController sc;
 

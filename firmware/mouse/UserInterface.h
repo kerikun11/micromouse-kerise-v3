@@ -7,8 +7,8 @@
 #define BUZZER_PIN          21
 #define LEDC_BUZZER_CH      4
 
-#define BUZZER_TASK_PRIORITY    2
-#define BUZZER_TASK_STACK_SIZE  1024
+#define BUZZER_TASK_PRIORITY    1
+#define BUZZER_TASK_STACK_SIZE  4096
 
 #define BUZZER_QUEUE_SIZE   5
 
@@ -16,9 +16,11 @@ class Buzzer : private TaskBase {
   public:
     Buzzer(int pin, uint8_t channel): TaskBase("Buzzer Task", BUZZER_TASK_PRIORITY, BUZZER_TASK_STACK_SIZE), pin(pin), channel(channel) {
       playList = xQueueCreate(BUZZER_QUEUE_SIZE, sizeof(enum Music));
+      ledcSetup(LEDC_BUZZER_CH, 880, 4);
+      ledcAttachPin(BUZZER_PIN, LEDC_BUZZER_CH);
+      create_task();
     }
-    virtual ~Buzzer() {
-    }
+    virtual ~Buzzer() {}
     enum Music {
       BOOT,
       LOW_BATTERY,
@@ -30,11 +32,6 @@ class Buzzer : private TaskBase {
       COMPLETE,
       SHORT,
     };
-    void init() {
-      ledcSetup(LEDC_BUZZER_CH, 880, 4);
-      ledcAttachPin(BUZZER_PIN, LEDC_BUZZER_CH);
-      create_task();
-    }
     void play(const enum Music music) {
       xQueueSendToBack(playList, &music, 0);
     }
@@ -135,7 +132,7 @@ class Buzzer : private TaskBase {
 #define LED_L_PIN           5
 #define LED_R_PIN           2
 
-#define LED_TASK_PRIORITY   2
+#define LED_TASK_PRIORITY   1
 #define LED_STACK_SIZE      1024
 
 class LED: TaskBase {
@@ -164,7 +161,7 @@ class LED: TaskBase {
 #define BUTTON_LONG_PRESS_LEVEL_2 100
 #define BUTTON_LONG_PRESS_LEVEL_3 500
 
-#define BUTTON_TASK_PRIORITY      2
+#define BUTTON_TASK_PRIORITY      1
 #define BUTTON_STACK_SIZE         1024
 
 class Button: TaskBase {
@@ -172,12 +169,9 @@ class Button: TaskBase {
     Button(int pin) : TaskBase("Button Task", BUTTON_TASK_PRIORITY, BUTTON_STACK_SIZE) {
       pinMode(pin, INPUT_PULLUP);
       flags = 0x00;
-    }
-    virtual ~Button() {}
-    void init() {
       create_task();
     }
-
+    virtual ~Button() {}
     union {
       uint8_t flags;           /**< all flags */
       struct {
@@ -195,38 +189,39 @@ class Button: TaskBase {
     int pin;
     int counter;
 
-    void timerIsr() {
-      if (digitalRead(pin) == LOW) {
-        if (counter < BUTTON_LONG_PRESS_LEVEL_3 + 1)
-          counter++;
-        if (counter == BUTTON_LONG_PRESS_LEVEL_3)
-          long_pressing_3 = 1;
-        if (counter == BUTTON_LONG_PRESS_LEVEL_2)
-          long_pressing_2 = 1;
-        if (counter == BUTTON_LONG_PRESS_LEVEL_1)
-          long_pressing_1 = 1;
-        if (counter == BUTTON_PRESS_LEVEL)
-          pressing = 1;
-      } else {
-        if (counter >= BUTTON_LONG_PRESS_LEVEL_3)
-          long_pressed_3 = 1;
-        else if (counter >= BUTTON_LONG_PRESS_LEVEL_2)
-          long_pressed_2 = 1;
-        else if (counter >= BUTTON_LONG_PRESS_LEVEL_1)
-          long_pressed_1 = 1;
-        else if (counter >= BUTTON_PRESS_LEVEL)
-          pressed = 1;
-        counter = 0;
-        flags &= 0x0F;
-      }
-    }
     virtual void task() {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, BUTTON_SAMPLING_MS / portTICK_RATE_MS);
-        timerIsr();
+        if (digitalRead(pin) == LOW) {
+          if (counter < BUTTON_LONG_PRESS_LEVEL_3 + 1)
+            counter++;
+          if (counter == BUTTON_LONG_PRESS_LEVEL_3)
+            long_pressing_3 = 1;
+          if (counter == BUTTON_LONG_PRESS_LEVEL_2)
+            long_pressing_2 = 1;
+          if (counter == BUTTON_LONG_PRESS_LEVEL_1)
+            long_pressing_1 = 1;
+          if (counter == BUTTON_PRESS_LEVEL)
+            pressing = 1;
+        } else {
+          if (counter >= BUTTON_LONG_PRESS_LEVEL_3)
+            long_pressed_3 = 1;
+          else if (counter >= BUTTON_LONG_PRESS_LEVEL_2)
+            long_pressed_2 = 1;
+          else if (counter >= BUTTON_LONG_PRESS_LEVEL_1)
+            long_pressed_1 = 1;
+          else if (counter >= BUTTON_PRESS_LEVEL)
+            pressed = 1;
+          counter = 0;
+          flags &= 0x0F;
+        }
       }
     }
 };
+
+extern Buzzer bz;
+extern Button btn;
+extern LED led;
 

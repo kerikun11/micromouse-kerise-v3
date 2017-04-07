@@ -6,31 +6,16 @@
 
 #include "as5145.h"
 #include "UserInterface.h"
-#include "Emergency.h"
-#include "debug.h"
-#include "logger.h"
 #include "motor.h"
 #include "mpu6500.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "MoveAction.h"
+#include "MazeSolver.h"
 
-extern AS5145 as;
-extern Buzzer bz;
-extern Button btn;
-extern LED led;
-extern Logger lg;
-extern Motor mt;
-extern Fan fan;
-extern MPU6500 mpu;
-extern Reflector ref;
-extern WallDetector wd;
-extern SpeedController sc;
-extern MoveAction ma;
-
-#define EXTERNAL_CONTROLLER_TASK_PRIORITY 2
-#define EXTERNAL_CONTROLLER_STACK_SIZE    2048
+#define EXTERNAL_CONTROLLER_TASK_PRIORITY 1
+#define EXTERNAL_CONTROLLER_STACK_SIZE    4096
 
 class ExternalController: TaskBase {
   public:
@@ -40,36 +25,11 @@ class ExternalController: TaskBase {
       create_task();
     }
   private:
-    WiFiClient client;
     virtual void task() {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
-        //        continue;
-        /*
-          if (!client.connected() && client.connect("192.168.11.9", 1234)) {
-          printf("Connection Failed\n");
-          continue;
-          }
-          if (client.available()) {
-          bz.play(Buzzer::CONFIRM);
-          String s = client.readStringUntil(',');
-          s.trim();
-          sc.Kp = s.toFloat();
-          s = client.readStringUntil(',');
-          s.trim();
-          sc.Ki = s.toFloat();
-          s = client.readStringUntil('\r');
-          s.trim();
-          sc.Kd = s.toFloat();
-          char str[64];
-          sprintf(str, "Kp: %f\tKi: %f\tKd: %f\n", sc.Kp, sc.Ki, sc.Kd);
-          client.print(str);
-          client.flush();
-          }
-        */
-        //        /*
         while (Serial.available()) {
           char c = Serial.read();
           printf("%c\n", c);
@@ -161,8 +121,9 @@ class ExternalController: TaskBase {
               break;
           }
         }
-        //        */
       }
     }
 };
+
+extern ExternalController ec;
 

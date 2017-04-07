@@ -16,7 +16,7 @@
 #define AS5145_DMA_CHAIN  1
 
 #define AS5145_TASK_PRIORITY    5
-#define AS5145_TASK_STACK_SIZE  1024
+#define AS5145_TASK_STACK_SIZE  4096
 
 #define AS5145_PULSES           4096
 
@@ -44,7 +44,7 @@ class AS5145: private TaskBase {
       spi.setDataMode(SPI_MODE2);
       digitalWrite(AS5145_CS_PIN, HIGH);
       pinMode(AS5145_CS_PIN, OUTPUT);
-      create_task(1);
+      create_task();
     }
     void print() {
       printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
@@ -110,4 +110,6 @@ class AS5145: private TaskBase {
       }
     }
 };
+
+extern AS5145 as;
 

@@ -16,7 +16,8 @@
 #define MOTOR_CTRL_FREQUENCY  25000
 #define MOTOR_CTRL_BIT_NUM    10
 #define MOTOR_DUTY_MAX        1023 //< 2 ^ MOTOR_CTRL_BIT_NUM - 1
-#define MOTOR_DUTY_SAT        511
+#define MOTOR_DUTY_SAT        1023
+
 class Motor {
   public:
     Motor() {
@@ -104,4 +105,7 @@ class Fan {
       ledcWrite(LEDC_FAN_CH, duty * (pow(2, FAN_BIT_NUM) - 1));
     }
 };
+
+extern Motor mt;
+extern Fan fan;
 

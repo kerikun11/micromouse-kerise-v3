@@ -21,22 +21,6 @@
 #include "MoveAction.h"
 #include "MazeSolver.h"
 
-extern AS5145 as;
-extern Buzzer bz;
-extern Button btn;
-extern LED led;
-extern Emergency em;
-extern ExternalController ec;
-extern Logger lg;
-extern Motor mt;
-extern Fan fan;
-extern MPU6500 mpu;
-extern Reflector ref;
-extern WallDetector wd;
-extern SpeedController sc;
-extern MoveAction ma;
-extern MazeSolver ms;
-
 AS5145 as;
 Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
 Button btn(BUTTON_PIN);
@@ -55,15 +39,12 @@ MazeSolver ms;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  pinMode(RX, INPUT_PULLUP);
-  Serial.begin(250000);
+  Serial.begin(115200);
   printf("\n************ KERISE v3 ************\n");
+  printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
   led = 3;
 
-  bz.init();
-  btn.init();
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
-  //  float voltage = 3.32656f * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
   printf("Battery Voltage: %.3f\n", voltage);
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
@@ -88,58 +69,88 @@ void setup() {
   //  printf("IP address: %s", WiFi.localIP().toString().c_str());
 
   delay(500);
+  mpu.init();
+  as.init();
   em.init();
   ec.init();
-  as.init();
-  mpu.init();
   ref.init();
-  //  mpu.calibration();
 
   wd.enable();
   wd.calibration();
+  lg.start();
 }
-
-bool en = false;
 
 void loop() {
   //  mpu.print();
   //  as.print();
+  //  wd.print();
+  //  delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
-  //  wd.print();
-  //  delay(100);
+  //  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
+  //  delay(10);
 
-  if (btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    delay(1000);
-    mpu.calibration();
-    fan.drive(0.8);
-    delay(200);
-    lg.start();
-    sc.enable();
-    sc.set_target(900, 0);
-    delay(400);
-    bz.play(Buzzer::SELECT);
-    sc.set_target(0, 0);
-    delay(200);
-    bz.play(Buzzer::CANCEL);
-    sc.disable();
-    fan.drive(0);
-    lg.end();
-  }
+  //  if (btn.pressed) {
+  //    btn.flags = 0;
+  //    bz.play(Buzzer::CONFIRM);
+  //    delay(1000);
+  //    mpu.calibration();
+  //    bool suction = true;
+  //    if (suction) fan.drive(0.8);
+  //    delay(200);
+  //    lg.start();
+  //    sc.enable(suction);
+  //    sc.set_target(900, 0);
+  //    delay(400);
+  //    bz.play(Buzzer::SELECT);
+  //    sc.set_target(0, 0);
+  //    delay(400);
+  //    bz.play(Buzzer::CANCEL);
+  //    sc.disable();
+  //    fan.drive(0);
+  //    lg.end();
+  //  }
   if (btn.long_pressing_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     lg.print();
   }
 
+  if (!em.isEmergency() && btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+
+    delay(1000);
+    while (1) {
+      delay(10);
+      if (ref.front(0) > 1000 && ref.front(1) > 1000)break;
+    }
+    bz.play(Buzzer::CONFIRM);
+    delay(100);
+    ms.start();
+
+    //    delay(1000);
+    //    ma.set_action(MoveAction::START_STEP);
+    //    ma.set_action(MoveAction::TURN_RIGHT_90);
+    //    ma.set_action(MoveAction::TURN_LEFT_90);
+    //    ma.set_action(MoveAction::STOP);
+    //    mpu.calibration();
+    //    ma.enable();
+
+    //    delay(1000);
+    //    ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+    //    ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+    //    mpu.calibration();
+    //    ma.enable();
+  }
+
   //  if (btn.pressed) {
   //    btn.flags = 0;
   //    bz.play(Buzzer::CONFIRM);
   //    delay(500);
-  //    ms.start();
+  //    mpu.calibration();
+  //    ma.enable();
   //  }
 }
 
