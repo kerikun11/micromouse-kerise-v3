@@ -14,7 +14,7 @@
 
 class Buzzer : private TaskBase {
   public:
-    Buzzer(int pin, uint8_t channel): TaskBase("Buzzer Task", BUZZER_TASK_PRIORITY, BUZZER_TASK_STACK_SIZE), pin(pin), channel(channel) {
+    Buzzer(int pin, uint8_t channel): TaskBase("Buzzer", BUZZER_TASK_PRIORITY, BUZZER_TASK_STACK_SIZE), pin(pin), channel(channel) {
       playList = xQueueCreate(BUZZER_QUEUE_SIZE, sizeof(enum Music));
       ledcSetup(LEDC_BUZZER_CH, 880, 4);
       ledcAttachPin(BUZZER_PIN, LEDC_BUZZER_CH);
@@ -137,7 +137,7 @@ class Buzzer : private TaskBase {
 
 class LED: TaskBase {
   public:
-    LED(int pin1, int pin2): TaskBase("LED Task", LED_TASK_PRIORITY, LED_STACK_SIZE), pin1(pin1), pin2(pin2) {
+    LED(int pin1, int pin2): TaskBase("LED", LED_TASK_PRIORITY, LED_STACK_SIZE), pin1(pin1), pin2(pin2) {
       pinMode(pin1, OUTPUT);
       pinMode(pin2, OUTPUT);
     }
@@ -166,7 +166,7 @@ class LED: TaskBase {
 
 class Button: TaskBase {
   public:
-    Button(int pin) : TaskBase("Button Task", BUTTON_TASK_PRIORITY, BUTTON_STACK_SIZE) {
+    Button(int pin) : TaskBase("Button", BUTTON_TASK_PRIORITY, BUTTON_STACK_SIZE) {
       pinMode(pin, INPUT_PULLUP);
       flags = 0x00;
       create_task();
@@ -220,6 +220,21 @@ class Button: TaskBase {
       }
     }
 };
+
+//#define SELECTOR_TASK_PRIORITY  1
+//#define SELECTOR_STACK_SIZE     2048
+//
+//class Selector : TaskBase {
+//  public:
+//    Selector(): TaskBase("Selector", SELECTOR_TASK_PRIORITY, SELECTOR_STACK_SIZE) {
+//    }
+//    int waitForButton() {
+//      while (1) {
+//        int value = (as.posistion(0) + as.posistion(1)) / 10;
+//        delay(1);
+//      }
+//    }
+//}
 
 extern Buzzer bz;
 extern Button btn;

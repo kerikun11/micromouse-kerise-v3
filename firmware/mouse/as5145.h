@@ -22,7 +22,7 @@
 
 class AS5145: private TaskBase {
   public:
-    AS5145(): TaskBase("AS5145 Task", AS5145_TASK_PRIORITY, AS5145_TASK_STACK_SIZE), spi(HSPI) {}
+    AS5145(): TaskBase("AS5145", AS5145_TASK_PRIORITY, AS5145_TASK_STACK_SIZE), spi(HSPI) {}
     virtual ~AS5145() {}
     void init() {
       //      static spi_bus_config_t bus_cfg = {0};

@@ -40,6 +40,7 @@ MazeSolver ms;
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
+  pinMode(RX, INPUT_PULLUP);
   printf("\n************ KERISE v3 ************\n");
   printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
   led = 3;
@@ -58,16 +59,6 @@ void setup() {
   }
   bz.play(Buzzer::BOOT);
 
-  //  WiFi.mode(WIFI_STA);
-  //  WiFi.begin("WiFi-2.4GHz", "kashimamerda");
-  //  printf("WiFi Connecting...");
-  //  while (WiFi.status() != WL_CONNECTED) {
-  //    delay(500);
-  //    printf("wait...\n");
-  //  }
-  //  printf("WiFi connected");
-  //  printf("IP address: %s", WiFi.localIP().toString().c_str());
-
   delay(500);
   mpu.init();
   as.init();
@@ -76,8 +67,7 @@ void setup() {
   ref.init();
 
   wd.enable();
-  wd.calibration();
-  lg.start();
+  //  lg.start();
 }
 
 void loop() {
@@ -111,46 +101,115 @@ void loop() {
   //    fan.drive(0);
   //    lg.end();
   //  }
-  if (btn.long_pressing_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    lg.print();
-  }
-
-  if (!em.isEmergency() && btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-
-    delay(1000);
-    while (1) {
-      delay(10);
-      if (ref.front(0) > 1000 && ref.front(1) > 1000)break;
-    }
-    bz.play(Buzzer::CONFIRM);
-    delay(100);
-    ms.start();
-
-    //    delay(1000);
-    //    ma.set_action(MoveAction::START_STEP);
-    //    ma.set_action(MoveAction::TURN_RIGHT_90);
-    //    ma.set_action(MoveAction::TURN_LEFT_90);
-    //    ma.set_action(MoveAction::STOP);
-    //    mpu.calibration();
-    //    ma.enable();
-
-    //    delay(1000);
-    //    ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-    //    ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-    //    mpu.calibration();
-    //    ma.enable();
-  }
-
-  //  if (btn.pressed) {
+  //  if (btn.long_pressing_1) {
   //    btn.flags = 0;
   //    bz.play(Buzzer::CONFIRM);
-  //    delay(500);
-  //    mpu.calibration();
-  //    ma.enable();
+  //    lg.print();
   //  }
+
+  if (btn.long_pressed_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CANCEL);
+    ms.printWall();
+  }
+
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    task();
+  }
+}
+
+int waitForSelect(int range = 4) {
+  int prev = 0;
+  while (1) {
+    delay(1);
+    int value = (((int)as.position(0) + (int)as.position(1)) / 5) % range;
+    if (value != prev) {
+      prev = value;
+      //      bz.play(Buzzer::SELECT);
+      led = value;
+    }
+    if (btn.pressed) {
+      btn.flags = 0;
+      bz.play(Buzzer::CONFIRM);
+      return value;
+    }
+    if (btn.long_pressed_1) {
+      btn.flags = 0;
+      bz.play(Buzzer::CANCEL);
+      return -1;
+    }
+  }
+  return -1;
+}
+
+void task() {
+  int preset = waitForSelect();
+  delay(500);
+  if (!waitForCover()) {
+    return;
+  }
+  delay(500);
+  bz.play(Buzzer::SELECT);
+  switch (preset) {
+    case 0:
+      ms.start();
+      break;
+    case 1:
+      ma.enable();
+      break;
+    case 2:
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
+      ma.enable();
+      break;
+    case 3:
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
+      ma.enable();
+      break;
+  }
+}
+
+bool waitForCover() {
+  while (1) {
+    delay(1);
+    if (ref.front(0) > 1000 && ref.front(1) > 1000) {
+      bz.play(Buzzer::CONFIRM);
+      return true;
+    }
+    if (btn.pressed) {
+      btn.flags = 0;
+      bz.play(Buzzer::CANCEL);
+      return false;
+    }
+  }
 }
 

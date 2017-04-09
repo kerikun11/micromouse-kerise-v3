@@ -24,7 +24,7 @@
 
 class MPU6500: public TaskBase {
   public:
-    MPU6500(): TaskBase("MPU6500 Task", MPU6500_TASK_PRIORITY, MPU6500_TASK_STACK_SIZE), spi(VSPI) {}
+    MPU6500(): TaskBase("MPU6500", MPU6500_TASK_PRIORITY, MPU6500_TASK_STACK_SIZE), spi(VSPI) {}
     virtual ~MPU6500() {}
     void init() {
       //      static spi_bus_config_t bus_cfg = {0};

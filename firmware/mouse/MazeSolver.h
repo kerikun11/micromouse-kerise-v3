@@ -29,7 +29,7 @@
 
 class MazeSolver: TaskBase {
   public:
-    MazeSolver(): TaskBase("Maze Solver Task", MAZE_SOLVER_TASK_PRIORITY, MAZE_SOLVER_STACK_SIZE), agent(maze) {
+    MazeSolver(): TaskBase("Maze Solver", MAZE_SOLVER_TASK_PRIORITY, MAZE_SOLVER_STACK_SIZE), agent(maze) {
       dir = NORTH;
       pos = IndexVec(0, 0);
     }
@@ -41,6 +41,9 @@ class MazeSolver: TaskBase {
     void terminate() {
       delete_task();
       ma.disable();
+    }
+    void printWall(){
+      maze.printWall();
     }
   private:
     Maze maze, maze_backup;
@@ -197,13 +200,15 @@ class MazeSolver: TaskBase {
       ma.set_action(MoveAction::START_STEP);
       pos = IndexVec(0, 1);
 
-      mpu.calibration();
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
       bz.play(Buzzer::CONFIRM);
       ma.enable();
       while (1) {
         ma.waitForEnd();
 
-        delay(100); /* debug */
+        delay(200); /* debug */
         Direction wallData = getWallData();
         printf("Vec:\t(%d, %d)\tWall:\t0x%X\n", pos.x, pos.y, (int)wallData);
 
@@ -288,7 +293,6 @@ class MazeSolver: TaskBase {
       ma.enable();
       ma.waitForEnd();
       ma.disable();
-      bz.play(Buzzer::COMPLETE);
       // end drive
       delay(2000);
 

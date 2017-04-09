@@ -15,16 +15,17 @@
 #include "SpeedController.h"
 
 #define WALL_ATTACH_ENABLED     false
-#define WALL_AVOID_ENABLED      false
-#define WALL_AVOID_GAIN         0.0001f
+#define WALL_AVOID_ENABLED      true
+#define WALL_AVOID_GAIN         0.00001f
 
 #define LOOK_AHEAD_UNIT         5
+//#define LOOK_AHEAD_UNIT_SUCTION (2 + velocity / 900 * 5)
 #define LOOK_AHEAD_UNIT_SUCTION 5
-#define TRAJECTORY_PROP_GAIN    150
+#define TRAJECTORY_PROP_GAIN    120
 
 class Trajectory {
   public:
-    Trajectory(bool suction) {
+    Trajectory(bool suction): suction(suction) {
       reset();
     }
     virtual ~Trajectory() {
@@ -34,7 +35,6 @@ class Trajectory {
     }
     Position getNextDir(const Position &cur, float velocity) {
       int index_cur = getNextIndex(cur);
-      //      int look_ahead = LOOK_AHEAD_UNIT * (1.0f + pow(velocity / 600, 2));
       int look_ahead = LOOK_AHEAD_UNIT;
       if (suction)look_ahead = LOOK_AHEAD_UNIT_SUCTION;
       Position dir = (getPosition(index_cur + look_ahead) - cur).rotate(-cur.theta);
@@ -79,7 +79,7 @@ class Trajectory {
 class Curve90: public Trajectory {
   public:
     Curve90(bool mirror = false) : Trajectory(false), mirror(mirror) {}
-    const float velocity = 200.0f;
+    const float velocity = 160.0f;
     const float straight = 15.0f;
   private:
     bool mirror;
@@ -280,7 +280,7 @@ class C180: public Trajectory {
 
 class MoveAction: TaskBase {
   public:
-    MoveAction() : TaskBase("Move Action Task", MOVE_ACTION_TASK_PRIORITY, MOVE_ACTION_STACK_SIZE) {
+    MoveAction() : TaskBase("Move Action", MOVE_ACTION_TASK_PRIORITY, MOVE_ACTION_STACK_SIZE) {
       xLastWakeTime = xTaskGetTickCount();
     }
     virtual ~MoveAction() {}
@@ -426,7 +426,7 @@ class MoveAction: TaskBase {
     void turn(const float angle) {
       const float speed = 3 * M_PI;
       const float accel = 48 * M_PI;
-      const float back_gain = 300.0f;
+      const float back_gain = 200.0f;
       uint32_t ms = 0;
       while (1) {
         if (fabs(sc.actual.rot) > speed) break;
@@ -441,7 +441,7 @@ class MoveAction: TaskBase {
       }
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-        if (fabs(sc.actual.rot) < 0.2) break;
+        if (fabs(sc.actual.rot) < 0.1) break;
         float extra = angle - getRelativePosition().theta;
         float target_speed = sqrt(2 * accel * fabs(extra));
         float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
@@ -454,23 +454,24 @@ class MoveAction: TaskBase {
       }
       updateOrigin(Position(0, 0, angle));
     }
-    void straight_x(const float distance, const float v_max, const float v_end, bool avoid = true) {
-      const float accel = 9000;
-      const float decel = 6000;
+    void straight_x(const float distance, const float v_max, const float v_end, bool avoid, bool suction) {
+      const float accel = 3000;
+      const float decel = 3000;
       uint32_t ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
       while (1) {
         Position cur = getRelativePosition();
-        if (cur.x > distance - 5.0f) break;
-        if (v_end < 1.0f && cur.x > distance - 10.0f && sc.actual.trans < 1.0f) break;
+        if (v_end >= 1.0f && cur.x > distance - 10.0f) break;
+        if (v_end < 1.0f && cur.x > distance - 1.0f) break;
         float extra = distance - cur.x;
         float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
         float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        float theta = atan2f(-cur.y, 2 * LOOK_AHEAD_UNIT) - cur.theta;
+        int look_ahead = LOOK_AHEAD_UNIT;
+        float theta = atan2f(-cur.y, 2 * look_ahead) - cur.theta;
         sc.set_target(velocity, TRAJECTORY_PROP_GAIN * theta);
         if (avoid) wall_avoid();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -482,10 +483,10 @@ class MoveAction: TaskBase {
     template<class C>
     void trace(C tr, const float velocity) {
       while (1) {
-        if (tr.getRemain() < 5.0f) break;
+        if (tr.getRemain() < -5.0f) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         Position dir = tr.getNextDir(getRelativePosition(), velocity);
-        sc.set_target(velocity, dir.theta * TRAJECTORY_PROP_GAIN);
+        sc.set_target(velocity, TRAJECTORY_PROP_GAIN * dir.theta);
       }
       sc.set_target(velocity, 0);
       updateOrigin(tr.getEndPosition());
@@ -502,7 +503,7 @@ class MoveAction: TaskBase {
     }
     void searchRun() {
       const float velocity = 200;
-      const float ahead_length = 10.0f;
+      const float ahead_length = 5.0f;
       sc.enable();
       while (1) {
         while (q.empty()) {
@@ -514,9 +515,9 @@ class MoveAction: TaskBase {
           float v = sqrt(2 * decel * fabs(extra));
           if (v > velocity) v = velocity;
           if (extra < 0) v = -v;
-          float theta = atan2f(-cur.y, LOOK_AHEAD_UNIT) - cur.theta;
+          float theta = atan2f(-cur.y, LOOK_AHEAD_UNIT * 2) - cur.theta;
           sc.set_target(v, TRAJECTORY_PROP_GAIN * theta);
-          //        wall_avoid();
+          wall_avoid();
         }
         struct Operation operation = q.front();
         enum ACTION action = operation.action;
@@ -526,10 +527,10 @@ class MoveAction: TaskBase {
         switch (action) {
           case START_STEP:
             setPosition();
-            straight_x(SEGMENT_WIDTH - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2 + ahead_length, velocity, velocity);
+            straight_x(SEGMENT_WIDTH - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2 + ahead_length, velocity, velocity, true, false);
             break;
           case START_INIT:
-            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true, false);
             wall_attach();
             turn(M_PI / 2);
             wall_attach();
@@ -548,29 +549,29 @@ class MoveAction: TaskBase {
             }
             return;
           case GO_STRAIGHT:
-            straight_x(SEGMENT_WIDTH * num, velocity, velocity);
+            straight_x(SEGMENT_WIDTH * num, velocity, velocity, true, false);
             break;
           case GO_HALF:
-            straight_x(SEGMENT_WIDTH / 2 * num, velocity, velocity);
+            straight_x(SEGMENT_WIDTH / 2 * num, velocity, velocity, true, false);
             break;
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               Curve90 tr(false);
-              straight_x(tr.straight - ahead_length, velocity, tr.velocity);
+              straight_x(tr.straight - ahead_length, velocity, tr.velocity, true, false);
               trace(tr, tr.velocity);
-              straight_x(tr.straight + ahead_length, tr.velocity, velocity);
+              straight_x(tr.straight + ahead_length, tr.velocity, velocity, true, false);
             }
             break;
           case TURN_RIGHT_90:
             for (int i = 0; i < num; i++) {
               Curve90 tr(true);
-              straight_x(tr.straight - ahead_length, velocity, tr.velocity);
+              straight_x(tr.straight - ahead_length, velocity, tr.velocity, true, false);
               trace(tr, tr.velocity);
-              straight_x(tr.straight + ahead_length, tr.velocity, velocity);
+              straight_x(tr.straight + ahead_length, tr.velocity, velocity, true, false);
             }
             break;
           case TURN_BACK:
-            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true, false);
             if (mpu.angle.z > 0) {
               wall_attach();
               turn(-M_PI / 2);
@@ -582,7 +583,7 @@ class MoveAction: TaskBase {
               wall_attach();
               turn(M_PI / 2);
             }
-            straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, 0);
+            straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, 0, true, false);
             break;
           case RETURN:
             if (mpu.angle.z > 0) {
@@ -598,7 +599,7 @@ class MoveAction: TaskBase {
             }
             break;
           case STOP:
-            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true, false);
             wall_attach();
             break;
         }
@@ -641,16 +642,15 @@ class MoveAction: TaskBase {
       path.replace("ll", "L");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 500;
-      const float curve_gain = 0.5f;
-      //      sc.enable(true);
-      sc.enable(false);
+      const float v_max = 600;
+      const float curve_gain = 0.6f;
+      sc.enable(true);
       setPosition();
       printPosition("S");
       int path_index = 0;
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
-      //      fan.drive(0.8);
-      delay(200);
+      fan.drive(0.2);
+      delay(500);
       while (1) {
         if (path_index > (int) path.length() - 1)
           break;
@@ -659,7 +659,8 @@ class MoveAction: TaskBase {
               C60 tr(false);
               straight += tr.straight1;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -670,7 +671,8 @@ class MoveAction: TaskBase {
               C60 tr(true);
               straight += tr.straight1;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -681,7 +683,7 @@ class MoveAction: TaskBase {
               C60 tr(false);
               straight += tr.straight2;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -692,7 +694,7 @@ class MoveAction: TaskBase {
               C60 tr(true);
               straight += tr.straight2;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -702,7 +704,7 @@ class MoveAction: TaskBase {
           case FAST_TURN_LEFT_30: {
               C30 tr(false);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -711,7 +713,7 @@ class MoveAction: TaskBase {
           case FAST_TURN_RIGHT_30: {
               C30 tr(true);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -720,7 +722,7 @@ class MoveAction: TaskBase {
           case FAST_TURN_LEFT_120: {
               C120 tr(false);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -729,7 +731,7 @@ class MoveAction: TaskBase {
           case FAST_TURN_RIGHT_120: {
               C120 tr(true);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -738,7 +740,8 @@ class MoveAction: TaskBase {
           case FAST_TURN_LEFT_90: {
               C90 tr(false);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -747,7 +750,8 @@ class MoveAction: TaskBase {
           case FAST_TURN_RIGHT_90: {
               C90 tr(true);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -757,7 +761,8 @@ class MoveAction: TaskBase {
               C150 tr(false);
               straight += tr.straight1;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -768,7 +773,8 @@ class MoveAction: TaskBase {
               C150 tr(true);
               straight += tr.straight1;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -779,7 +785,7 @@ class MoveAction: TaskBase {
               C150 tr(false);
               straight += tr.straight2;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -790,7 +796,7 @@ class MoveAction: TaskBase {
               C150 tr(true);
               straight += tr.straight2;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -801,7 +807,8 @@ class MoveAction: TaskBase {
               C180 tr(false);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -812,7 +819,8 @@ class MoveAction: TaskBase {
               C180 tr(true);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
+                //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
               trace(tr, tr.velocity * curve_gain);
@@ -832,7 +840,8 @@ class MoveAction: TaskBase {
 
       printPosition("E");
       if (straight > 1.0f) {
-        straight_x(straight, v_max, 0);
+        straight_x(straight, v_max, 0, false, true);
+        //                straight_x(straight, v_max, 0, true, true);
         straight = 0;
       }
       printPosition("E");
@@ -842,6 +851,7 @@ class MoveAction: TaskBase {
       sc.disable();
       path = "";
       printPosition("E");
+      bz.play(Buzzer::COMPLETE);
     }
 };
 

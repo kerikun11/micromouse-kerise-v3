@@ -107,7 +107,7 @@ class Position {
 
 class SpeedController : TaskBase {
   public:
-    SpeedController() : TaskBase("Speed Controller Task", SPEED_CONTROLLER_TASK_PRIORITY, SPEED_CONTROLLER_STACK_SIZE) {
+    SpeedController() : TaskBase("Speed Controller", SPEED_CONTROLLER_TASK_PRIORITY, SPEED_CONTROLLER_STACK_SIZE) {
       reset();
     }
     virtual ~SpeedController() {}

@@ -11,7 +11,7 @@
 
 class Logger: TaskBase {
   public:
-    Logger(): TaskBase("Logger Task", LOGGER_TASK_PRIORITY, LOGGER_STACK_SIZE) {}
+    Logger(): TaskBase("Logger", LOGGER_TASK_PRIORITY, LOGGER_STACK_SIZE) {}
     virtual ~Logger() {}
     void start() {
       log = "";

@@ -16,7 +16,7 @@
 
 class Reflector: private TaskBase {
   public:
-    Reflector(): TaskBase("Reflector Task", REFLECTOR_TASK_PRIORITY, REFLECTOR_TASK_STACK_SIZE) {
+    Reflector(): TaskBase("Reflector", REFLECTOR_TASK_PRIORITY, REFLECTOR_TASK_STACK_SIZE) {
       for (int i = 0; i < 4; i++) {
         for (int j = 0; j < ave_num; j++) raw[i][j] = 0;
         value[i] = 0;

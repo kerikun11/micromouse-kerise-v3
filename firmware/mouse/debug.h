@@ -19,7 +19,7 @@
 
 class ExternalController: TaskBase {
   public:
-    ExternalController(): TaskBase("External Controller Task", EXTERNAL_CONTROLLER_TASK_PRIORITY, EXTERNAL_CONTROLLER_STACK_SIZE) {}
+    ExternalController(): TaskBase("External Controller", EXTERNAL_CONTROLLER_TASK_PRIORITY, EXTERNAL_CONTROLLER_STACK_SIZE) {}
     virtual ~ExternalController() {}
     void init() {
       create_task();
@@ -109,11 +109,6 @@ class ExternalController: TaskBase {
               mpu.calibration();
               wd.calibration();
               ma.enable();
-              break;
-            case 'm':
-              //              bz.play(Buzzer::CONFIRM);
-              //              ms->terminate();
-              //              ms->start();
               break;
             case 'p':
               bz.play(Buzzer::SELECT);

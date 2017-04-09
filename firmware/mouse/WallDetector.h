@@ -10,14 +10,14 @@
 #define WALL_DETECTOR_STACK_SIZE    4096
 
 #define WALL_DETECTOR_FLONT_RATIO   1.0f
-#define WALL_SIDE_DIV               2.6f  //< Response
-#define WALL_FRONT_DIV              3.2f  //< Response
+#define WALL_SIDE_DIV               2.4f  //< Response
+#define WALL_FRONT_DIV              2.6f  //< Response
 
 #define WALL_UPDATE_PERIOD_US       1000
 
 class WallDetector : TaskBase {
   public:
-    WallDetector() : TaskBase("Wall Detector Task", WALL_DETECTOR_TASK_PRIORITY, WALL_DETECTOR_STACK_SIZE), calibration_flag(false) {}
+    WallDetector() : TaskBase("Wall Detector", WALL_DETECTOR_TASK_PRIORITY, WALL_DETECTOR_STACK_SIZE), calibration_flag(false) {}
     virtual ~WallDetector() {}
     void enable() {
       create_task();
