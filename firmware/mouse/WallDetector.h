@@ -9,7 +9,7 @@
 #define WALL_DETECTOR_TASK_PRIORITY 4
 #define WALL_DETECTOR_STACK_SIZE    4096
 
-#define WALL_DETECTOR_FLONT_RATIO   1.0f
+#define WALL_DETECTOR_FLONT_RATIO   1.5f
 #define WALL_SIDE_DIV               2.4f  //< Response
 #define WALL_FRONT_DIV              2.6f  //< Response
 
@@ -94,7 +94,7 @@ class WallDetector : TaskBase {
           //            _wall.front[i] = true;
           //          else if (value < _wall_ref.front[i] * 0.98)
           //            _wall.front[i] = false;
-          _wall_difference.front[i] = (_wall_distance.front[i] - value) / _wall_distance.front[i];
+          _wall_difference.front[i] =  (_wall_distance.front[i] * WALL_DETECTOR_FLONT_RATIO - value) / _wall_distance.front[i];
         }
 
         if (calibration_flag) {
@@ -111,7 +111,7 @@ class WallDetector : TaskBase {
               _wall_ref.side[i] = _wall_distance.side[i] / WALL_SIDE_DIV;
             }
             for (int i = 0; i < 2; i++) {
-              _wall_distance.front[i] = WALL_DETECTOR_FLONT_RATIO * (_wall_distance.side[0] + _wall_distance.side[1]) / 2;
+              _wall_distance.front[i] =  (_wall_distance.side[0] + _wall_distance.side[1]) / 2;
               _wall_ref.front[i] = _wall_distance.front[i] / WALL_FRONT_DIV;
             }
             printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) _wall_distance.side[0],

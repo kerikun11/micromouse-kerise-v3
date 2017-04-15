@@ -79,7 +79,7 @@ class Trajectory {
 class Curve90: public Trajectory {
   public:
     Curve90(bool mirror = false) : Trajectory(false), mirror(mirror) {}
-    const float velocity = 160.0f;
+    const float velocity = 120.0f;
     const float straight = 15.0f;
   private:
     bool mirror;
@@ -393,33 +393,21 @@ class MoveAction: TaskBase {
     }
     void wall_attach() {
 #if WALL_ATTACH_ENABLED
-      if (wd->wall().flont[0] && wd->wall().flont[1]) {
+      if (wd.wall().front[0] && wd.wall().front[1]) {
         while (1) {
-          float trans = wd->wall_difference().flont[0] + wd->wall_difference().flont[1];
-          float rot = wd->wall_difference().flont[1] - wd->wall_difference().flont[0];
-          sc.set_target(trans * 100, rot * 10);
-          if (fabs(trans) < 0.1f && fabs(rot) < 0.1f) break;
-          delay(1);
+          float trans = (wd.wall_difference().front[0] + wd.wall_difference().front[1]) * 100;
+          float rot = (wd.wall_difference().front[1] - wd.wall_difference().front[0]) * 50;
+          if (fabs(trans) < 5.0f && fabs(rot) < 0.5f) break;
+          sc.set_target(trans, rot);
+          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         }
         sc.set_target(0, 0);
         printPosition("1");
+        //        fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
         fixPosition(Position(getRelativePosition().x, 0, 0).rotate(origin.theta));
         printPosition("2");
-        bz->play(Buzzer::SELECT);
+        bz.play(Buzzer::SELECT);
         delay(1000);
-        while (1) {
-          Position cur = getRelativePosition();
-          if (fabs(10 - cur.x) < 0.1)
-            break;
-          Thread::signal_wait(0x01);
-          sc.set_target((10 - cur.x) * 100, -cur.y * 1);
-        }
-        sc.set_target(0, 0);
-        printPosition("3");
-        fixPosition(Position(getRelativePosition().x, 0, 0).rotate(origin.theta));
-        printPosition("4");
-        bz->play(Buzzer::SELECT);
-        Thread::wait(1000);
       }
 #endif
     }
@@ -502,7 +490,7 @@ class MoveAction: TaskBase {
       }
     }
     void searchRun() {
-      const float velocity = 200;
+      const float velocity = 160;
       const float ahead_length = 5.0f;
       sc.enable();
       while (1) {
@@ -642,8 +630,8 @@ class MoveAction: TaskBase {
       path.replace("ll", "L");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 600;
-      const float curve_gain = 0.6f;
+      const float v_max = 500;
+      const float curve_gain = 0.5f;
       sc.enable(true);
       setPosition();
       printPosition("S");

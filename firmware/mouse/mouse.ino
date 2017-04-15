@@ -73,8 +73,8 @@ void setup() {
 void loop() {
   //  mpu.print();
   //  as.print();
-  //  wd.print();
-  //  delay(100);
+  wd.print();
+  delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
