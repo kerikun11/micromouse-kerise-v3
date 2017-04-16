@@ -5,6 +5,7 @@
 */
 
 #include <WiFi.h>
+#include <FS.h>
 #include "esp_deep_sleep.h"
 #include "config.h"
 
@@ -36,6 +37,9 @@ WallDetector wd;
 SpeedController sc;
 MoveAction ma;
 MazeSolver ms;
+
+#define SAVE_PATH_PATH  "path.txt"
+String path;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
@@ -73,8 +77,8 @@ void setup() {
 void loop() {
   //  mpu.print();
   //  as.print();
-  wd.print();
-  delay(100);
+  //  wd.print();
+  //  delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
@@ -86,16 +90,28 @@ void loop() {
   //    bz.play(Buzzer::CONFIRM);
   //    delay(1000);
   //    mpu.calibration();
-  //    bool suction = true;
-  //    if (suction) fan.drive(0.8);
+  //    bool suction = false;
+  //    if (suction) fan.drive(0.4);
   //    delay(200);
   //    lg.start();
   //    sc.enable(suction);
-  //    sc.set_target(900, 0);
-  //    delay(400);
-  //    bz.play(Buzzer::SELECT);
+  //    const float accel = 6000;
+  //    const float decel = 6000;
+  //    const float v_max = 1200;
+  //    for (float v = 0; v < v_max; v += accel / 1000) {
+  //      sc.set_target(v, 0);
+  //      delay(1);
+  //    }
+  //    delay(200);
+  //    for (float v = v_max; v > 0; v -= decel / 1000) {
+  //      sc.set_target(v, 0);
+  //      delay(1);
+  //    }
+  //    //    sc.set_target(1200, 0);
+  //    //    delay(500);
+  //    //    bz.play(Buzzer::SELECT);
   //    sc.set_target(0, 0);
-  //    delay(400);
+  //    delay(300);
   //    bz.play(Buzzer::CANCEL);
   //    sc.disable();
   //    fan.drive(0);
@@ -109,10 +125,9 @@ void loop() {
 
   if (btn.long_pressed_1) {
     btn.flags = 0;
-    bz.play(Buzzer::CANCEL);
+    bz.play(Buzzer::CONFIRM);
     ms.printWall();
   }
-
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
@@ -164,16 +179,16 @@ void task() {
       ma.set_action(MoveAction::FAST_GO_STRAIGHT);
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
       ma.set_action(MoveAction::FAST_TURN_LEFT_90);
       ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
       ma.set_action(MoveAction::FAST_GO_STRAIGHT);
       ma.set_action(MoveAction::FAST_GO_STRAIGHT);
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
       mpu.calibration(false);
       wd.calibration();
       mpu.calibrationWait();

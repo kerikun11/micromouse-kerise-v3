@@ -7,7 +7,8 @@
 #define MACHINE_WHEEL_DIAMETER  13.4f
 #define MACHINE_TAIL_LENGTH     18.4f
 
-#define SEGMENT_WIDTH        90
-#define WALL_THICKNESS        6
+#define SEGMENT_WIDTH           90.0f
+#define SEGMENT_DIAGONAL_WIDTH  127.2792206135786f
+#define WALL_THICKNESS          6.0f
 
 

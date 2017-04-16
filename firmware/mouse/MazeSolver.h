@@ -42,7 +42,7 @@ class MazeSolver: TaskBase {
       delete_task();
       ma.disable();
     }
-    void printWall(){
+    void printWall() {
       maze.printWall();
     }
   private:
@@ -333,7 +333,7 @@ class MazeSolver: TaskBase {
     virtual void task() {
       delay(500);
       search_run();
-      delay(3000);
+      delay(2000);
       fast_run();
       while (1) {
         delay(1000);

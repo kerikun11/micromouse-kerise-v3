@@ -95,13 +95,13 @@ class Position {
 #define SPEED_CONTROLLER_TASK_PRIORITY  4
 #define SPEED_CONTROLLER_STACK_SIZE     4096
 
-#define SPEED_CONTROLLER_KP   1.2f
-#define SPEED_CONTROLLER_KI   4.0f
+#define SPEED_CONTROLLER_KP   1.6f
+#define SPEED_CONTROLLER_KI   3.0f
 #define SPEED_CONTROLLER_KD   0.004f
 
-#define SPEED_CONTROLLER_KP_SUCTION 1.6f
-#define SPEED_CONTROLLER_KI_SUCTION 2.8f
-#define SPEED_CONTROLLER_KD_SUCTION 0.002f
+#define SPEED_CONTROLLER_KP_SUCTION 3.2f
+#define SPEED_CONTROLLER_KI_SUCTION 2.4f
+#define SPEED_CONTROLLER_KD_SUCTION 0.004f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -211,7 +211,6 @@ class SpeedController : TaskBase {
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         }
-        //        differential.trans = mpu.accel.y;
         differential.trans = (accel[0] + accel[1] + accel[2] + accel[3]) / 4;
         differential.rot = 0;
         differential.pole2wheel();
