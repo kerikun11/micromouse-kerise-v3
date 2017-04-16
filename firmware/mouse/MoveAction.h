@@ -16,13 +16,15 @@
 
 #define WALL_ATTACH_ENABLED     false
 #define WALL_AVOID_ENABLED      true
-#define WALL_AVOID_GAIN         0.00002f
+#define WALL_AVOID_GAIN         0.00003f
 
 #define LOOK_AHEAD_UNIT         10
 //#define LOOK_AHEAD_UNIT_SUCTION (2 + velocity / 900 * 5)
 #define LOOK_AHEAD_UNIT_SUCTION 10
-#define TRAJECTORY_PROP_GAIN    80
+#define TRAJECTORY_PROP_GAIN    90
 #define TRAJECTORY_INT_GAIN     0.0
+
+//#define printf  lg.printf
 
 class Trajectory {
   public:
@@ -308,6 +310,7 @@ class MoveAction: TaskBase {
         q.pop();
       }
       path = "";
+      printf("Move Action Disabled\n");
     }
     void set_action(FAST_ACTION action, const int num = 1) {
       for (int i = 0; i < num; i++)
@@ -334,12 +337,7 @@ class MoveAction: TaskBase {
       }
     }
     void printPosition(const char* name) const {
-      printf("%s\t", name);
-      //    printf("Ori:(%06.1f, %06.1f, %06.3f)\t", origin.x, origin.y, origin.theta);
-      //    printf("Abs:(%06.1f, %06.1f, %06.3f)\t", sc.getPosition().x, sc.getPosition().y,
-      //        sc.getPosition().theta);
-      printf("Rel:(%06.1f, %06.1f, %06.3f)\t", getRelativePosition().x, getRelativePosition().y, getRelativePosition().theta);
-      printf("\n");
+      printf("%s\tRel:(%06.1f, %06.1f, %06.3f)\n", name, getRelativePosition().x, getRelativePosition().y, getRelativePosition().theta);
     }
     Position getRelativePosition() const {
       return (sc.getPosition() - origin).rotate(-origin.theta);
@@ -399,7 +397,7 @@ class MoveAction: TaskBase {
       const float speed = 3 * M_PI;
       const float accel = 48 * M_PI;
       const float back_gain = 100.0f;
-      uint32_t ms = 0;
+      int ms = 0;
       while (1) {
         if (fabs(sc.actual.rot) > speed) break;
         float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
@@ -425,10 +423,11 @@ class MoveAction: TaskBase {
         }
       }
       updateOrigin(Position(0, 0, angle));
+      printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid, bool suction) {
-      const float accel = 6000;
-      const float decel = 6000;
+      const float accel = 3000;
+      const float decel = 3000;
       uint32_t ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -452,6 +451,7 @@ class MoveAction: TaskBase {
       }
       sc.set_target(v_end, 0);
       updateOrigin(Position(distance, 0, 0));
+      printPosition("Straight End");
     }
     template<class C>
     void trace(C tr, const float velocity) {
@@ -464,6 +464,7 @@ class MoveAction: TaskBase {
       }
       sc.set_target(velocity, 0);
       updateOrigin(tr.getEndPosition());
+      printPosition("Trace End");
     }
     virtual void task() {
       if (path.length() > 0) {
@@ -476,7 +477,7 @@ class MoveAction: TaskBase {
       }
     }
     void searchRun() {
-      const float velocity = 200;
+      const float velocity = 160;
       const float ahead_length = 5.0f;
       integral = 0;
       sc.enable();
@@ -618,15 +619,15 @@ class MoveAction: TaskBase {
       path.replace("xllx", "L");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 900;
-      const float curve_gain = 0.5f;
+      const float v_max = 450;
+      const float curve_gain = 0.45f;
       integral = 0;
       sc.enable(true);
       setPosition();
       printPosition("S");
       int path_index = 0;
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
-      fan.drive(0.4);
+      fan.drive(0.3);
       delay(500);
       while (1) {
         if (path_index > (int) path.length() - 1)

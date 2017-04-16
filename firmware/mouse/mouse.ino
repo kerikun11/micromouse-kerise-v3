@@ -38,9 +38,6 @@ SpeedController sc;
 MoveAction ma;
 MazeSolver ms;
 
-#define SAVE_PATH_PATH  "path.txt"
-String path;
-
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
@@ -90,17 +87,21 @@ void loop() {
   //    bz.play(Buzzer::CONFIRM);
   //    delay(1000);
   //    mpu.calibration();
-  //    bool suction = false;
-  //    if (suction) fan.drive(0.4);
+  //    bool suction = true;
+  //    if (suction) fan.drive(0.6);
   //    delay(200);
   //    lg.start();
   //    sc.enable(suction);
-  //    const float accel = 6000;
+  //    const float accel = 9000;
   //    const float decel = 6000;
-  //    const float v_max = 1200;
-  //    for (float v = 0; v < v_max; v += accel / 1000) {
-  //      sc.set_target(v, 0);
+  //    const float v_max = 1800;
+  //    const float v_start = 0;
+  //    float T = 1.5f * (v_max - v_start) / accel;
+  //    for (int ms = 0; ms / 1000.0f < T; ms++) {
+  //      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+  //      sc.set_target(velocity_a, 0);
   //      delay(1);
+  //      ms++;
   //    }
   //    delay(200);
   //    for (float v = v_max; v > 0; v -= decel / 1000) {
@@ -123,15 +124,15 @@ void loop() {
   //    lg.print();
   //  }
 
-  if (btn.long_pressed_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    ms.printWall();
-  }
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     task();
+  }
+  if (btn.long_pressed_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    ms.printWall();
   }
 }
 
@@ -161,6 +162,7 @@ int waitForSelect(int range = 4) {
 
 void task() {
   int preset = waitForSelect();
+  if (preset < 0) return;
   delay(500);
   if (!waitForCover()) {
     return;
@@ -172,6 +174,23 @@ void task() {
       ms.start();
       break;
     case 1:
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
       ma.enable();
       break;
     case 2:

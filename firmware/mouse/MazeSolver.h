@@ -27,6 +27,8 @@
 #define MAZE_SOLVER_TASK_PRIORITY 2
 #define MAZE_SOLVER_STACK_SIZE    4096
 
+//#define printf  lg.printf
+
 class MazeSolver: TaskBase {
   public:
     MazeSolver(): TaskBase("Maze Solver", MAZE_SOLVER_TASK_PRIORITY, MAZE_SOLVER_STACK_SIZE), agent(maze) {
@@ -44,6 +46,7 @@ class MazeSolver: TaskBase {
     }
     void printWall() {
       maze.printWall();
+      printf("State: %d\n", agent.getState());
     }
   private:
     Maze maze, maze_backup;

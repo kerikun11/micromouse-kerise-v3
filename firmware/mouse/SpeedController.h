@@ -99,9 +99,9 @@ class Position {
 #define SPEED_CONTROLLER_KI   3.0f
 #define SPEED_CONTROLLER_KD   0.004f
 
-#define SPEED_CONTROLLER_KP_SUCTION 3.2f
-#define SPEED_CONTROLLER_KI_SUCTION 2.4f
-#define SPEED_CONTROLLER_KD_SUCTION 0.004f
+#define SPEED_CONTROLLER_KP_SUCTION 3.6f
+#define SPEED_CONTROLLER_KI_SUCTION 2.1f
+#define SPEED_CONTROLLER_KD_SUCTION 0.0018f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -181,6 +181,7 @@ class SpeedController : TaskBase {
     float wheel_position[ave_num][2];
     float accel[ave_num];
     WheelParameter actual_prev;
+    WheelParameter target_prev;
     Position position;
 
     virtual void task() {
@@ -211,7 +212,7 @@ class SpeedController : TaskBase {
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         }
-        differential.trans = (accel[0] + accel[1] + accel[2] + accel[3]) / 4;
+        differential.trans = (accel[0] + accel[1] + accel[2]) / 3 - (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000;
         differential.rot = 0;
         differential.pole2wheel();
         float pwm_value[2];
@@ -226,6 +227,7 @@ class SpeedController : TaskBase {
 
         actual_prev.trans = actual.trans;
         actual_prev.rot = actual.rot;
+        target_prev.trans = target.trans;
       }
     }
 };
