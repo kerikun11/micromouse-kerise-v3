@@ -68,7 +68,7 @@ void setup() {
   ref.init();
 
   wd.enable();
-  //  lg.start();
+  lg.start();
 }
 
 void loop() {
@@ -134,6 +134,21 @@ void loop() {
     bz.play(Buzzer::CONFIRM);
     ms.printWall();
   }
+
+  //  if (btn.pressed) {
+  //    btn.flags = 0;
+  //    bz.play(Buzzer::CONFIRM);
+  //    //    fan.drive(0);
+  //    sc.set_target(0, 0);
+  //  }
+  //  if (btn.long_pressing_1) {
+  //    btn.flags = 0;
+  //    bz.play(Buzzer::CONFIRM);
+  //    delay(500);
+  //    //    fan.drive(0.6);
+  //    sc.enable();
+  //    sc.set_target(300, 0);
+  //  }
 }
 
 int waitForSelect(int range = 4) {

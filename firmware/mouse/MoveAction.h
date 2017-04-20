@@ -16,7 +16,7 @@
 
 #define WALL_ATTACH_ENABLED     false
 #define WALL_AVOID_ENABLED      true
-#define WALL_AVOID_GAIN         0.00003f
+#define WALL_AVOID_GAIN         0.00004f
 
 #define LOOK_AHEAD_UNIT         10
 //#define LOOK_AHEAD_UNIT_SUCTION (2 + velocity / 900 * 5)
@@ -82,7 +82,7 @@ class Trajectory {
 class S90: public Trajectory {
   public:
     S90(bool mirror = false) : Trajectory(false), mirror(mirror) {}
-    const float velocity = 120.0f;
+    const float velocity = 90.0f;
     const float straight = 10.0f;
   private:
     bool mirror;
@@ -229,7 +229,7 @@ class C180: public Trajectory {
   public:
     C180(bool mirror = false) : Trajectory(true), mirror(mirror) {}
     //    const float velocity = 818.9712224905114f;
-    const float velocity = 760.0f;
+    const float velocity = 720.0f;
     const float straight = 20.0f;
   private:
     bool mirror;
@@ -426,7 +426,7 @@ class MoveAction: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid, bool suction) {
-      const float accel = 3000;
+      const float accel = 1500;
       const float decel = 3000;
       uint32_t ms = 0;
       float v_start = sc.actual.trans;
@@ -456,7 +456,7 @@ class MoveAction: TaskBase {
     template<class C>
     void trace(C tr, const float velocity) {
       while (1) {
-        if (tr.getRemain() < -5.0f) break;
+        if (tr.getRemain() < -10.0f) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         Position dir = tr.getNextDir(getRelativePosition(), velocity);
         integral += dir.theta;
@@ -477,8 +477,8 @@ class MoveAction: TaskBase {
       }
     }
     void searchRun() {
-      const float velocity = 160;
-      const float ahead_length = 5.0f;
+      const float velocity = 120;
+      const float ahead_length = 10.0f;
       integral = 0;
       sc.enable();
       while (1) {
@@ -619,8 +619,8 @@ class MoveAction: TaskBase {
       path.replace("xllx", "L");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 450;
-      const float curve_gain = 0.45f;
+      const float v_max = 900;
+      const float curve_gain = 0.58f;
       integral = 0;
       sc.enable(true);
       setPosition();

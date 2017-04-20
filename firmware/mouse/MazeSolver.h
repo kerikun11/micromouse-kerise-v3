@@ -211,7 +211,7 @@ class MazeSolver: TaskBase {
       while (1) {
         ma.waitForEnd();
 
-        delay(200); /* debug */
+        //        delay(200); /* debug */
         Direction wallData = getWallData();
         printf("Vec:\t(%d, %d)\tWall:\t0x%X\n", pos.x, pos.y, (int)wallData);
 
@@ -237,7 +237,7 @@ class MazeSolver: TaskBase {
         prevState = agent.getState();
 
         Direction nextDir = agent.getNextDirection();     //< Agentの状態が探索中の場合は次に進むべき方向を取得する
-        delay(100); /* debug */
+        //        delay(100); /* debug */
         printf("NextDir: %X\n", (int) nextDir);
         if (nextDir == 0) {
           bz.play(Buzzer::ERROR);
@@ -256,6 +256,7 @@ class MazeSolver: TaskBase {
       bz.play(Buzzer::COMPLETE);
     }
     void fast_run() {
+      maze = maze_backup;
       printf("agent.calcRunSequence();\n");
       agent.calcRunSequence(false);
       const OperationList &runSequence = agent.getRunSequence();
