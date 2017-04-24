@@ -68,7 +68,7 @@ void setup() {
   ref.init();
 
   wd.enable();
-  lg.start();
+  //  lg.start();
 }
 
 void loop() {
@@ -209,20 +209,19 @@ void task() {
       ma.enable();
       break;
     case 2:
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      for (int i = 0; i < 7; i++) {
+        ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+        ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      }
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      for (int i = 0; i < 7; i++) {
+        ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      }
       ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      for (int i = 0; i < 6; i++) {
+        ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      }
       mpu.calibration(false);
       wd.calibration();
       mpu.calibrationWait();

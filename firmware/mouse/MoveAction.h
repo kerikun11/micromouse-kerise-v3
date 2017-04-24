@@ -20,8 +20,8 @@
 
 #define LOOK_AHEAD_UNIT         10
 //#define LOOK_AHEAD_UNIT_SUCTION (2 + velocity / 900 * 5)
-#define LOOK_AHEAD_UNIT_SUCTION 10
-#define TRAJECTORY_PROP_GAIN    90
+#define LOOK_AHEAD_UNIT_SUCTION 20
+#define TRAJECTORY_PROP_GAIN    75
 #define TRAJECTORY_INT_GAIN     0.0
 
 //#define printf  lg.printf
@@ -426,14 +426,14 @@ class MoveAction: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid, bool suction) {
-      const float accel = 1500;
-      const float decel = 3000;
+      const float accel = 1200;
+      const float decel = 900;
       uint32_t ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
       while (1) {
         Position cur = getRelativePosition();
-        if (v_end >= 1.0f && cur.x > distance - 10.0f) break;
+        if (v_end >= 1.0f && cur.x > distance - 20.0f) break;
         if (v_end < 1.0f && cur.x > distance - 1.0f) break;
         float extra = distance - cur.x;
         float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
@@ -619,8 +619,8 @@ class MoveAction: TaskBase {
       path.replace("xllx", "L");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 900;
-      const float curve_gain = 0.58f;
+      const float v_max = 1200;
+      const float curve_gain = 0.78f;
       integral = 0;
       sc.enable(true);
       setPosition();
@@ -640,7 +640,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight;
             }
             break;
@@ -651,7 +652,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight;
             }
             break;
@@ -662,7 +664,8 @@ class MoveAction: TaskBase {
                 straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
             }
             break;
           case FAST_TURN_RIGHT_45R: {
@@ -672,7 +675,8 @@ class MoveAction: TaskBase {
                 straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
             }
             break;
           case FAST_TURN_LEFT_V90: {
@@ -681,7 +685,8 @@ class MoveAction: TaskBase {
                 straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
             }
             break;
           case FAST_TURN_RIGHT_V90: {
@@ -690,7 +695,8 @@ class MoveAction: TaskBase {
                 straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
             }
             break;
           case FAST_TURN_LEFT_90: {
@@ -701,7 +707,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight;
             }
             break;
@@ -713,7 +720,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight;
             }
             break;
@@ -725,7 +733,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight2;
             }
             break;
@@ -737,7 +746,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight2;
             }
             break;
@@ -748,7 +758,8 @@ class MoveAction: TaskBase {
                 straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight1;
             }
             break;
@@ -759,7 +770,8 @@ class MoveAction: TaskBase {
                 straight_x(straight, v_max, tr.velocity * curve_gain, false, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight1;
             }
             break;
@@ -771,7 +783,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight;
             }
             break;
@@ -783,7 +796,8 @@ class MoveAction: TaskBase {
                 //                straight_x(straight, v_max, tr.velocity * curve_gain, true, true);
                 straight = 0;
               }
-              trace(tr, tr.velocity * curve_gain);
+              trace(tr, sc.actual.trans);
+              //              trace(tr, tr.velocity * curve_gain);
               straight += tr.straight;
             }
             break;
