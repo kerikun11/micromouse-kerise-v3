@@ -95,13 +95,15 @@ class Position {
 #define SPEED_CONTROLLER_TASK_PRIORITY  4
 #define SPEED_CONTROLLER_STACK_SIZE     4096
 
-#define SPEED_CONTROLLER_KP   1.6f
-#define SPEED_CONTROLLER_KI   3.0f
-#define SPEED_CONTROLLER_KD   0.004f
+#define SPEED_CONTROLLER_KM   0.01f
 
-#define SPEED_CONTROLLER_KP_SUCTION 3.6f
-#define SPEED_CONTROLLER_KI_SUCTION 2.1f
-#define SPEED_CONTROLLER_KD_SUCTION 0.0018f
+#define SPEED_CONTROLLER_KP   2.4f
+#define SPEED_CONTROLLER_KI   3.6f
+#define SPEED_CONTROLLER_KD   0.0f
+
+#define SPEED_CONTROLLER_KP_SUCTION 2.4f
+#define SPEED_CONTROLLER_KI_SUCTION 3.6f
+#define SPEED_CONTROLLER_KD_SUCTION 0.0f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -177,7 +179,7 @@ class SpeedController : TaskBase {
     float Ki = SPEED_CONTROLLER_KI;
     float Kd = SPEED_CONTROLLER_KD;
   private:
-    static const int ave_num = 16;
+    static const int ave_num = 8;
     float wheel_position[ave_num][2];
     float accel[ave_num];
     WheelParameter actual_prev;
@@ -219,7 +221,8 @@ class SpeedController : TaskBase {
         for (int i = 0; i < 2; i++) {
           pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Kp * Ki * (0 - integral.wheel[i]) + Kp * Kd * (0 - differential.wheel[i]);
         }
-        mt.drive(pwm_value[0], pwm_value[1]);
+        const float Km = SPEED_CONTROLLER_KM;
+        mt.drive(pwm_value[0] + Km * actual.wheel[0], pwm_value[1] + Km * actual.wheel[1]);
 
         position.theta += (actual_prev.rot + actual.rot) / 2 * SPEED_CONTROLLER_PERIOD_US / 1000000;
         position.x += (actual_prev.trans + actual.trans) / 2 * cos(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;

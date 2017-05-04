@@ -211,7 +211,7 @@ class MazeSolver: TaskBase {
       while (1) {
         ma.waitForEnd();
 
-        //        delay(200); /* debug */
+        //        delay(500); /* debug */
         Direction wallData = getWallData();
         printf("Vec:\t(%d, %d)\tWall:\t0x%X\n", pos.x, pos.y, (int)wallData);
 

@@ -72,10 +72,10 @@ void setup() {
 }
 
 void loop() {
-  //  mpu.print();
+  //    mpu.print();
   //  as.print();
   //  wd.print();
-  //  delay(100);
+  //    delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
@@ -88,31 +88,34 @@ void loop() {
   //    delay(1000);
   //    mpu.calibration();
   //    bool suction = true;
-  //    if (suction) fan.drive(0.6);
+  //    if (suction) fan.drive(0.3);
   //    delay(200);
   //    lg.start();
   //    sc.enable(suction);
+  //#if 0
   //    const float accel = 9000;
-  //    const float decel = 6000;
-  //    const float v_max = 1800;
+  //    const float decel = 9000;
+  //    const float v_max = 1200;
   //    const float v_start = 0;
   //    float T = 1.5f * (v_max - v_start) / accel;
   //    for (int ms = 0; ms / 1000.0f < T; ms++) {
   //      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
   //      sc.set_target(velocity_a, 0);
   //      delay(1);
-  //      ms++;
   //    }
+  //    bz.play(Buzzer::SELECT);
   //    delay(200);
+  //    bz.play(Buzzer::SELECT);
   //    for (float v = v_max; v > 0; v -= decel / 1000) {
   //      sc.set_target(v, 0);
   //      delay(1);
   //    }
-  //    //    sc.set_target(1200, 0);
-  //    //    delay(500);
-  //    //    bz.play(Buzzer::SELECT);
+  //#else
+  //    sc.set_target(450, 0);
+  //    delay(400);
+  //#endif
   //    sc.set_target(0, 0);
-  //    delay(300);
+  //    delay(400);
   //    bz.play(Buzzer::CANCEL);
   //    sc.disable();
   //    fan.drive(0);
@@ -132,22 +135,19 @@ void loop() {
   if (btn.long_pressed_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    ms.printWall();
+    //    ms.printWall();
+    lg.print();
   }
 
   //  if (btn.pressed) {
   //    btn.flags = 0;
-  //    bz.play(Buzzer::CONFIRM);
-  //    //    fan.drive(0);
-  //    sc.set_target(0, 0);
+  //    bz.play(Buzzer::CANCEL);
+  //    fan.drive(0);
   //  }
-  //  if (btn.long_pressing_1) {
+  //  if (btn.long_pressed_1) {
   //    btn.flags = 0;
   //    bz.play(Buzzer::CONFIRM);
-  //    delay(500);
-  //    //    fan.drive(0.6);
-  //    sc.enable();
-  //    sc.set_target(300, 0);
+  //    fan.drive(0.4);
   //  }
 }
 
@@ -228,16 +228,19 @@ void task() {
       ma.enable();
       break;
     case 3:
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      //      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      //      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
+      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      //      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      //      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
+      //      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
+      //      ma.set_path("srllrrllrrllrrsrssllrllrrssssrsssssssrssrrllsrrlrlrlsllrlrlrlrllrlrrsrll");
+      //      ma.set_path("srssssslsslsslssrssrssrssrsslsslsslsslssrssrssrssrsslsslsslsslssrssrssrssrsslsslsslsslss");
+      ma.set_path("srllrr");
       mpu.calibration(false);
       wd.calibration();
       mpu.calibrationWait();
