@@ -8,6 +8,8 @@
 #include "motor.h"
 #include "mpu6500.h"
 #include "MazeSolver.h"
+#include "FastRun.h"
+#include "SearchRun.h"
 
 #define EMERGENCY_TASK_PRIORITY 4
 #define EMERGENCY_STACK_SIZE    2048
@@ -30,6 +32,8 @@ class Emergency: TaskBase {
           fan.drive(0);
           bz.play(Buzzer::EMERGENCY);
           ms.terminate();
+          sr.disable();
+          fr.disable();
           delay(500);
           mt.emergency_release();
         }

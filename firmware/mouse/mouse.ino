@@ -19,7 +19,8 @@
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
-#include "MoveAction.h"
+#include "FastRun.h"
+#include "SearchRun.h"
 #include "MazeSolver.h"
 
 AS5145 as;
@@ -35,7 +36,8 @@ MPU6500 mpu;
 Reflector ref;
 WallDetector wd;
 SpeedController sc;
-MoveAction ma;
+FastRun fr;
+SearchRun sr;
 MazeSolver ms;
 
 void setup() {
@@ -186,65 +188,33 @@ void task() {
   bz.play(Buzzer::SELECT);
   switch (preset) {
     case 0:
-      ms.start();
+      sr.set_action(SearchRun::START_STEP);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::TURN_LEFT_90);
+      sr.set_action(SearchRun::TURN_LEFT_90);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::GO_STRAIGHT);
+      sr.set_action(SearchRun::GO_STRAIGHT);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::TURN_LEFT_90);
+      sr.set_action(SearchRun::TURN_LEFT_90);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::TURN_RIGHT_90);
+      sr.set_action(SearchRun::GO_STRAIGHT);
+      sr.set_action(SearchRun::TURN_BACK);
+      sr.set_action(SearchRun::STOP);
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
+      sr.enable();
       break;
     case 1:
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      mpu.calibration(false);
-      wd.calibration();
-      mpu.calibrationWait();
-      ma.enable();
       break;
     case 2:
-      for (int i = 0; i < 7; i++) {
-        ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-        ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      }
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      for (int i = 0; i < 7; i++) {
-        ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      }
-      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      for (int i = 0; i < 6; i++) {
-        ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      }
-      mpu.calibration(false);
-      wd.calibration();
-      mpu.calibrationWait();
-      ma.enable();
       break;
     case 3:
-      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      //      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      //      ma.set_action(MoveAction::FAST_TURN_LEFT_90);
-      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      //      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      //      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      //      ma.set_action(MoveAction::FAST_TURN_RIGHT_90);
-      //      ma.set_action(MoveAction::FAST_GO_STRAIGHT);
-      //      ma.set_path("srllrrllrrllrrsrssllrllrrssssrsssssssrssrrllsrrlrlrlsllrlrlrlrllrlrrsrll");
-      //      ma.set_path("srssssslsslsslssrssrssrssrsslsslsslsslssrssrssrssrsslsslsslsslssrssrssrssrsslsslsslsslss");
-      ma.set_path("srllrr");
-      mpu.calibration(false);
-      wd.calibration();
-      mpu.calibrationWait();
-      ma.enable();
       break;
   }
 }
