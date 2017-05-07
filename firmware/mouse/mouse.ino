@@ -188,33 +188,59 @@ void task() {
   bz.play(Buzzer::SELECT);
   switch (preset) {
     case 0:
-      sr.set_action(SearchRun::START_STEP);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::TURN_LEFT_90);
-      sr.set_action(SearchRun::TURN_LEFT_90);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::GO_STRAIGHT);
-      sr.set_action(SearchRun::GO_STRAIGHT);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::TURN_LEFT_90);
-      sr.set_action(SearchRun::TURN_LEFT_90);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::TURN_RIGHT_90);
-      sr.set_action(SearchRun::GO_STRAIGHT);
-      sr.set_action(SearchRun::TURN_BACK);
-      sr.set_action(SearchRun::STOP);
+      ms.start();
+      break;
+    case 1:
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_LEFT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
       mpu.calibration(false);
       wd.calibration();
       mpu.calibrationWait();
-      sr.enable();
-      break;
-    case 1:
+      fr.enable();
       break;
     case 2:
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
+      fr.enable();
       break;
     case 3:
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_LEFT_90);
+      fr.set_action(FastRun::FAST_TURN_LEFT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_LEFT_90);
+      fr.set_action(FastRun::FAST_TURN_LEFT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
+      fr.set_action(FastRun::FAST_GO_STRAIGHT);
+      mpu.calibration(false);
+      wd.calibration();
+      mpu.calibrationWait();
+      fr.enable();
       break;
   }
 }
