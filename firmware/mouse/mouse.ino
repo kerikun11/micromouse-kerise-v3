@@ -70,76 +70,71 @@ void setup() {
   ref.init();
 
   wd.enable();
-  //  lg.start();
+  //    lg.start();
 }
 
 void loop() {
-  //    mpu.print();
+  //  mpu.print();
   //  as.print();
   //  wd.print();
-  //    delay(100);
+  //  delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
   //  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
   //  delay(10);
 
-  //  if (btn.pressed) {
-  //    btn.flags = 0;
-  //    bz.play(Buzzer::CONFIRM);
-  //    delay(1000);
-  //    mpu.calibration();
-  //    bool suction = true;
-  //    if (suction) fan.drive(0.3);
-  //    delay(200);
-  //    lg.start();
-  //    sc.enable(suction);
-  //#if 0
-  //    const float accel = 9000;
-  //    const float decel = 9000;
-  //    const float v_max = 1200;
-  //    const float v_start = 0;
-  //    float T = 1.5f * (v_max - v_start) / accel;
-  //    for (int ms = 0; ms / 1000.0f < T; ms++) {
-  //      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
-  //      sc.set_target(velocity_a, 0);
-  //      delay(1);
-  //    }
-  //    bz.play(Buzzer::SELECT);
-  //    delay(200);
-  //    bz.play(Buzzer::SELECT);
-  //    for (float v = v_max; v > 0; v -= decel / 1000) {
-  //      sc.set_target(v, 0);
-  //      delay(1);
-  //    }
-  //#else
-  //    sc.set_target(450, 0);
-  //    delay(400);
-  //#endif
-  //    sc.set_target(0, 0);
-  //    delay(400);
-  //    bz.play(Buzzer::CANCEL);
-  //    sc.disable();
-  //    fan.drive(0);
-  //    lg.end();
-  //  }
-  //  if (btn.long_pressing_1) {
-  //    btn.flags = 0;
-  //    bz.play(Buzzer::CONFIRM);
-  //    lg.print();
-  //  }
-
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    task();
+    delay(1000);
+    mpu.calibration();
+    bool suction = true;
+    if (suction) fan.drive(0.3);
+    delay(200);
+    lg.start();
+    sc.enable(suction);
+    const float accel = 9000;
+    const float decel = 9000;
+    const float v_max = 1200;
+    const float v_start = 0;
+    float T = 1.5f * (v_max - v_start) / accel;
+    for (int ms = 0; ms / 1000.0f < T; ms++) {
+      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+      sc.set_target(velocity_a, 0);
+      delay(1);
+    }
+    bz.play(Buzzer::SELECT);
+    delay(200);
+    bz.play(Buzzer::SELECT);
+    for (float v = v_max; v > 0; v -= decel / 1000) {
+      sc.set_target(v, 0);
+      delay(1);
+    }
+    sc.set_target(0, 0);
+    delay(400);
+    bz.play(Buzzer::CANCEL);
+    sc.disable();
+    fan.drive(0);
+    lg.end();
   }
-  if (btn.long_pressed_1) {
+  if (btn.long_pressing_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    //    ms.printWall();
     lg.print();
   }
+
+  //  if (btn.pressed) {
+  //    btn.flags = 0;
+  //    bz.play(Buzzer::CONFIRM);
+  //    task();
+  //  }
+  //  if (btn.long_pressed_1) {
+  //    btn.flags = 0;
+  //    bz.play(Buzzer::CONFIRM);
+  //    ms.printWall();
+  //    //    lg.print();
+  //  }
 
   //  if (btn.pressed) {
   //    btn.flags = 0;
@@ -160,7 +155,7 @@ int waitForSelect(int range = 4) {
     int value = (((int)as.position(0) + (int)as.position(1)) / 5) % range;
     if (value != prev) {
       prev = value;
-      //      bz.play(Buzzer::SELECT);
+      //      for (int i = 0; i < value+1; i++) bz.play(Buzzer::SELECT);
       led = value;
     }
     if (btn.pressed) {

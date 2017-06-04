@@ -82,7 +82,7 @@ class Reflector: private TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       const int sample_wait_us = 10;
-      const int charging_wait_us = 240;
+      const int charging_wait_us = 300;
       int temp;
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);

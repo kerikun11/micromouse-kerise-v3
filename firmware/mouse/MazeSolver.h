@@ -213,7 +213,7 @@ class MazeSolver: TaskBase {
       while (1) {
         sr.waitForEnd();
 
-        //        delay(500); /* debug */
+        delay(500); /* debug */
         Direction wallData = getWallData();
         printf("Vec:\t(%d, %d)\tWall:\t0x%X\n", pos.x, pos.y, (int)wallData);
 
@@ -302,39 +302,39 @@ class MazeSolver: TaskBase {
       // end drive
       delay(2000);
 
-      //      // back to start
-      //      printf("Back to Start\n");
-      //      fr.setPosition();
-      //      fr.set_action(FastRun::RETURN);
-      //      fr.set_action(MoveAction::GO_HALF);
-      //      for (size_t i = 0; i < runSequence.size(); i++) {
-      //        const Operation& op = runSequence[runSequence.size() - 1 - i];
-      //        if (i == runSequence.size() - 1) {
-      //          fr.set_action(MoveAction::GO_STRAIGHT, op.n - 1);
-      //        } else {
-      //          switch (op.op) {
-      //            case Operation::FORWARD:
-      //              fr.set_action(MoveAction::GO_STRAIGHT, op.n);
-      //              break;
-      //            case Operation::TURN_LEFT90:
-      //              fr.set_action(MoveAction::TURN_RIGHT_90, op.n);
-      //              break;
-      //            case Operation::TURN_RIGHT90:
-      //              fr.set_action(MoveAction::TURN_LEFT_90, op.n);
-      //              break;
-      //            case Operation::TURN_LEFT45:
-      //            case Operation::TURN_RIGHT45:
-      //            case Operation::FORWARD_DIAG:
-      //            case Operation::STOP:
-      //              break;
-      //          }
-      //        }
-      //      }
-      //      fr.set_action(MoveAction::START_INIT);
-      //      fr.enable();
-      //      fr.waitForEnd();
-      //      fr.disable();
-      //      bz.play(Buzzer::CANCEL);
+      // back to start
+      printf("Back to Start\n");
+      sr.setPosition();
+      sr.set_action(SearchRun::RETURN);
+      sr.set_action(SearchRun::GO_HALF);
+      for (size_t i = 0; i < runSequence.size(); i++) {
+        const Operation& op = runSequence[runSequence.size() - 1 - i];
+        if (i == runSequence.size() - 1) {
+          sr.set_action(SearchRun::GO_STRAIGHT, op.n - 1);
+        } else {
+          switch (op.op) {
+            case Operation::FORWARD:
+              sr.set_action(SearchRun::GO_STRAIGHT, op.n);
+              break;
+            case Operation::TURN_LEFT90:
+              sr.set_action(SearchRun::TURN_RIGHT_90, op.n);
+              break;
+            case Operation::TURN_RIGHT90:
+              sr.set_action(SearchRun::TURN_LEFT_90, op.n);
+              break;
+            case Operation::TURN_LEFT45:
+            case Operation::TURN_RIGHT45:
+            case Operation::FORWARD_DIAG:
+            case Operation::STOP:
+              break;
+          }
+        }
+      }
+      sr.set_action(SearchRun::START_INIT);
+      sr.enable();
+      sr.waitForEnd();
+      sr.disable();
+      bz.play(Buzzer::CANCEL);
     }
     virtual void task() {
       delay(500);
