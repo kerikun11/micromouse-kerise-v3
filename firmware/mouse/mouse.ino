@@ -84,57 +84,58 @@ void loop() {
   //  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
   //  delay(10);
 
-  if (btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    delay(1000);
-    mpu.calibration();
-    bool suction = true;
-    if (suction) fan.drive(0.3);
-    delay(200);
-    lg.start();
-    sc.enable(suction);
-    const float accel = 9000;
-    const float decel = 9000;
-    const float v_max = 1200;
-    const float v_start = 0;
-    float T = 1.5f * (v_max - v_start) / accel;
-    for (int ms = 0; ms / 1000.0f < T; ms++) {
-      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
-      sc.set_target(velocity_a, 0);
-      delay(1);
-    }
-    bz.play(Buzzer::SELECT);
-    delay(200);
-    bz.play(Buzzer::SELECT);
-    for (float v = v_max; v > 0; v -= decel / 1000) {
-      sc.set_target(v, 0);
-      delay(1);
-    }
-    sc.set_target(0, 0);
-    delay(400);
-    bz.play(Buzzer::CANCEL);
-    sc.disable();
-    fan.drive(0);
-    lg.end();
-  }
-  if (btn.long_pressing_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    lg.print();
-  }
-
   //  if (btn.pressed) {
   //    btn.flags = 0;
   //    bz.play(Buzzer::CONFIRM);
-  //    task();
+  //    delay(1000);
+  //    mpu.calibration();
+  //    bool suction = true;
+  //    if (suction) fan.drive(0.3);
+  //    delay(200);
+  //    lg.start();
+  //    sc.enable(suction);
+  //    const float accel = 9000;
+  //    const float decel = 9000;
+  //    const float v_max = 1200;
+  //    const float v_start = 0;
+  //    float T = 1.5f * (v_max - v_start) / accel;
+  //    for (int ms = 0; ms / 1000.0f < T; ms++) {
+  //      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+  //      sc.set_target(velocity_a, 0);
+  //      delay(1);
+  //    }
+  //    bz.play(Buzzer::SELECT);
+  //    delay(200);
+  //    bz.play(Buzzer::SELECT);
+  //    for (float v = v_max; v > 0; v -= decel / 1000) {
+  //      sc.set_target(v, 0);
+  //      delay(1);
+  //    }
+  //    sc.set_target(0, 0);
+  //    delay(400);
+  //    bz.play(Buzzer::CANCEL);
+  //    sc.disable();
+  //    fan.drive(0);
+  //    lg.end();
   //  }
-  //  if (btn.long_pressed_1) {
+  //  if (btn.long_pressing_1) {
   //    btn.flags = 0;
   //    bz.play(Buzzer::CONFIRM);
-  //    ms.printWall();
-  //    //    lg.print();
+  //    lg.print();
   //  }
+
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    if (ms.isRunning()) ms.terminate();
+    task();
+  }
+  if (btn.long_pressed_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    ms.printWall();
+    //    lg.print();
+  }
 
   //  if (btn.pressed) {
   //    btn.flags = 0;
@@ -155,7 +156,8 @@ int waitForSelect(int range = 4) {
     int value = (((int)as.position(0) + (int)as.position(1)) / 5) % range;
     if (value != prev) {
       prev = value;
-      //      for (int i = 0; i < value+1; i++) bz.play(Buzzer::SELECT);
+      for (int i = 0; i < value / 4; i++) bz.play(Buzzer::SELECT);
+      //      for (int i = 0; i < value; i++) bz.play(Buzzer::SELECT);
       led = value;
     }
     if (btn.pressed) {
@@ -173,72 +175,56 @@ int waitForSelect(int range = 4) {
 }
 
 void task() {
-  int preset = waitForSelect();
-  if (preset < 0) return;
-  delay(500);
-  if (!waitForCover()) {
-    return;
-  }
-  delay(500);
-  bz.play(Buzzer::SELECT);
-  switch (preset) {
+  int mode = waitForSelect(4);
+  switch (mode) {
     case 0:
+      if (!waitForCover()) return;
       ms.start();
       break;
-    case 1:
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_LEFT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      mpu.calibration(false);
-      wd.calibration();
-      mpu.calibrationWait();
-      fr.enable();
+    case 1: {
+        int speed = waitForSelect(8);
+        fr.fast_speed = 300 + 300 * speed;
+      }
+      if (!waitForCover()) return;
+      ms.start();
       break;
-    case 2:
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      mpu.calibration(false);
-      wd.calibration();
-      mpu.calibrationWait();
-      fr.enable();
-      break;
-    case 3:
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_LEFT_90);
-      fr.set_action(FastRun::FAST_TURN_LEFT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_LEFT_90);
-      fr.set_action(FastRun::FAST_TURN_LEFT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_TURN_RIGHT_90);
-      fr.set_action(FastRun::FAST_GO_STRAIGHT);
-      mpu.calibration(false);
-      wd.calibration();
-      mpu.calibrationWait();
-      fr.enable();
+    case 2: {
+        int gain = waitForSelect(8);
+        fr.fast_curve_gain = 0.1 + 0.1f * gain;
+      }
+      if (!waitForCover()) return;
+      ms.start();
       break;
   }
 }
+
+//void task() {
+//  int preset = waitForSelect();
+//  if (preset < 0) return;
+//  delay(500);
+//  if (!waitForCover()) {
+//    return;
+//  }
+//  delay(1000);
+//  bz.play(Buzzer::SELECT);
+//  switch (preset) {
+//    case 0:
+//      fr.set_speed();
+//      ms.start();
+//      break;
+//    case 1:
+//      ms.start();
+//      break;
+//    case 2:
+//      fr.set_speed();
+//      ms.start();
+//      break;
+//    case 3:
+//      fr.set_speed();
+//      ms.start();
+//      break;
+//  }
+//}
 
 bool waitForCover() {
   while (1) {

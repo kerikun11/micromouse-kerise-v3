@@ -50,10 +50,14 @@ class MazeSolver: TaskBase {
       maze.printWall();
       printf("State: %d\n", agent.getState());
     }
+    bool isRunning() {
+      return handle != NULL;
+    }
   private:
     Maze maze, maze_backup;
     Agent agent;
     Agent::State prevState = Agent::IDLE;
+    IndexVec caribration_count;
     Direction dir;
     IndexVec pos;
 
@@ -213,7 +217,7 @@ class MazeSolver: TaskBase {
       while (1) {
         sr.waitForEnd();
 
-        delay(500); /* debug */
+        delay(200); /* debug */
         Direction wallData = getWallData();
         printf("Vec:\t(%d, %d)\tWall:\t0x%X\n", pos.x, pos.y, (int)wallData);
 
@@ -340,9 +344,13 @@ class MazeSolver: TaskBase {
       delay(500);
       search_run();
       delay(2000);
-      fast_run();
       while (1) {
-        delay(1000);
+        fast_run();
+        delay(3000);
+        fr.fast_speed *= 1.2;
+        fr.fast_curve_gain *= 1.2;
+        bz.play(Buzzer::CONFIRM);
+        delay(2000);
       }
     }
 };

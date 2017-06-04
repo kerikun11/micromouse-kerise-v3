@@ -39,14 +39,12 @@ class Logger: TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
         char str[64];
         const int i = 0;
         sprintf(str, "%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Kp * sc.Ki * (0 - sc.integral.wheel[i]), sc.Kp * sc.Kd * (0 - sc.differential.wheel[i]));
-        //        sprintf(str, "%.0f,%.0f,%.0f\n", sc.actual.wheel[0], sc.actual.wheel[1], sc.target.wheel[i]);
-        //        log += str;
-        printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
-        //        printf("-3,3,%.3f\n", mpu.gyro.z);
+        log += str;
+        //        printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
       }
     }
 };

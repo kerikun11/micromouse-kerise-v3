@@ -229,6 +229,7 @@ class FastRun: TaskBase {
   public:
     FastRun() : TaskBase("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE) {
       xLastWakeTime = xTaskGetTickCount();
+      set_speed();
     }
     virtual ~FastRun() {}
     enum FAST_ACTION : char {
@@ -251,6 +252,12 @@ class FastRun: TaskBase {
       FAST_TURN_LEFT_180 = 'Q',
       FAST_TURN_RIGHT_180 = 'E',
     };
+    float fast_speed;
+    float fast_curve_gain;
+    void set_speed(const float speed = 900, const float gain = 0.4) {
+      fast_speed = speed;
+      fast_curve_gain = gain;
+    }
     void enable() {
       printf("FastRun Enabled\n");
       delete_task();
@@ -300,7 +307,6 @@ class FastRun: TaskBase {
     }
   private:
     portTickType xLastWakeTime;
-    float fast_speed;
     Position origin;
     String path, last_path;
 
@@ -388,14 +394,14 @@ class FastRun: TaskBase {
       path.replace("xLLx", "l");
       printf("Path: %s\n", path.c_str());
 
-      const float v_max = 600;
-      const float curve_gain = 0.4f;
+      const float v_max = fast_speed;
+      const float curve_gain = fast_curve_gain;
       sc.enable(true);
       setPosition();
       printPosition("S");
       int path_index = 0;
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
-      fan.drive(0.2);
+      fan.drive(0.3);
       delay(500);
       while (1) {
         if (path_index > (int) path.length() - 1) break;

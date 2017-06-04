@@ -13,7 +13,7 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define SEARCH_WALL_ATTACH_ENABLED     true
+#define SEARCH_WALL_ATTACH_ENABLED     false
 #define SEARCH_WALL_AVOID_ENABLED      true
 #define SEARCH_WALL_AVOID_GAIN         0.00003f
 
@@ -77,7 +77,7 @@ class SearchTrajectory {
 class S90: public SearchTrajectory {
   public:
     S90(bool mirror = false) : mirror(mirror) {}
-    const float velocity = 100.0f;
+    const float velocity = 120.0f;
     const float straight = 5.0f;
   private:
     bool mirror;
@@ -109,7 +109,7 @@ class SearchRun: TaskBase {
     }
     virtual ~SearchRun() {}
     enum ACTION {
-      START_STEP, START_INIT, GO_STRAIGHT, GO_HALF, TURN_LEFT_90, TURN_RIGHT_90, TURN_BACK, RETURN, STOP,
+      START_STEP, START_INIT, GO_STRAIGHT, GO_HALF, TURN_LEFT_90, TURN_RIGHT_90, TURN_BACK, RETURN, TURN_LEFT_PUT, TURN_RIGHT_PUT, STOP,
     };
     struct Operation {
       enum ACTION action;
@@ -117,7 +117,7 @@ class SearchRun: TaskBase {
     };
     const char* action_string(enum ACTION action) {
       static const char name[][32] =
-      { "start_step", "start_init", "go_straight", "go_half", "turn_left_90", "turn_right_90", "turn_back", "return", "stop", };
+      { "start_step", "start_init", "go_straight", "go_half", "turn_left_90", "turn_right_90", "turn_back", "return", "turn_left_put", "turn_right_put", "stop", };
       return name[action];
     }
     void enable() {
@@ -185,15 +185,14 @@ class SearchRun: TaskBase {
       if (wd.wall().front[0] && wd.wall().front[1]) {
         while (1) {
           float trans = (wd.wall_difference().front[0] + wd.wall_difference().front[1]) * 100;
-          float rot = (wd.wall_difference().front[1] - wd.wall_difference().front[0]) * 12;
-          if (fabs(trans) < 0.2f && fabs(rot) < 0.1f) break;
+          float rot = (wd.wall_difference().front[1] - wd.wall_difference().front[0]) * 10;
+          if (fabs(trans) < 0.2f && fabs(rot) < 0.2f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         }
         sc.set_target(0, 0);
         printPosition("1");
         fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
-        //        fixPosition(Position(getRelativePosition().x, getRelativePosition().y, getRelativePosition().theta).rotate(origin.theta));
         printPosition("2");
         bz.play(Buzzer::SELECT);
         delay(1000);
@@ -205,7 +204,6 @@ class SearchRun: TaskBase {
       const float accel = 24 * M_PI;
       const float back_gain = 240.0f;
       int ms = 0;
-      fan.drive(0.2);
       delay(200);
       while (1) {
         if (fabs(sc.actual.rot) > speed) break;
@@ -234,11 +232,10 @@ class SearchRun: TaskBase {
       sc.set_target(0, 0);
       updateOrigin(Position(0, 0, angle));
       printPosition("Turn End");
-      fan.drive(0);
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 300;
-      const float decel = 300;
+      const float accel = 600;
+      const float decel = 600;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -275,8 +272,50 @@ class SearchRun: TaskBase {
       updateOrigin(tr.getEndPosition());
       printPosition("Trace End");
     }
+    void put_back() {
+      for (int i = 0; i < 120; i++) {
+        //        float theta = atan2f(-getRelativePosition().y, SEARCH_LOOK_AHEAD) - getRelativePosition().theta;
+        //        sc.set_target(-i, theta * SEARCH_PROP_GAIN);
+        sc.set_target(-i, -getRelativePosition().theta * 200.0f);
+        delay(1);
+      }
+      delay(200);
+      sc.disable();
+      mt.drive(-200, -200);
+      delay(200);
+      sc.enable();
+      updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
+      setPosition(origin);
+      fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
+    }
+    void uturn(const float velocity, const float v_end) {
+      WallDetector::WALL wall = wd.wall();
+      if (mpu.angle.z > 0) {
+        turn(-M_PI / 2);
+        if (wall.side[0]) {
+          put_back();
+          straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, 0, true);
+        }
+        turn(-M_PI / 2);
+        if (wall.front[0] && wall.front[1]) {
+          put_back();
+          straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, v_end, true);
+        }
+      } else {
+        turn(M_PI / 2);
+        if (wall.side[1]) {
+          put_back();
+          straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, 0, true);
+        }
+        turn(M_PI / 2);
+        if (wall.front[0] && wall.front[1]) {
+          put_back();
+          straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, v_end, true);
+        }
+      }
+    }
     virtual void task() {
-      const float velocity = 200;
+      const float velocity = 240;
       const float ahead_length = 0.0f;
       sc.enable();
       while (1) {
@@ -305,18 +344,11 @@ class SearchRun: TaskBase {
             break;
           case START_INIT:
             straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
-            wall_attach();
             turn(M_PI / 2);
-            wall_attach();
+            put_back();
+            straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, 0, true);
             turn(M_PI / 2);
-            for (int i = 0; i < 160; i++) {
-              sc.set_target(-i, -getRelativePosition().theta * 100.0f);
-              delay(1);
-            }
-            delay(200);
-            sc.disable();
-            mt.drive(-60, -60);
-            delay(400);
+            put_back();
             mt.free();
             while (q.size()) {
               q.pop();
@@ -333,7 +365,7 @@ class SearchRun: TaskBase {
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(false);
-              fan.drive(0.2);
+              fan.drive(0.3);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
               fan.drive(0);
@@ -343,39 +375,33 @@ class SearchRun: TaskBase {
           case TURN_RIGHT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(true);
-              fan.drive(0.2);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
-              fan.drive(0);
               straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
             }
             break;
           case TURN_BACK:
             straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
-            if (mpu.angle.z > 0) {
-              wall_attach();
-              turn(-M_PI / 2);
-              wall_attach();
-              turn(-M_PI / 2);
-            } else {
-              wall_attach();
-              turn(M_PI / 2);
-              wall_attach();
-              turn(M_PI / 2);
-            }
+            uturn(velocity, velocity);
             straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, velocity, true);
             break;
           case RETURN:
-            if (mpu.angle.z > 0) {
-              wall_attach();
-              turn(-M_PI / 2);
-              wall_attach();
-              turn(-M_PI / 2);
-            } else {
-              wall_attach();
+            uturn(velocity, 0);
+            break;
+          case TURN_LEFT_PUT: {
+              straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
               turn(M_PI / 2);
-              wall_attach();
-              turn(M_PI / 2);
+              put_back();
+              straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, velocity, true);
+              straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, velocity, true);
+            }
+            break;
+          case TURN_RIGHT_PUT: {
+              straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
+              turn(-M_PI / 2);
+              put_back();
+              straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, velocity, true);
+              straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, velocity, true);
             }
             break;
           case STOP:
