@@ -254,7 +254,7 @@ class FastRun: TaskBase {
     };
     float fast_speed;
     float fast_curve_gain;
-    void set_speed(const float speed = 900, const float gain = 0.4) {
+    void set_speed(const float speed = 300, const float gain = 0.3) {
       fast_speed = speed;
       fast_curve_gain = gain;
     }
@@ -322,8 +322,8 @@ class FastRun: TaskBase {
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 1200;
-      const float decel = 1200;
+      const float accel = 3000;
+      const float decel = 3000;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;

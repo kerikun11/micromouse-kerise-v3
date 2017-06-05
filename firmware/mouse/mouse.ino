@@ -133,7 +133,7 @@ void loop() {
   if (btn.long_pressed_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    ms.printWall();
+    ms.print();
     //    lg.print();
   }
 

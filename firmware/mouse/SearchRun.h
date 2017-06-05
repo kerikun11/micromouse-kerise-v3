@@ -202,7 +202,7 @@ class SearchRun: TaskBase {
     void turn(const float angle) {
       const float speed = 1.0 * M_PI;
       const float accel = 24 * M_PI;
-      const float back_gain = 240.0f;
+      const float back_gain = 200.0f;
       int ms = 0;
       delay(200);
       while (1) {
@@ -279,10 +279,12 @@ class SearchRun: TaskBase {
         sc.set_target(-i, -getRelativePosition().theta * 200.0f);
         delay(1);
       }
-      delay(200);
+      delay(100);
       sc.disable();
-      mt.drive(-200, -200);
+      mt.drive(-120, -120);
       delay(200);
+      mt.drive(-200, -200);
+      delay(100);
       sc.enable();
       updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
       setPosition(origin);
@@ -365,7 +367,7 @@ class SearchRun: TaskBase {
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(false);
-              fan.drive(0.3);
+              fan.drive(0.2);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
               fan.drive(0);
