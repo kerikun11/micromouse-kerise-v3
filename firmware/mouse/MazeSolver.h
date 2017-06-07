@@ -101,15 +101,16 @@ class MazeSolver: TaskBase {
           return false;
         }
         for (auto nextDir : nextDirs) {
-          const int calib_max = 3;
+          const int calib_max = 5;
           Vector nextVec = agent.getCurVec().next(nextDir);
           switch (Dir(nextDir - agent.getCurDir())) {
             case Dir::East:
+              calib++;
               sr.set_action(SearchRun::GO_STRAIGHT);
               break;
             case Dir::North:
-              calib++;
-              if (calib > calib_max && maze.nWall(nextVec) == 2) {
+              calib += 3;
+              if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
                 sr.set_action(SearchRun::TURN_LEFT_PUT);
                 calib = 0;
               } else {
@@ -121,8 +122,8 @@ class MazeSolver: TaskBase {
               calib = 0;
               break;
             case Dir::South:
-              calib++;
-              if (calib > calib_max && maze.nWall(nextVec) == 2) {
+              calib ++;
+              if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
                 sr.set_action(SearchRun::TURN_RIGHT_PUT);
                 calib = 0;
               } else {

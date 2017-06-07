@@ -57,7 +57,7 @@ class Reflector: private TaskBase {
       portYIELD_FROM_ISR();
     }
   private:
-    static const int ave_num = 128;
+    static const int ave_num = 64;
     int raw[4][ave_num];
     int value[4];
     int offset[4];
@@ -82,7 +82,7 @@ class Reflector: private TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       const int sample_wait_us = 10;
-      const int charging_wait_us = 300;
+      const int charging_wait_us = 400;
       int temp;
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);

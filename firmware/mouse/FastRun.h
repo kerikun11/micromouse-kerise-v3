@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         10
-#define FAST_PROP_GAIN          60
+#define FAST_PROP_GAIN          90
 
 //#define printf  lg.printf
 
@@ -322,8 +322,8 @@ class FastRun: TaskBase {
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 3000;
-      const float decel = 3000;
+      const float accel = 1500;
+      const float decel = 1500;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
