@@ -183,19 +183,33 @@ void task() {
       break;
     case 1: {
         int speed = waitForSelect(8);
-        fr.fast_speed = 300 + 300 * speed;
+        fr.fast_speed = 200 + 200 * speed;
       }
       if (!waitForCover()) return;
       ms.start();
       break;
     case 2: {
         int gain = waitForSelect(8);
-        fr.fast_curve_gain = 0.1 + 0.1f * gain;
+        fr.fast_curve_gain = 0.1f + 0.1f * gain;
       }
       if (!waitForCover()) return;
       ms.start();
       break;
+    //    case 3: {
+    //        ms.set_goal({Vector(0, 1)});
+    //      }
+    //      break;
+    case 3:
+      fr.set_path("srsssrlssllrlrrlrlsslrrllrsrllrsllrlrlslrsss");
+      bz.play(Buzzer::CONFIRM);
+      mpu.calibration();
+      fr.enable();
+      fr.waitForEnd();
+      fr.disable();
+
+      break;
   }
+  bz.play(Buzzer::SELECT);
 }
 
 //void task() {

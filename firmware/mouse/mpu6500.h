@@ -72,6 +72,13 @@ class MPU6500: public TaskBase {
     };
     Parameter accel, velocity, gyro, angle;
     void calibration(bool waitUntilTheEnd = true) {
+      delete_task();
+      writeReg(0x19, 0x07);
+      writeReg(0x1b, 0x18);
+      writeReg(0x1c, 0x18);
+      delay(100);
+      create_task();
+      delay(100);
       calibration_flag = true;
       if (waitUntilTheEnd) {
         calibrationWait();
@@ -168,7 +175,7 @@ class MPU6500: public TaskBase {
         accel_sum += accel;
         gyro_sum += gyro;
         static int calibration_counter;
-        const int ave_count = 2000;
+        const int ave_count = 1000;
         if (++calibration_counter >= ave_count) {
           accel_offset += accel_sum / ave_count;
           gyro_offset += gyro_sum / ave_count;

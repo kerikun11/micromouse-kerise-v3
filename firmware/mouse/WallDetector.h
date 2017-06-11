@@ -11,7 +11,7 @@
 
 #define WALL_DETECTOR_FLONT_RATIO   1.62f
 #define WALL_SIDE_DIV               1.8f  //< Response
-#define WALL_FRONT_DIV              3.0f  //< Response
+#define WALL_FRONT_DIV              2.8f  //< Response
 
 #define WALL_UPDATE_PERIOD_US       1000
 

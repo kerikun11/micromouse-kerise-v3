@@ -28,7 +28,7 @@
 #endif
 
 #define DEEPNESS 0
-#define SEARCHING_ADDITIALLY_AT_START 1
+#define SEARCHING_ADDITIALLY_AT_START 0
 
 typedef uint16_t step_t;
 
@@ -436,7 +436,7 @@ class StepMap {
 class Agent {
   public:
     Agent(Maze& maze, const std::vector<Vector>& goal) : maze(maze), stepMap(maze), goal(goal) {
-      reset();
+      reset(goal);
     }
     enum State {
       IDOLE,
@@ -467,6 +467,10 @@ class Agent {
       curDir = Dir::North;
       state = IDOLE;
       calcNextDir();
+    }
+    void reset(const std::vector<Vector>& goal) {
+      this->goal = goal;
+      reset();
     }
     void forceBackToStart() {
       if (state != REACHED_START) state = FORCE_BACKING_TO_START;
@@ -629,10 +633,34 @@ class Agent {
       }
       return true;
     }
+    void findShortestCandidates() {
+      stepMap.update(goal, StepMap::Goal);
+      stepMap.update({start}, StepMap::Start);
+      candidates.clear();
+      std::vector<step_t> goal_steps;
+      for (auto g : goal) goal_steps.push_back(stepMap.getStep(g, StepMap::Start));
+      step_t goal_step = *(std::min_element(goal_steps.begin(), goal_steps.end()));
+      for (int i = 0; i < MAZE_SIZE; i++) {
+        for (int j = 0; j < MAZE_SIZE; j++) {
+          Vector v(i, j);
+#if DEEPNESS == 0
+          if (stepMap.getStep(i, j) + stepMap.getStep(i, j, StepMap::Start) <= goal_step && maze.nKnown(Vector(i, j)) != 4) {
+            candidates.push_back(v);
+          }
+#elif DEEPNESS == 1
+          if (stepMap.getStep(i, j) != MAZE_STEP_MAX && maze.nKnown(Vector(i, j)) != 4) {
+            candidates.push_back(v);
+          }
+#endif
+        }
+      }
+    }
     const enum State calcNextDir(const Vector& pv, const Dir& pd, enum State state) {
       if (state == IDOLE) {
         step = 0; f = 0; l = 0; r = 0; b = 0;
-        state = SEARCHING_FOR_GOAL;
+        findShortestCandidates();
+        if (candidates.empty()) state = BACKING_TO_START;
+        else state = SEARCHING_FOR_GOAL;
 #if SEARCHING_ADDITIALLY_AT_START
         state = SEARCHING_ADDITIONALLY;
 #endif
@@ -659,26 +687,7 @@ class Agent {
       }
 
       if (state == SEARCHING_ADDITIONALLY) {
-        stepMap.update(goal, StepMap::Goal);
-        stepMap.update({start}, StepMap::Start);
-        candidates.clear();
-        std::vector<step_t> goal_steps;
-        for (auto g : goal) goal_steps.push_back(stepMap.getStep(g, StepMap::Start));
-        step_t goal_step = *(std::min_element(goal_steps.begin(), goal_steps.end()));
-        for (int i = 0; i < MAZE_SIZE; i++) {
-          for (int j = 0; j < MAZE_SIZE; j++) {
-            Vector v(i, j);
-#if DEEPNESS == 0
-            if (stepMap.getStep(i, j) + stepMap.getStep(i, j, StepMap::Start) <= goal_step && maze.nKnown(Vector(i, j)) != 4) {
-              candidates.push_back(v);
-            }
-#elif DEEPNESS == 1
-            if (stepMap.getStep(i, j) != MAZE_STEP_MAX && maze.nKnown(Vector(i, j)) != 4) {
-              candidates.push_back(v);
-            }
-#endif
-          }
-        }
+        findShortestCandidates();
         if (candidates.empty()) {
           state = BACKING_TO_START;
         } else {

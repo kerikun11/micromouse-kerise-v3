@@ -15,10 +15,10 @@
 
 #define SEARCH_WALL_ATTACH_ENABLED     false
 #define SEARCH_WALL_AVOID_ENABLED      true
-#define SEARCH_WALL_AVOID_GAIN         0.00002f
+#define SEARCH_WALL_AVOID_GAIN         0.000024f
 
 #define SEARCH_LOOK_AHEAD   5
-#define SEARCH_PROP_GAIN    180
+#define SEARCH_PROP_GAIN    60
 
 #define SEARCH_RUN_TASK_PRIORITY   3
 #define SEARCH_RUN_STACK_SIZE      8192
@@ -279,12 +279,10 @@ class SearchRun: TaskBase {
         sc.set_target(-i, -getRelativePosition().theta * 200.0f);
         delay(1);
       }
-      delay(100);
-      sc.disable();
-      mt.drive(-120, -120);
       delay(200);
-      mt.drive(-200, -200);
-      delay(100);
+      sc.disable();
+      mt.drive(-300, -300);
+      delay(200);
       sc.enable();
       updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
       setPosition(origin);
@@ -318,6 +316,7 @@ class SearchRun: TaskBase {
     }
     virtual void task() {
       const float velocity = 240;
+      const float v_max = 360;
       const float ahead_length = 0.0f;
       sc.enable();
       while (1) {
@@ -325,7 +324,7 @@ class SearchRun: TaskBase {
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
           S90 tr;
           Position cur = getRelativePosition();
-          const float decel = 1200;
+          const float decel = 600;
           float extra = tr.straight - ahead_length - cur.x - SEARCH_LOOK_AHEAD;
           float v = sqrt(2 * decel * fabs(extra));
           if (v > velocity) v = velocity;
@@ -348,7 +347,7 @@ class SearchRun: TaskBase {
             straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
             turn(M_PI / 2);
             put_back();
-            straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, velocity, 0, true);
+            straight_x(SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2, v_max, 0, true);
             turn(M_PI / 2);
             put_back();
             mt.free();
@@ -359,10 +358,10 @@ class SearchRun: TaskBase {
               delay(1000);
             }
           case GO_STRAIGHT:
-            straight_x(SEGMENT_WIDTH * num, velocity, velocity, true);
+            straight_x(SEGMENT_WIDTH * num, v_max, velocity, true);
             break;
           case GO_HALF:
-            straight_x(SEGMENT_WIDTH / 2 * num, velocity, velocity, true);
+            straight_x(SEGMENT_WIDTH / 2 * num, v_max, velocity, true);
             break;
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {

@@ -21,8 +21,8 @@
 
 #define FAST_RUN_PERIOD         1000
 
-#define FAST_LOOK_AHEAD         10
-#define FAST_PROP_GAIN          90
+#define FAST_LOOK_AHEAD         8
+#define FAST_PROP_GAIN          120
 
 //#define printf  lg.printf
 

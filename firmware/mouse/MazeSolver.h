@@ -22,8 +22,8 @@
 #define MAZE_SOLVER_STACK_SIZE    8092
 
 //#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
-//#define MAZE_GOAL {Vector(6,6), Vector(6,7), Vector(7,6), Vector(7,7)}
-#define MAZE_GOAL {Vector(1,0)}
+#define MAZE_GOAL {Vector(3,7), Vector(3,8), Vector(4,7), Vector(4,8)}
+//#define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 
 //#define printf  lg.printf
@@ -48,6 +48,9 @@ class MazeSolver: TaskBase {
     }
     bool isRunning() {
       return handle != NULL;
+    }
+    void set_goal(const std::vector<Vector>& goal) {
+      agent.reset(goal);
     }
   private:
     Maze maze;
@@ -83,6 +86,10 @@ class MazeSolver: TaskBase {
         agent.calcNextDir();
         Agent::State newState = agent.getState();
         if (newState != prevState && newState == Agent::REACHED_START) break;
+        if (newState != prevState && newState == Agent::REACHED_GOAL) {
+          /* REACHED_GOAL */
+          bz.play(Buzzer::CONFIRM);
+        }
         if (newState != prevState && newState == Agent::REACHED_GOAL) {
           /* REACHED_GOAL */
           bz.play(Buzzer::CONFIRM);
