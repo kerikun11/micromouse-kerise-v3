@@ -273,13 +273,13 @@ class SearchRun: TaskBase {
       printPosition("Trace End");
     }
     void put_back() {
-      for (int i = 0; i < 120; i++) {
+      for (int i = 0; i < 150; i++) {
         //        float theta = atan2f(-getRelativePosition().y, SEARCH_LOOK_AHEAD) - getRelativePosition().theta;
         //        sc.set_target(-i, theta * SEARCH_PROP_GAIN);
         sc.set_target(-i, -getRelativePosition().theta * 200.0f);
         delay(1);
       }
-      delay(200);
+      delay(240);
       sc.disable();
       mt.drive(-300, -300);
       delay(200);
@@ -366,10 +366,10 @@ class SearchRun: TaskBase {
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(false);
-              fan.drive(0.2);
+              //              fan.drive(0.2);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
-              fan.drive(0);
+              //              fan.drive(0);
               straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
             }
             break;

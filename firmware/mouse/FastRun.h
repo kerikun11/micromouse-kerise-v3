@@ -21,7 +21,7 @@
 
 #define FAST_RUN_PERIOD         1000
 
-#define FAST_LOOK_AHEAD         8
+#define FAST_LOOK_AHEAD         10
 #define FAST_PROP_GAIN          120
 
 //#define printf  lg.printf
@@ -254,7 +254,7 @@ class FastRun: TaskBase {
     };
     float fast_speed;
     float fast_curve_gain;
-    void set_speed(const float speed = 300, const float gain = 0.3) {
+    void set_speed(const float speed = 400, const float gain = 0.36) {
       fast_speed = speed;
       fast_curve_gain = gain;
     }

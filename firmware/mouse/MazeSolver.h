@@ -22,8 +22,8 @@
 #define MAZE_SOLVER_STACK_SIZE    8092
 
 //#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
-#define MAZE_GOAL {Vector(3,7), Vector(3,8), Vector(4,7), Vector(4,8)}
-//#define MAZE_GOAL {Vector(1,0)}
+//#define MAZE_GOAL {Vector(3,7), Vector(3,8), Vector(4,7), Vector(4,8)}
+#define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 
 //#define printf  lg.printf
@@ -90,8 +90,8 @@ class MazeSolver: TaskBase {
           /* REACHED_GOAL */
           bz.play(Buzzer::CONFIRM);
         }
-        if (newState != prevState && newState == Agent::REACHED_GOAL) {
-          /* REACHED_GOAL */
+        if (newState != prevState && newState == Agent::SEARCHING_ADDITIONALLY) {
+          /* SEARCHING_ADDITIONALLY */
           bz.play(Buzzer::CONFIRM);
         }
         if (newState != prevState && newState == Agent::BACKING_TO_START) {
@@ -229,8 +229,8 @@ class MazeSolver: TaskBase {
       while (1) {
         fast_run();
         delay(3000);
-        fr.fast_speed *= 1.2;
-        fr.fast_curve_gain *= 1.2;
+        fr.fast_speed *= 1.1;
+        fr.fast_curve_gain *= 1.1;
         bz.play(Buzzer::CONFIRM);
         delay(2000);
       }
