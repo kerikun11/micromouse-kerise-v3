@@ -18,7 +18,7 @@
 #define SEARCH_WALL_AVOID_GAIN         0.000024f
 
 #define SEARCH_LOOK_AHEAD   5
-#define SEARCH_PROP_GAIN    60
+#define SEARCH_PROP_GAIN    30
 
 #define SEARCH_RUN_TASK_PRIORITY   3
 #define SEARCH_RUN_STACK_SIZE      8192
@@ -202,7 +202,7 @@ class SearchRun: TaskBase {
     void turn(const float angle) {
       const float speed = 1.0 * M_PI;
       const float accel = 24 * M_PI;
-      const float back_gain = 200.0f;
+      const float back_gain = 120.0f;
       int ms = 0;
       delay(200);
       while (1) {

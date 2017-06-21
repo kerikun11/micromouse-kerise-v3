@@ -70,7 +70,7 @@ void setup() {
   ref.init();
 
   wd.enable();
-  //    lg.start();
+  //  lg.start();
 }
 
 void loop() {
@@ -96,7 +96,7 @@ void loop() {
   //    sc.enable(suction);
   //    const float accel = 9000;
   //    const float decel = 9000;
-  //    const float v_max = 1200;
+  //    const float v_max = 1800;
   //    const float v_start = 0;
   //    float T = 1.5f * (v_max - v_start) / accel;
   //    for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -195,10 +195,6 @@ void task() {
       if (!waitForCover()) return;
       ms.start();
       break;
-    //    case 3: {
-    //        ms.set_goal({Vector(0, 1)});
-    //      }
-    //      break;
     case 3:
       fr.set_path("srsssrlssllrlrrlrlsslrrllrsrllrsllrlrlslrsss");
       bz.play(Buzzer::CONFIRM);
@@ -206,7 +202,6 @@ void task() {
       fr.enable();
       fr.waitForEnd();
       fr.disable();
-
       break;
   }
   bz.play(Buzzer::SELECT);
@@ -243,7 +238,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0) > 1000 && ref.front(1) > 1000) {
+    if (ref.front(0) > 1000 && ref.front(1) > 1600) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }

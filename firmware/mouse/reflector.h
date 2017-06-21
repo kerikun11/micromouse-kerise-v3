@@ -57,7 +57,7 @@ class Reflector: private TaskBase {
       portYIELD_FROM_ISR();
     }
   private:
-    static const int ave_num = 64;
+    static const int ave_num = 16;
     int raw[4][ave_num];
     int value[4];
     int offset[4];
@@ -82,10 +82,10 @@ class Reflector: private TaskBase {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       const int sample_wait_us = 10;
-      const int charging_wait_us = 400;
+//      const int charging_wait_us = 1000;
       int temp;
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+//        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
         for (int i = 0; i < 4; i++) {
           for (int j = ave_num - 1; j > 0; j--) {
@@ -94,7 +94,8 @@ class Reflector: private TaskBase {
         }
 
         digitalWrite(PR_TX_SL_FR_PIN, LOW);
-        delayMicroseconds(charging_wait_us);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        //        delayMicroseconds(charging_wait_us);
         digitalWrite(PR_TX_SL_FR_PIN, HIGH);
         delayMicroseconds(sample_wait_us);
         assert(adcStart(PR_RX_SL_PIN));
@@ -106,7 +107,8 @@ class Reflector: private TaskBase {
         raw[2][0] = (temp < 0) ? 1 : temp;
 
         digitalWrite(PR_TX_SR_FL_PIN, LOW);
-        delayMicroseconds(charging_wait_us);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        //        delayMicroseconds(charging_wait_us);
         digitalWrite(PR_TX_SR_FL_PIN, HIGH);
         delayMicroseconds(sample_wait_us);
         assert(adcStart(PR_RX_SR_PIN));

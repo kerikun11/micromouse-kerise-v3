@@ -78,7 +78,7 @@ class MazeSolver: TaskBase {
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
-        delay(200);
+//        delay(200);
         agent.updateWall(v, d + 1, wd.wall().side[0]); // left
         agent.updateWall(v, d + 0, wd.wall().front[0] && wd.wall().front[1]); // front
         agent.updateWall(v, d - 1, wd.wall().side[1]); // right

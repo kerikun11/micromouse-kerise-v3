@@ -51,8 +51,8 @@ class Buzzer : private TaskBase {
       while (1) {
         Music music;
         if (xQueueReceive(playList, &music, (1000 - 100) / portTICK_RATE_MS) == pdFALSE) {
-          //          sound(NOTE_C, 7, 50);
-          //          mute(50);
+          sound(NOTE_C, 7, 50);
+          mute(50);
           continue;
         }
         switch (music) {
