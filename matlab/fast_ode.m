@@ -1,52 +1,36 @@
-clear
-segment = 90;
+clear;
+seg_full = 90;
+seg_half = seg_full/2;
+seg_diag = seg_half*sqrt(2);
 %{
 % search 90
-pos_end = [segment/2-10, segment/2-10, pi/2];
+pos_end = [segment/2-5, segment/2-5, pi/2];
 %}
 %{
 % fast 45
 pos_end = [segment, segment/2, pi/4];
 %}
-%%{
+%{
 % fast 90
 pos_end = [segment/2*2-10, segment/2*2-10, pi/2];
 %}
 %{
 % fast V90
-pos_end = [segment/2*sqrt(2), segment/2*sqrt(2), pi/2];
+pos_offset = [5, 0, pi/4];
+pos_end = [seg_diag-5, seg_diag-5, pi/2];
+%}
+%%{
+% fast P90
+pos_offset = [0, 0, pi/4];
+pos_end = [seg_diag*2, seg_diag*2, pi/2];
 %}
 %{
 % fast 135
-pos_end = [0+25, segment, pi*3/4];
+pos_offset = [-25, 0, 0];
+pos_end = [seg_half-25, seg_full, pi*3/4];
 %}
 %{
 % fast 180
-pos_end = [0, segment, pi];
-%}
-
-%{
-% 30
-pos_end = [segment/2*(sqrt(3)+1)/2, segment/2*(sqrt(3)-1)/2, pi/6];
-%}
-%{
-% 60
-pos_end = [segment*2/3, segment/2, pi/3];
-%}
-%{
-% 90
-pos_end = [segment/2, segment/2, pi/2];
-%}
-%{
-% 120
-pos_end = [segment/2, segment/2*sqrt(3), pi*2/3];
-%}
-%{
-% 150
-pos_end = [20, segment, pi/6*5];
-%}
-%{
-% 180
 pos_end = [0, segment, pi];
 %}
 
@@ -58,6 +42,7 @@ dx = 1;
 T = omega_max / omega_dot * pi;
 [t, theta] = ode45(@(t, theta) omega_max * sin(pi*t/T)^2, [0 T], 0);
 
+figure(1);
 if angle < theta(end)
     theta_gain = sqrt(angle / theta(end));
     T = T * theta_gain;
@@ -147,3 +132,16 @@ subplot(6,1,[3 6]);
 title(sprintf('$$ v_{max}: %.3f $$', v), 'Interpreter','latex', 'FontSize', 12);
 xlabel('x', 'Interpreter','latex', 'FontSize', 12);
 ylabel('y', 'Interpreter','latex', 'FontSize', 12);
+axis equal;
+xlim([min(pos(:,1)), max(pos(:,1))]);
+ylim([min(pos(:,2)), max(pos(:,2))]);
+
+trans = [cos(pos_offset(3)), -sin(pos_offset(3));
+    sin(pos_offset(3)), cos(pos_offset(3))];
+tra = (pos(:,1:2)+ones(size(pos,1),1)*pos_offset(1, 1:2)) * inv(trans);
+figure(2); hold off;
+plot(tra(:,1), tra(:,2), 'LineWidth', 4); hold on;
+axis equal;
+xlim([min(tra(:,1)), max(tra(:,1))]);
+ylim([min(tra(:,2)), max(tra(:,2))]);
+grid on;
