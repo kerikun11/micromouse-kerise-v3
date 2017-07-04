@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source C:/Users/kerikun11/OneDrive/Github/KERISE/kicad/KERISE.sch)
-    (date "2017/06/21 15:48:41")
+    (date "2017/07/04 10:07:32")
     (tool "Eeschema 4.0.6")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -731,7 +731,7 @@
       (tstamp 593217CA))
     (comp (ref U11)
       (value FT234XD)
-      (footprint Housings_DFN_QFN:DFN-12-1EP_3x3mm_Pitch0.45mm)
+      (footprint mouse:DFN-12-1EP_3x3mm_Pitch0.45mm)
       (libsource (lib KERISE) (part FT234XD))
       (sheetpath (names /Writer/) (tstamps /592C5056/))
       (tstamp 592C50E3))
@@ -1253,14 +1253,14 @@
         (pin (num 2) (name XOUT) (type input))
         (pin (num 3) (name GND) (type input)))))
   (libraries
-    (library (logical linear)
-      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\linear.lib"))
-    (library (logical KERISE)
-      (uri KERISE.lib))
     (library (logical device)
       (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\device.lib"))
+    (library (logical linear)
+      (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\linear.lib"))
     (library (logical conn)
       (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\conn.lib"))
+    (library (logical KERISE)
+      (uri KERISE.lib))
     (library (logical switches)
       (uri "C:\\Program Files\\KiCad\\share\\kicad\\library\\switches.lib")))
   (nets
