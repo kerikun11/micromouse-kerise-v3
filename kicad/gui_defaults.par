@@ -82,7 +82,7 @@
     (edit_vias
       not_visible
       (bounds
-        100 150 419 738
+        100 150 419 482
       )
     )
     (edit_net_rules

@@ -11,43 +11,25 @@
     (via_costs 50)
     (plane_via_costs 5)
     (start_ripup_costs 100)
-    (start_pass_no 24817)
+    (start_pass_no 11038)
     (layer_rule F.Cu
       (active on)
       (preferred_direction vertical)
       (preferred_direction_trace_costs 1.0)
-      (against_preferred_direction_trace_costs 2.2)
+      (against_preferred_direction_trace_costs 1.0)
     )
     (layer_rule B.Cu
       (active on)
       (preferred_direction horizontal)
       (preferred_direction_trace_costs 1.0)
-      (against_preferred_direction_trace_costs 1.9)
+      (against_preferred_direction_trace_costs 1.0)
     )
   )
   (rule
-    (width 154.0)
-    (clear 154.2)
+    (width 150.0)
+    (clear 150.2)
     (clear 0.0 (type smd_to_turn_gap))
-    (clear 38.6 (type smd_smd))
-  )
-  (padstack "Via[0-1]_320:300_um"
-    (shape
-      (circle F.Cu 320.0 0.0 0.0)
-    )
-    (shape
-      (circle B.Cu 320.0 0.0 0.0)
-    )
-    (attach off)
-  )
-  (padstack "Via[0-1]_340:300_um"
-    (shape
-      (circle F.Cu 340.0 0.0 0.0)
-    )
-    (shape
-      (circle B.Cu 340.0 0.0 0.0)
-    )
-    (attach off)
+    (clear 37.6 (type smd_smd))
   )
   (padstack "Via[0-1]_360:300_um"
     (shape
@@ -58,7 +40,7 @@
     )
     (attach off)
   )
-  (padstack "Via[0-1]_400:360_um"
+  (padstack "Via[0-1]_400:300_um"
     (shape
       (circle F.Cu 400.0 0.0 0.0)
     )
@@ -77,136 +59,88 @@
     (attach off)
   )
   (via 
-    "Via[0-1]_320:300_um" "Via[0-1]_320:300_um" default
-  )
-  (via 
-    "Via[0-1]_340:300_um" "Via[0-1]_340:300_um" default
-  )
-  (via 
     "Via[0-1]_360:300_um" "Via[0-1]_360:300_um" default
   )
   (via 
-    "Via[0-1]_400:360_um" "Via[0-1]_400:360_um" default
+    "Via[0-1]_400:300_um" "Via[0-1]_400:300_um" default
   )
   (via 
     "Via[0-1]_600:400_um" "Via[0-1]_600:400_um" default
   )
   (via 
-    "Via[0-1]_320:300_um-kicad_default" "Via[0-1]_320:300_um" "kicad_default"
-  )
-  (via 
-    "Via[0-1]_340:300_um-kicad_default" "Via[0-1]_340:300_um" "kicad_default"
-  )
-  (via 
     "Via[0-1]_360:300_um-kicad_default" "Via[0-1]_360:300_um" "kicad_default"
   )
   (via 
-    "Via[0-1]_400:360_um-kicad_default" "Via[0-1]_400:360_um" "kicad_default"
+    "Via[0-1]_400:300_um-kicad_default" "Via[0-1]_400:300_um" "kicad_default"
   )
   (via 
     "Via[0-1]_600:400_um-kicad_default" "Via[0-1]_600:400_um" "kicad_default"
   )
   (via 
-    "Via[0-1]_320:300_um-3.3V" "Via[0-1]_320:300_um" 3.3V
-  )
-  (via 
-    "Via[0-1]_340:300_um-3.3V" "Via[0-1]_340:300_um" 3.3V
-  )
-  (via 
     "Via[0-1]_360:300_um-3.3V" "Via[0-1]_360:300_um" 3.3V
   )
   (via 
-    "Via[0-1]_400:360_um-3.3V" "Via[0-1]_400:360_um" 3.3V
+    "Via[0-1]_400:300_um-3.3V" "Via[0-1]_400:300_um" 3.3V
   )
   (via 
     "Via[0-1]_600:400_um-3.3V" "Via[0-1]_600:400_um" 3.3V
   )
   (via 
-    "Via[0-1]_320:300_um-BATT" "Via[0-1]_320:300_um" BATT
-  )
-  (via 
-    "Via[0-1]_340:300_um-BATT" "Via[0-1]_340:300_um" BATT
-  )
-  (via 
     "Via[0-1]_360:300_um-BATT" "Via[0-1]_360:300_um" BATT
   )
   (via 
-    "Via[0-1]_400:360_um-BATT" "Via[0-1]_400:360_um" BATT
+    "Via[0-1]_400:300_um-BATT" "Via[0-1]_400:300_um" BATT
   )
   (via 
     "Via[0-1]_600:400_um-BATT" "Via[0-1]_600:400_um" BATT
   )
   (via 
-    "Via[0-1]_320:300_um-Charger" "Via[0-1]_320:300_um" Charger
-  )
-  (via 
-    "Via[0-1]_340:300_um-Charger" "Via[0-1]_340:300_um" Charger
-  )
-  (via 
     "Via[0-1]_360:300_um-Charger" "Via[0-1]_360:300_um" Charger
   )
   (via 
-    "Via[0-1]_400:360_um-Charger" "Via[0-1]_400:360_um" Charger
+    "Via[0-1]_400:300_um-Charger" "Via[0-1]_400:300_um" Charger
   )
   (via 
     "Via[0-1]_600:400_um-Charger" "Via[0-1]_600:400_um" Charger
   )
   (via 
-    "Via[0-1]_320:300_um-GND" "Via[0-1]_320:300_um" GND
-  )
-  (via 
-    "Via[0-1]_340:300_um-GND" "Via[0-1]_340:300_um" GND
-  )
-  (via 
     "Via[0-1]_360:300_um-GND" "Via[0-1]_360:300_um" GND
   )
   (via 
-    "Via[0-1]_400:360_um-GND" "Via[0-1]_400:360_um" GND
+    "Via[0-1]_400:300_um-GND" "Via[0-1]_400:300_um" GND
   )
   (via 
     "Via[0-1]_600:400_um-GND" "Via[0-1]_600:400_um" GND
   )
   (via 
-    "Via[0-1]_320:300_um-LED" "Via[0-1]_320:300_um" LED
-  )
-  (via 
-    "Via[0-1]_340:300_um-LED" "Via[0-1]_340:300_um" LED
-  )
-  (via 
     "Via[0-1]_360:300_um-LED" "Via[0-1]_360:300_um" LED
   )
   (via 
-    "Via[0-1]_400:360_um-LED" "Via[0-1]_400:360_um" LED
+    "Via[0-1]_400:300_um-LED" "Via[0-1]_400:300_um" LED
   )
   (via 
     "Via[0-1]_600:400_um-LED" "Via[0-1]_600:400_um" LED
   )
   (via 
-    "Via[0-1]_320:300_um-Motor" "Via[0-1]_320:300_um" Motor
-  )
-  (via 
-    "Via[0-1]_340:300_um-Motor" "Via[0-1]_340:300_um" Motor
-  )
-  (via 
     "Via[0-1]_360:300_um-Motor" "Via[0-1]_360:300_um" Motor
   )
   (via 
-    "Via[0-1]_400:360_um-Motor" "Via[0-1]_400:360_um" Motor
+    "Via[0-1]_400:300_um-Motor" "Via[0-1]_400:300_um" Motor
   )
   (via 
     "Via[0-1]_600:400_um-Motor" "Via[0-1]_600:400_um" Motor
   )
   (via_rule
-    default "Via[0-1]_320:300_um"
+    default "Via[0-1]_360:300_um"
   )
   (via_rule
-    "kicad_default" "Via[0-1]_320:300_um-kicad_default"
+    "kicad_default" "Via[0-1]_360:300_um-kicad_default"
   )
   (via_rule
-    3.3V "Via[0-1]_340:300_um-3.3V"
+    3.3V "Via[0-1]_360:300_um-3.3V"
   )
   (via_rule
-    BATT "Via[0-1]_340:300_um-BATT"
+    BATT "Via[0-1]_360:300_um-BATT"
   )
   (via_rule
     Charger "Via[0-1]_360:300_um-Charger"
@@ -215,16 +149,16 @@
     GND "Via[0-1]_360:300_um-GND"
   )
   (via_rule
-    LED "Via[0-1]_400:360_um-LED"
+    LED "Via[0-1]_400:300_um-LED"
   )
   (via_rule
-    Motor "Via[0-1]_400:360_um-Motor"
+    Motor "Via[0-1]_400:300_um-Motor"
   )
   (class default
     (clearance_class default)
     (via_rule default)
     (rule
-      (width 154.0)
+      (width 150.0)
     )
     (circuit 
       (use_layer F.Cu B.Cu)
@@ -245,7 +179,7 @@
     (clearance_class "kicad_default")
     (via_rule kicad_default)
     (rule
-      (width 154.0)
+      (width 150.0)
     )
     (circuit 
       (use_layer F.Cu B.Cu)
@@ -256,7 +190,7 @@
     (clearance_class 3.3V)
     (via_rule 3.3V)
     (rule
-      (width 200.0)
+      (width 160.0)
     )
     (circuit 
       (use_layer F.Cu B.Cu)
@@ -267,7 +201,7 @@
     (clearance_class BATT)
     (via_rule BATT)
     (rule
-      (width 200.0)
+      (width 150.0)
     )
     (circuit 
       (use_layer F.Cu B.Cu)
@@ -278,7 +212,7 @@
     (clearance_class Charger)
     (via_rule Charger)
     (rule
-      (width 240.0)
+      (width 200.0)
     )
     (circuit 
       (use_layer F.Cu B.Cu)
@@ -289,7 +223,7 @@
     (clearance_class GND)
     (via_rule GND)
     (rule
-      (width 240.0)
+      (width 160.0)
     )
     (circuit 
       (use_layer F.Cu B.Cu)

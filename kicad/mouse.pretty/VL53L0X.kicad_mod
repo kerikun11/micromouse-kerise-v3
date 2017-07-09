@@ -1,7 +1,7 @@
-(module VL53L0X (layer F.Cu) (tedit 57CEB927)
+(module VL53L0X (layer F.Cu) (tedit 596073F9)
   (descr VL53L0X)
   (tags "TOF distance sensor")
-  (fp_text reference REF** (at 0 0) (layer F.SilkS) hide
+  (fp_text reference U9 (at 0 0) (layer F.Fab) hide
     (effects (font (size 0.5 0.5) (thickness 0.125)))
   )
   (fp_text value VL53L0X (at 0 0) (layer F.Fab) hide
