@@ -4,38 +4,47 @@ seg_half = seg_full/2;
 seg_diag = seg_half*sqrt(2);
 %{
 % search 90
-pos_end = [segment/2-5, segment/2-5, pi/2];
+adv_straight = 5;
+pos_offset = [adv_straight, 0, 0];
+pos_end = [seg_half - adv_straight, seg_half - adv_straight, pi/2];
 %}
 %{
 % fast 45
-pos_end = [segment, segment/2, pi/4];
+pos_offset = [0, 0, 0];
+pos_end = [seg_full, seg_half, pi/4];
 %}
 %{
 % fast 90
-pos_end = [segment/2*2-10, segment/2*2-10, pi/2];
+adv_straight = 10;
+pos_offset = [adv_straight, 0, 0];
+pos_end = [seg_full-adv_straight, seg_full-adv_straight, pi/2];
 %}
 %{
 % fast V90
-pos_offset = [5, 0, pi/4];
-pos_end = [seg_diag-5, seg_diag-5, pi/2];
+adv_straight = 5;
+pos_offset = [adv_straight, 0, pi/4];
+pos_end = [seg_diag-adv_straight, seg_diag-adv_straight, pi/2];
 %}
-%%{
-% fast P90
+%{
+% fast K90
 pos_offset = [0, 0, pi/4];
 pos_end = [seg_diag*2, seg_diag*2, pi/2];
 %}
 %{
 % fast 135
-pos_offset = [-25, 0, 0];
-pos_end = [seg_half-25, seg_full, pi*3/4];
+adv_straight = 20;
+pos_offset = [adv_straight, 0, 0];
+pos_end = [seg_half-adv_straight, seg_full, pi*3/4];
 %}
 %{
 % fast 180
-pos_end = [0, segment, pi];
+adv_straight = 20;
+pos_offset = [adv_straight, 0, 0];
+pos_end = [0, seg_full, pi];
 %}
 
-omega_dot = 144 * pi;
-omega_max = 6 * pi;
+omega_dot = 150 * pi;
+omega_max = 5 * pi;
 angle = pos_end(3);
 dx = 1;
 
@@ -142,6 +151,8 @@ tra = (pos(:,1:2)+ones(size(pos,1),1)*pos_offset(1, 1:2)) * inv(trans);
 figure(2); hold off;
 plot(tra(:,1), tra(:,2), 'LineWidth', 4); hold on;
 axis equal;
-xlim([min(tra(:,1)), max(tra(:,1))]);
-ylim([min(tra(:,2)), max(tra(:,2))]);
+xlim([round(min(tra(:,1))/seg_half)*seg_half, ceil(max(tra(:,1)-1)/seg_half)*seg_half]);
+ylim([round(min(tra(:,2))/seg_half)*seg_half, ceil(max(tra(:,2)-1)/seg_half)*seg_half]);
+xticks([-5*seg_half:seg_half/9:5*seg_half]);
+yticks([-5*seg_half:seg_half/9:5*seg_half]);
 grid on;
