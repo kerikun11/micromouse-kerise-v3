@@ -97,13 +97,13 @@ class Position {
 
 #define SPEED_CONTROLLER_KM   0.01f
 
-#define SPEED_CONTROLLER_KP   1.8f
-#define SPEED_CONTROLLER_KI   96.0f
-#define SPEED_CONTROLLER_KD   0.0f
+#define SPEED_CONTROLLER_KP   1.5f
+#define SPEED_CONTROLLER_KI   60.0f
+#define SPEED_CONTROLLER_KD   0.00f
 
-#define SPEED_CONTROLLER_KP_SUCTION 1.8f
-#define SPEED_CONTROLLER_KI_SUCTION 96.0f
-#define SPEED_CONTROLLER_KD_SUCTION 0.0f
+//#define SPEED_CONTROLLER_KP_SUCTION 1.8f
+//#define SPEED_CONTROLLER_KI_SUCTION 96.0f
+//#define SPEED_CONTROLLER_KD_SUCTION 0.02f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -128,6 +128,13 @@ class SpeedController : TaskBase {
         rot = (wheel[1] - wheel[0]) / 2.0f / MACHINE_ROTATION_RADIUS;
         trans = (wheel[1] + wheel[0]) / 2.0f;
       }
+      const struct WheelParameter& operator =(const struct WheelParameter& obj) {
+        trans = obj.trans;
+        rot = obj.rot;
+        wheel[0] = obj.wheel[0];
+        wheel[1] = obj.wheel[1];
+        return *this;
+      }
     };
     void reset() {
       for (int i = 0; i < 2; i++) {
@@ -135,6 +142,7 @@ class SpeedController : TaskBase {
         for (int j = 0; j < ave_num; j++) {
           wheel_position[j][i] = as.position(i);
           accel[j] = 0;
+          gyro[j] = 0;
         }
         actual.wheel[i] = 0;
         integral.wheel[i] = 0;
@@ -146,9 +154,12 @@ class SpeedController : TaskBase {
     }
     void enable(bool suction = false) {
       if (suction) {
-        Kp = SPEED_CONTROLLER_KP_SUCTION;
-        Ki = SPEED_CONTROLLER_KI_SUCTION;
-        Kd = SPEED_CONTROLLER_KD_SUCTION;
+        //        Kp = SPEED_CONTROLLER_KP_SUCTION;
+        //        Ki = SPEED_CONTROLLER_KI_SUCTION;
+        //        Kd = SPEED_CONTROLLER_KD_SUCTION;
+        Kp = SPEED_CONTROLLER_KP;
+        Ki = SPEED_CONTROLLER_KI;
+        Kd = SPEED_CONTROLLER_KD;
       } else {
         Kp = SPEED_CONTROLLER_KP;
         Ki = SPEED_CONTROLLER_KI;
@@ -182,6 +193,7 @@ class SpeedController : TaskBase {
     static const int ave_num = 8;
     float wheel_position[ave_num][2];
     float accel[ave_num];
+    float gyro[ave_num];
     WheelParameter actual_prev;
     WheelParameter target_prev;
     Position position;
@@ -199,11 +211,15 @@ class SpeedController : TaskBase {
         }
         for (int j = ave_num - 1; j > 0; j--) {
           accel[j] = accel[j - 1];
+          gyro[j] = gyro[j - 1];
         }
         accel[0] = mpu.accel.y;
+        gyro[0] = mpu.gyro.z;
         float sum_accel = 0.0f;
+        float sum_gyro = 0.0f;
         for (int j = 0; j < ave_num; j++) {
           sum_accel += accel[j];
+          sum_gyro += gyro[j];
         }
         for (int i = 0; i < 2; i++) {
           actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
@@ -215,11 +231,11 @@ class SpeedController : TaskBase {
           integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         }
         differential.trans = (accel[0] + accel[1] + accel[2]) / 3 - (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000;
-        differential.rot = 0;
+        differential.rot = (gyro[0] - gyro[ave_num - 1]) / (ave_num - 1) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (target.rot - target_prev.rot) / SPEED_CONTROLLER_PERIOD_US * 1000000;
         differential.pole2wheel();
         float pwm_value[2];
         for (int i = 0; i < 2; i++) {
-          pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Kp * Ki * (0 - integral.wheel[i]) + Kp * Kd * (0 - differential.wheel[i]);
+          pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Ki * (0 - integral.wheel[i]) + Kd * (0 - differential.wheel[i]);
         }
         const float Km = SPEED_CONTROLLER_KM;
         mt.drive(pwm_value[0] + Km * actual.wheel[0], pwm_value[1] + Km * actual.wheel[1]);
@@ -228,9 +244,8 @@ class SpeedController : TaskBase {
         position.x += (actual_prev.trans + actual.trans) / 2 * cos(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         position.y += (actual_prev.trans + actual.trans) / 2 * sin(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;
 
-        actual_prev.trans = actual.trans;
-        actual_prev.rot = actual.rot;
-        target_prev.trans = target.trans;
+        actual_prev = actual;
+        target_prev = target;
       }
     }
 };

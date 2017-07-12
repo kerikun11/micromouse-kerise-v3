@@ -70,7 +70,7 @@ void setup() {
   ref.init();
 
   wd.enable();
-  //  lg.start();
+//  lg.start();
 }
 
 void loop() {
@@ -96,7 +96,7 @@ void loop() {
   //    sc.enable(suction);
   //    const float accel = 9000;
   //    const float decel = 9000;
-  //    const float v_max = 1800;
+  //    const float v_max = 1500;
   //    const float v_start = 0;
   //    float T = 1.5f * (v_max - v_start) / accel;
   //    for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -105,14 +105,14 @@ void loop() {
   //      delay(1);
   //    }
   //    bz.play(Buzzer::SELECT);
-  //    delay(200);
+  //    delay(100);
   //    bz.play(Buzzer::SELECT);
   //    for (float v = v_max; v > 0; v -= decel / 1000) {
   //      sc.set_target(v, 0);
   //      delay(1);
   //    }
   //    sc.set_target(0, 0);
-  //    delay(400);
+  //    delay(300);
   //    bz.play(Buzzer::CANCEL);
   //    sc.disable();
   //    fan.drive(0);

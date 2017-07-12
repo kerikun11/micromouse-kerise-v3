@@ -14,7 +14,7 @@
 #include "SpeedController.h"
 
 #define FAST_WALL_AVOID         false
-#define FAST_WALL_AVOID_GAIN    0.00002f
+#define FAST_WALL_AVOID_GAIN    0.000016f
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          30
+#define FAST_PROP_GAIN          20
 
 //#define printf  lg.printf
 
