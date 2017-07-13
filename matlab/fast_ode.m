@@ -1,64 +1,67 @@
 clear;
 seg_full = 90;
-seg_half = seg_full/2;
-seg_diag = seg_half*sqrt(2);
-%{
+seg_half = seg_full / 2;
+%%{
 % search 90
 adv_straight = 5;
-pos_offset = [adv_straight, 0, 0];
-pos_end = [seg_half - adv_straight, seg_half - adv_straight, pi/2];
+pos_start = [0; 0; 0];
+pos_end = [seg_half; seg_half; pi/2];
 %}
 %{
 % fast 45
-pos_offset = [0, 0, 0];
-pos_end = [seg_full, seg_half, pi/4];
+adv_straight = 0;
+pos_start = [0; 0; 0];
+pos_end = [seg_full; seg_half; pi/4];
 %}
 %{
 % fast 90
 adv_straight = 10;
-pos_offset = [adv_straight, 0, 0];
-pos_end = [seg_full-adv_straight, seg_full-adv_straight, pi/2];
+pos_start = [0; 0; 0];
+pos_end = [seg_full; seg_full; pi/2];
 %}
 %{
 % fast V90
 adv_straight = 5;
-pos_offset = [adv_straight, 0, pi/4];
-pos_end = [seg_diag-adv_straight, seg_diag-adv_straight, pi/2];
+pos_start = [0; 0; pi/4];
+pos_end = [0; seg_full; 3/4*pi];
 %}
 %{
 % fast K90
-pos_offset = [0, 0, pi/4];
-pos_end = [seg_diag*2, seg_diag*2, pi/2];
+adv_straight = 0;
+pos_start = [0; 0; pi/4];
+pos_end = [0; seg_full * 2; 3/4*pi];
 %}
 %{
 % fast 135
 adv_straight = 20;
-pos_offset = [adv_straight, 0, 0];
-pos_end = [seg_half-adv_straight, seg_full, pi*3/4];
+pos_start = [0; 0; 0];
+pos_end = [seg_half; seg_full; 3/4*pi];
 %}
 %{
 % fast 180
 adv_straight = 20;
-pos_offset = [adv_straight, 0, 0];
-pos_end = [0, seg_full, pi];
+pos_start = [0; 0; 0];
+pos_end = [0; seg_full; pi];
 %}
 
 omega_dot = 150 * pi;
 omega_max = 5 * pi;
-angle = pos_end(3);
+Rot_start = [cos(pos_start(3)),-sin(pos_start(3)),0;sin(pos_start(3)),cos(pos_start(3)),0;0,0,1];
+Rot_end = [cos(pos_start(3)),-sin(pos_start(3)),0;sin(pos_start(3)),cos(pos_start(3)),0;0,0,1];
+pos_target = inv(Rot_start)*(pos_end-pos_start)-[adv_straight; 0; 0];
 dx = 1;
 
 T = omega_max / omega_dot * pi;
 [t, theta] = ode45(@(t, theta) omega_max * sin(pi*t/T)^2, [0 T], 0);
 
 figure(1);
-if angle < theta(end)
-    theta_gain = sqrt(angle / theta(end));
+if pos_target(3) < theta(end)
+    theta_gain = sqrt(pos_target(3) / theta(end));
     T = T * theta_gain;
     [t, x] = ode45(@(t, x) cos(theta_gain * ((omega_max*t)/2 - (T*omega_max*sin((2*pi*t)/T))/(4*pi))), [0 T], 0);
     [t, y] = ode45(@(t, x) sin(theta_gain * ((omega_max*t)/2 - (T*omega_max*sin((2*pi*t)/T))/(4*pi))), [0 T], 0);
     syms v;
-    v = double(solve((pos_end(2)-v*y(end))*cos(angle)==(pos_end(1)-v*x(end))*sin(angle), v));
+    v = double(solve((pos_target(2)-v*y(end))*cos(pos_target(3))==(pos_target(1)-v*x(end))*sin(pos_target(3)), v));
     dt = dx/v;
     x_end = x(end)*v; y_end = y(end)*v;
     omega = omega_max * sin(pi*[0:dt:T]/T).^2;
@@ -73,10 +76,10 @@ if angle < theta(end)
     plot(x, y, '.', 'MarkerSize', 12); grid on;
     
     pos = [x, y, theta];
-    pos = [pos; x_end, y_end, angle];
+    pos = [pos; x_end, y_end, pos_target(3)];
 else
     T1 = T / 2;
-    T2 = T1 + (angle - theta(end)) / omega_max;
+    T2 = T1 + (pos_target(3) - theta(end)) / omega_max;
     T3 = T2 + T / 2;
     [t, x1] = ode45(@(t, x1) cos((omega_max*t)/2 - (T*omega_max*sin((2*pi*t)/T))/(4*pi)), [0 T/2], 0);
     [t, x2] = ode45(@(t, x2) cos((omega_max*T/2)/2 - (T*omega_max*sin((2*pi*T/2)/T))/(4*pi) + omega_max*(t-T1)), [T1 T2], x1(end));
@@ -85,7 +88,7 @@ else
     [t, y2] = ode45(@(t, y2) sin((omega_max*T/2)/2 - (T*omega_max*sin((2*pi*T/2)/T))/(4*pi) + omega_max*(t-T1)), [T1 T2], y1(end));
     [t, y3] = ode45(@(t, y3) sin(omega_max*(T2-T1) + (omega_max*(t-T2+T1))/2 - (T*omega_max*sin((2*pi*(t-T2+T1))/T))/(4*pi)), [T2 T3], y2(end));
     syms v;
-    v = double(solve((pos_end(2)-v*y3(end))*cos(angle)==(pos_end(1)-v*x3(end))*sin(angle), v));
+    v = double(solve((pos_target(2)-v*y3(end))*cos(pos_target(3))==(pos_target(1)-v*x3(end))*sin(pos_target(3)), v));
     dt = dx/v;
     t1 = 0:dt:T1;
     t2 = t1(end):dt:T2;
@@ -122,10 +125,9 @@ else
 end
 
 format long;
-dlmwrite('data.csv', pos, 'precision', '%.10f');
-velocity = v
-extra_straight = (pos_end(2)-pos(end, 2)) / sin(angle)
-length = size(pos, 1)
+velocity = v;
+extra_straight = max([(pos_target(2)-pos(end, 2)) / sin(pos_target(3)),(pos_target(1)-pos(end, 1)) / cos(pos_target(3))]);
+length = size(pos, 1);
 
 subplot(6,1,1);
 title(sprintf('$$ \\dot{\\omega}_{max}: %.0f\\pi,\\ \\omega_{max}: %.0f\\pi $$', omega_dot/pi, omega_max/pi), 'Interpreter','latex', 'FontSize', 12);
@@ -133,7 +135,7 @@ xlabel('t', 'Interpreter','latex', 'FontSize', 12);
 ylabel('\omega', 'FontSize', 12);
 
 subplot(6,1,2);
-title(sprintf('$$ \\theta_{end}: %.2f\\pi $$', angle/pi), 'Interpreter','latex', 'FontSize', 12);
+title(sprintf('$$ \\theta_{end}: %.2f\\pi $$', pos_target(3)/pi), 'Interpreter','latex', 'FontSize', 12);
 xlabel('t', 'Interpreter','latex', 'FontSize', 12);
 ylabel('\theta', 'FontSize', 12);
 
@@ -145,14 +147,20 @@ axis equal;
 xlim([min(pos(:,1)), max(pos(:,1))]);
 ylim([min(pos(:,2)), max(pos(:,2))]);
 
-trans = [cos(pos_offset(3)), -sin(pos_offset(3));
-    sin(pos_offset(3)), cos(pos_offset(3))];
-tra = (pos(:,1:2)+ones(size(pos,1),1)*pos_offset(1, 1:2)) * inv(trans);
+pos_disp = pos_start + Rot_start * [adv_straight; 0; 0]+ Rot_start * pos';
 figure(2); hold off;
-plot(tra(:,1), tra(:,2), 'LineWidth', 4); hold on;
+plot([0 pos_disp(1,1)], [0, pos_disp(2,1)], 'LineWidth', 4); hold on;
+plot(pos_disp(1,:), pos_disp(2,:), 'LineWidth', 4); hold on;
+% plot([pos_disp(1,end), pos_end(1)], [pos_disp(2,end), pos_end(2)], 'LineWidth', 4); hold on;
+plot([pos_disp(1,end), pos_disp(1,end)+extra_straight*cos(pos_end(3))], [pos_disp(2,end), pos_disp(2,end)+extra_straight*sin(pos_end(3))], 'LineWidth', 4); hold on;
 axis equal;
-xlim([round(min(tra(:,1))/seg_half)*seg_half, ceil(max(tra(:,1)-1)/seg_half)*seg_half]);
-ylim([round(min(tra(:,2))/seg_half)*seg_half, ceil(max(tra(:,2)-1)/seg_half)*seg_half]);
+xlim([round(min(pos_disp(1,:))/seg_half)*seg_half, ceil(max(pos_disp(1,:)-1)/seg_half)*seg_half]);
+ylim([round(min(pos_disp(2,:))/seg_half)*seg_half, ceil(max(pos_disp(2,:)-1)/seg_half)*seg_half]);
 xticks([-5*seg_half:seg_half/9:5*seg_half]);
 yticks([-5*seg_half:seg_half/9:5*seg_half]);
 grid on;
+
+dlmwrite('data.csv', pos, 'precision', '%.10f');
+length
+velocity
+extra_straight
