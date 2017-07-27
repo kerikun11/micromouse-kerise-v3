@@ -70,7 +70,7 @@
     (clearance_matrix
       not_visible
       (bounds
-        0 150 1176 380
+        0 150 1076 364
       )
     )
     (via_rules
@@ -82,13 +82,13 @@
     (edit_vias
       not_visible
       (bounds
-        100 150 419 738
+        100 150 419 322
       )
     )
     (edit_net_rules
       not_visible
       (bounds
-        100 200 919 226
+        100 200 919 210
       )
     )
     (assign_net_rules
