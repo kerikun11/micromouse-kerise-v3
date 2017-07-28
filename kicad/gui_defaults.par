@@ -4,7 +4,7 @@
     (board_frame
       visible
       (bounds
-        -8 22 2176 1426
+        284 59 1124 947
       )
     )
     (color_manager
@@ -70,7 +70,7 @@
     (clearance_matrix
       not_visible
       (bounds
-        0 150 1076 364
+        0 150 1176 380
       )
     )
     (via_rules
@@ -82,13 +82,13 @@
     (edit_vias
       not_visible
       (bounds
-        100 150 419 322
+        100 150 419 354
       )
     )
     (edit_net_rules
       not_visible
       (bounds
-        100 200 919 210
+        100 200 919 226
       )
     )
     (assign_net_rules
