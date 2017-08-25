@@ -19,7 +19,7 @@
 #include "SearchRun.h"
 
 #define MAZE_SOLVER_TASK_PRIORITY 2
-#define MAZE_SOLVER_STACK_SIZE    8092
+#define MAZE_SOLVER_STACK_SIZE    8192
 
 //#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
 //#define MAZE_GOAL {Vector(3,7), Vector(3,8), Vector(4,7), Vector(4,8)}

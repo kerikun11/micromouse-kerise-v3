@@ -57,7 +57,7 @@ class Reflector: private TaskBase {
       portYIELD_FROM_ISR();
     }
   private:
-    static const int ave_num = 16;
+    static const int ave_num = 32;
     int raw[4][ave_num];
     int value[4];
     int offset[4];

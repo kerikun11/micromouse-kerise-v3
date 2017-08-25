@@ -14,11 +14,11 @@
 #include "SpeedController.h"
 
 #define SEARCH_WALL_ATTACH_ENABLED     false
-#define SEARCH_WALL_AVOID_ENABLED      true
-#define SEARCH_WALL_AVOID_GAIN         0.00002f
+#define SEARCH_WALL_AVOID_ENABLED      false
+#define SEARCH_WALL_AVOID_GAIN         0.00001f
 
 #define SEARCH_LOOK_AHEAD   5
-#define SEARCH_PROP_GAIN    60
+#define SEARCH_PROP_GAIN    20
 
 #define SEARCH_RUN_TASK_PRIORITY   3
 #define SEARCH_RUN_STACK_SIZE      8192
@@ -202,7 +202,7 @@ class SearchRun: TaskBase {
     void turn(const float angle) {
       const float speed = 1.0 * M_PI;
       const float accel = 24 * M_PI;
-      const float back_gain = 120.0f;
+      const float back_gain = 200.0f;
       int ms = 0;
       delay(200);
       while (1) {
@@ -234,8 +234,8 @@ class SearchRun: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 600;
-      const float decel = 600;
+      const float accel = 1200;
+      const float decel = 1200;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -273,16 +273,20 @@ class SearchRun: TaskBase {
       printPosition("Trace End");
     }
     void put_back() {
-      for (int i = 0; i < 150; i++) {
-        //        float theta = atan2f(-getRelativePosition().y, SEARCH_LOOK_AHEAD) - getRelativePosition().theta;
-        //        sc.set_target(-i, theta * SEARCH_PROP_GAIN);
+      const int max_v = 150;
+      for (int i = 0; i < max_v; i++) {
         sc.set_target(-i, -getRelativePosition().theta * 200.0f);
         delay(1);
       }
-      delay(240);
+      for (int i = 0; i < 100; i++) {
+        sc.set_target(-max_v, -getRelativePosition().theta * 200.0f);
+        delay(1);
+      }
       sc.disable();
-      mt.drive(-300, -300);
+      mt.drive(-200, -200);
       delay(200);
+      mt.drive(-100, -100);
+      delay(100);
       sc.enable();
       updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
       setPosition(origin);
@@ -366,10 +370,8 @@ class SearchRun: TaskBase {
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(false);
-              //              fan.drive(0.2);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
-              //              fan.drive(0);
               straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
             }
             break;

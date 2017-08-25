@@ -70,10 +70,20 @@ void setup() {
   ref.init();
 
   wd.enable();
-//  lg.start();
+  //  lg.start();
 }
 
 void loop() {
+#define TEST 0
+#if TEST == 0
+  normal_drive();
+#elif TEST == 1
+  trapizoid_test();
+#elif TEST == 2
+  fan_test();
+#elif TEST == 3
+  straight_test();
+#else
   //  mpu.print();
   //  as.print();
   //  wd.print();
@@ -81,49 +91,12 @@ void loop() {
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
-  //  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
-  //  delay(10);
+  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
+  delay(10);
+#endif
+}
 
-  //  if (btn.pressed) {
-  //    btn.flags = 0;
-  //    bz.play(Buzzer::CONFIRM);
-  //    delay(1000);
-  //    mpu.calibration();
-  //    bool suction = true;
-  //    if (suction) fan.drive(0.3);
-  //    delay(200);
-  //    lg.start();
-  //    sc.enable(suction);
-  //    const float accel = 9000;
-  //    const float decel = 9000;
-  //    const float v_max = 1500;
-  //    const float v_start = 0;
-  //    float T = 1.5f * (v_max - v_start) / accel;
-  //    for (int ms = 0; ms / 1000.0f < T; ms++) {
-  //      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
-  //      sc.set_target(velocity_a, 0);
-  //      delay(1);
-  //    }
-  //    bz.play(Buzzer::SELECT);
-  //    delay(100);
-  //    bz.play(Buzzer::SELECT);
-  //    for (float v = v_max; v > 0; v -= decel / 1000) {
-  //      sc.set_target(v, 0);
-  //      delay(1);
-  //    }
-  //    sc.set_target(0, 0);
-  //    delay(300);
-  //    bz.play(Buzzer::CANCEL);
-  //    sc.disable();
-  //    fan.drive(0);
-  //    lg.end();
-  //  }
-  //  if (btn.long_pressing_1) {
-  //    btn.flags = 0;
-  //    bz.play(Buzzer::CONFIRM);
-  //    lg.print();
-  //  }
-
+void normal_drive() {
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
@@ -136,17 +109,86 @@ void loop() {
     ms.print();
     //    lg.print();
   }
+}
 
-  //  if (btn.pressed) {
-  //    btn.flags = 0;
-  //    bz.play(Buzzer::CANCEL);
-  //    fan.drive(0);
-  //  }
-  //  if (btn.long_pressed_1) {
-  //    btn.flags = 0;
-  //    bz.play(Buzzer::CONFIRM);
-  //    fan.drive(0.4);
-  //  }
+void trapizoid_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    delay(1000);
+    mpu.calibration();
+    bool suction = true;
+    if (suction) fan.drive(0.5);
+    delay(500);
+    lg.start();
+    sc.enable(suction);
+    const float accel = 12000;
+    const float decel = 12000;
+    const float v_max = 2400;
+    const float v_start = 0;
+    float T = 1.5f * (v_max - v_start) / accel;
+    for (int ms = 0; ms / 1000.0f < T; ms++) {
+      float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+      sc.set_target(velocity_a, 0);
+      delay(1);
+    }
+    bz.play(Buzzer::SELECT);
+    delay(100);
+    bz.play(Buzzer::SELECT);
+    for (float v = v_max; v > 0; v -= decel / 1000) {
+      sc.set_target(v, 0);
+      delay(1);
+    }
+    sc.set_target(0, 0);
+    delay(300);
+    bz.play(Buzzer::CANCEL);
+    sc.disable();
+    fan.drive(0);
+    lg.end();
+  }
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
+}
+
+void fan_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CANCEL);
+    fan.drive(0);
+  }
+  if (btn.long_pressed_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    fan.drive(0.4);
+  }
+}
+
+void straight_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    delay(1000);
+    mpu.calibration();
+    sc.enable(true);
+    lg.start();
+    sc.getPosition().reset();
+    fan.drive(0.5);
+    delay(500);
+    straight_x(800, 1500, 0);
+    sc.set_target(0, 0);
+    fan.drive(0);
+    delay(100);
+    sc.disable();
+    lg.end();
+  }
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
 }
 
 int waitForSelect(int range = 4) {
@@ -207,34 +249,6 @@ void task() {
   bz.play(Buzzer::SELECT);
 }
 
-//void task() {
-//  int preset = waitForSelect();
-//  if (preset < 0) return;
-//  delay(500);
-//  if (!waitForCover()) {
-//    return;
-//  }
-//  delay(1000);
-//  bz.play(Buzzer::SELECT);
-//  switch (preset) {
-//    case 0:
-//      fr.set_speed();
-//      ms.start();
-//      break;
-//    case 1:
-//      ms.start();
-//      break;
-//    case 2:
-//      fr.set_speed();
-//      ms.start();
-//      break;
-//    case 3:
-//      fr.set_speed();
-//      ms.start();
-//      break;
-//  }
-//}
-
 bool waitForCover() {
   while (1) {
     delay(1);
@@ -248,5 +262,37 @@ bool waitForCover() {
       return false;
     }
   }
+}
+
+Position getRelativePosition() {
+  return sc.getPosition();
+}
+
+#define TEST_LOOK_AHEAD 20
+#define TEST_PROP_GAIN  20
+
+void straight_x(const float distance, const float v_max, const float v_end) {
+  const float accel = 3000;
+  const float decel = 3000;
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  int ms = 0;
+  const float v_start = sc.actual.trans;
+  const float T = 1.5f * (v_max - v_start) / accel;
+  while (1) {
+    Position cur = getRelativePosition();
+    if (v_end >= 1.0f && cur.x > distance - TEST_LOOK_AHEAD) break;
+    if (v_end < 1.0f && cur.x > distance - 1.0f) break;
+    float extra = distance - cur.x;
+    float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+    float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
+    float velocity = v_max;
+    if (velocity > velocity_d) velocity = velocity_d;
+    if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
+    float theta = atan2f(-cur.y, TEST_LOOK_AHEAD * (1 + velocity / 600.0f)) - cur.theta;
+    sc.set_target(velocity, TEST_PROP_GAIN * theta);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    ms++;
+  }
+  sc.set_target(v_end, 0);
 }
 

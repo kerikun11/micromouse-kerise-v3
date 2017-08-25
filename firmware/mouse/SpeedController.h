@@ -98,8 +98,8 @@ class Position {
 #define SPEED_CONTROLLER_KM   0.01f
 
 #define SPEED_CONTROLLER_KP   1.5f
-#define SPEED_CONTROLLER_KI   60.0f
-#define SPEED_CONTROLLER_KD   0.00f
+#define SPEED_CONTROLLER_KI   96.0f
+#define SPEED_CONTROLLER_KD   0.0f
 
 //#define SPEED_CONTROLLER_KP_SUCTION 1.8f
 //#define SPEED_CONTROLLER_KI_SUCTION 96.0f
@@ -110,7 +110,9 @@ class Position {
 class SpeedController : TaskBase {
   public:
     SpeedController() : TaskBase("Speed Controller", SPEED_CONTROLLER_TASK_PRIORITY, SPEED_CONTROLLER_STACK_SIZE) {
+      enabled = false;
       reset();
+      create_task();
     }
     virtual ~SpeedController() {}
     struct WheelParameter {
@@ -166,12 +168,11 @@ class SpeedController : TaskBase {
         Kd = SPEED_CONTROLLER_KD;
       }
       reset();
-      create_task();
+      enabled = true;
       printf("Speed Controller Enabled\n");
     }
     void disable() {
-      delete_task();
-      mt.free();
+      enabled = false;
     }
     void set_target(float trans, float rot) {
       target.trans = trans;
@@ -190,7 +191,8 @@ class SpeedController : TaskBase {
     float Ki = SPEED_CONTROLLER_KI;
     float Kd = SPEED_CONTROLLER_KD;
   private:
-    static const int ave_num = 8;
+    bool enabled;
+    static const int ave_num = 4;
     float wheel_position[ave_num][2];
     float accel[ave_num];
     float gyro[ave_num];
@@ -203,6 +205,10 @@ class SpeedController : TaskBase {
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        if (!enabled) {
+          mt.free();
+          continue;
+        }
         for (int i = 0; i < 2; i++) {
           for (int j = ave_num - 1; j > 0; j--) {
             wheel_position[j][i] = wheel_position[j - 1][i];

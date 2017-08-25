@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          20
+#define FAST_PROP_GAIN          30
 
 //#define printf  lg.printf
 
@@ -337,7 +337,7 @@ class FastRun: TaskBase {
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        float theta = atan2f(-cur.y, FAST_LOOK_AHEAD) - cur.theta;
+        float theta = atan2f(-cur.y, FAST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
         sc.set_target(velocity, FAST_PROP_GAIN * theta);
         if (avoid) wall_avoid();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
