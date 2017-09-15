@@ -1,5 +1,5 @@
-(module STAND_AS_HOST (layer F.Cu) (tedit 59720089)
-  (fp_text reference P18 (at 0 -1.5) (layer F.SilkS) hide
+(module STAND_AS_HOST (layer F.Cu) (tedit 59BB635F)
+  (fp_text reference P22 (at 0 -1.5) (layer F.SilkS) hide
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (fp_text value ENC_Host (at 0 -1.5) (layer F.Fab)
@@ -14,6 +14,6 @@
   (pad 3 smd rect (at -0.5 -0.75) (size 0.5 0.8) (layers F.Cu F.Paste F.Mask))
   (pad 4 smd rect (at 0.5 0.75) (size 0.5 0.8) (layers F.Cu F.Paste F.Mask))
   (pad 5 smd rect (at 0.5 -0.75) (size 0.5 0.8) (layers F.Cu F.Paste F.Mask))
-  (pad 1 thru_hole oval (at -3 0) (size 1.6 1.2) (drill oval 1.2 0.8) (layers *.Cu *.Mask F.SilkS))
-  (pad 6 thru_hole oval (at 3 0) (size 1.6 1.2) (drill oval 1.2 0.8) (layers *.Cu *.Mask F.SilkS))
+  (pad 1 thru_hole oval (at -2.5 0) (size 1.6 1.2) (drill oval 1.2 0.8) (layers *.Cu *.Mask F.SilkS))
+  (pad 6 thru_hole oval (at 2.5 0) (size 1.6 1.2) (drill oval 1.2 0.8) (layers *.Cu *.Mask F.SilkS))
 )
