@@ -1,27 +1,83 @@
-Cmp-Mod V01 Created by PcbNew   date = 2017/08/18 10:09:29
+Cmp-Mod V01 Created by PcbNew   date = 2017/09/24 17:56:42
 
 BeginCmp
-TimeStamp = 58A2BB80
-Path = /57CF0B09/589BE652
-Reference = P6;
-ValeurCmp = PR_Slave;
-IdModule  = mouse:STAND_PR_SLAVE;
+TimeStamp = 59700E22
+Path = /597E1B35/59497D43
+Reference = P29;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_long_Slave;
 EndCmp
 
 BeginCmp
-TimeStamp = 596EA779
-Path = /59347BCD/59340164
-Reference = P23;
-ValeurCmp = ENC_Slave;
-IdModule  = mouse:STAND_AS_SLAVE;
+TimeStamp = 596EA6B5
+Path = /57CF0B09/594AC674
+Reference = D2;
+ValeurCmp = VSMB294008G;
+IdModule  = mouse:VISHAY_DIODE;
 EndCmp
 
 BeginCmp
-TimeStamp = 596EA74D
-Path = /592ADBF2/59340164
-Reference = P19;
-ValeurCmp = ENC_Slave;
-IdModule  = mouse:STAND_AS_SLAVE;
+TimeStamp = 58A1AD9C
+Path = /57CF2A30/589EE263
+Reference = C21;
+ValeurCmp = 47u;
+IdModule  = Capacitors_SMD:C_0805;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA6C7
+Path = /57CF2A30/594AC36C
+Reference = D5;
+ValeurCmp = VEMD2020X01;
+IdModule  = mouse:VISHAY_DIODE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA6C1
+Path = /57CF2A30/594AC674
+Reference = D4;
+ValeurCmp = VSMB294008G;
+IdModule  = mouse:VISHAY_DIODE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA6BB
+Path = /57CF0B09/594AC36C
+Reference = D3;
+ValeurCmp = VEMD2020X01;
+IdModule  = mouse:VISHAY_DIODE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3BE
+Path = /597E1B35/594AC674
+Reference = D10;
+ValeurCmp = VSMB294008G;
+IdModule  = mouse:VISHAY_DIODE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3C4
+Path = /597E1B35/594AC36C
+Reference = D11;
+ValeurCmp = VEMD2020X01;
+IdModule  = mouse:VISHAY_DIODE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3CA
+Path = /597E1B39/594AC674
+Reference = D12;
+ValeurCmp = VSMB294008G;
+IdModule  = mouse:VISHAY_DIODE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3D0
+Path = /597E1B39/594AC36C
+Reference = D13;
+ValeurCmp = VEMD2020X01;
+IdModule  = mouse:VISHAY_DIODE;
 EndCmp
 
 BeginCmp
@@ -145,27 +201,11 @@ IdModule  = Resistors_SMD:R_0603;
 EndCmp
 
 BeginCmp
-TimeStamp = 596EA755
-Path = /592B9AF5/592AB778
-Reference = P20;
-ValeurCmp = ToF_Host;
-IdModule  = mouse:STAND_PR_HOST;
-EndCmp
-
-BeginCmp
 TimeStamp = 596EA701
 Path = /5932D0A3
 Reference = P1;
 ValeurCmp = ANT;
 IdModule  = mouse:SMD_conn_1;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA6FC
-Path = /57CD8D81/594AA6DF
-Reference = LS1;
-ValeurCmp = Speaker;
-IdModule  = mouse:SMT-0440-S-R;
 EndCmp
 
 BeginCmp
@@ -198,38 +238,6 @@ Path = /57CD8D81/594AA483
 Reference = D6;
 ValeurCmp = LED;
 IdModule  = LEDs:LED_0402;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA6C7
-Path = /57CF2A30/594AC36C
-Reference = D5;
-ValeurCmp = VEMD2020X01;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA6C1
-Path = /57CF2A30/594AC674
-Reference = D4;
-ValeurCmp = VSMB294008G;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA6BB
-Path = /57CF0B09/594AC36C
-Reference = D3;
-ValeurCmp = VEMD2020X01;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA6B5
-Path = /57CF0B09/594AC674
-Reference = D2;
-ValeurCmp = VSMB294008G;
-IdModule  = mouse:VISHAY_DIODE;
 EndCmp
 
 BeginCmp
@@ -593,14 +601,6 @@ IdModule  = Resistors_SMD:R_0201;
 EndCmp
 
 BeginCmp
-TimeStamp = 58A1AD9C
-Path = /57CF2A30/589EE263
-Reference = C21;
-ValeurCmp = 47u;
-IdModule  = Capacitors_SMD:C_0805;
-EndCmp
-
-BeginCmp
 TimeStamp = 58A1AD96
 Path = /57CF2A30/57CF0F45
 Reference = C22;
@@ -665,22 +665,6 @@ IdModule  = mouse:SOIJ-8_5.3x5.3mm_Pitch1.27mm;
 EndCmp
 
 BeginCmp
-TimeStamp = 58A1AE61
-Path = /57CF2A30/589BE88F
-Reference = P11;
-ValeurCmp = PR_Host;
-IdModule  = mouse:STAND_PR_HOST;
-EndCmp
-
-BeginCmp
-TimeStamp = 58A1AE2B
-Path = /57CF0B09/589BE88F
-Reference = P5;
-ValeurCmp = PR_Host;
-IdModule  = mouse:STAND_PR_HOST;
-EndCmp
-
-BeginCmp
 TimeStamp = 596ED38E
 Path = /597E1B35/589EE263
 Reference = C32;
@@ -742,54 +726,6 @@ Path = /597E1B39/5925867D
 Reference = C39;
 ValeurCmp = 0.1u;
 IdModule  = Capacitors_SMD:C_0201;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3BE
-Path = /597E1B35/594AC674
-Reference = D10;
-ValeurCmp = VSMB294008G;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3C4
-Path = /597E1B35/594AC36C
-Reference = D11;
-ValeurCmp = VEMD2020X01;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3CA
-Path = /597E1B39/594AC674
-Reference = D12;
-ValeurCmp = VSMB294008G;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3D0
-Path = /597E1B39/594AC36C
-Reference = D13;
-ValeurCmp = VEMD2020X01;
-IdModule  = mouse:VISHAY_DIODE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3E1
-Path = /597E1B35/589BE88F
-Reference = P24;
-ValeurCmp = PR_Host;
-IdModule  = mouse:STAND_PR_HOST;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED409
-Path = /597E1B39/589BE88F
-Reference = P30;
-ValeurCmp = PR_Host;
-IdModule  = mouse:STAND_PR_HOST;
 EndCmp
 
 BeginCmp
@@ -961,6 +897,206 @@ IdModule  = Resistors_SMD:R_0201;
 EndCmp
 
 BeginCmp
+TimeStamp = 597A96FB
+Path = 
+Reference = G***;
+ValeurCmp = LOGO;
+IdModule  = mouse:KERI_9mm;
+EndCmp
+
+BeginCmp
+TimeStamp = 58B94B99
+Path = /57CA18F6/57CA1E0F
+Reference = U4;
+ValeurCmp = DRV8835;
+IdModule  = mouse:DRV8835;
+EndCmp
+
+BeginCmp
+TimeStamp = 59700E0E
+Path = /57CF0B09/59497D43
+Reference = P10;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_long_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 59700E18
+Path = /57CF2A30/59497D43
+Reference = P16;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_long_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 59700E2C
+Path = /597E1B39/59497D43
+Reference = P35;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_long_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA725
+Path = /57CF2A30/59497CA2
+Reference = P14;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA70D
+Path = /57CF0B09/59497CA2
+Reference = P8;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3F5
+Path = /597E1B35/59497CA2
+Reference = P27;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED41D
+Path = /597E1B39/59497CA2
+Reference = P33;
+ValeurCmp = Partition;
+IdModule  = mouse:Partition_Slave;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA7EF
+Path = /594A458D
+Reference = U2;
+ValeurCmp = ESP32;
+IdModule  = mouse:ESP32;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3E9
+Path = /597E1B35/589BE652
+Reference = P25;
+ValeurCmp = PR_Slave;
+IdModule  = mouse:STAND_PR_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED411
+Path = /597E1B39/589BE652
+Reference = P31;
+ValeurCmp = PR_Slave;
+IdModule  = mouse:STAND_PR_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 58A1AE6A
+Path = /57CF2A30/589BE652
+Reference = P12;
+ValeurCmp = PR_Slave;
+IdModule  = mouse:STAND_PR_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA75D
+Path = /592B9AF5/592AB803
+Reference = P21;
+ValeurCmp = ToF_Slave;
+IdModule  = mouse:STAND_PR_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 58A2BB80
+Path = /57CF0B09/589BE652
+Reference = P6;
+ValeurCmp = PR_Slave;
+IdModule  = mouse:STAND_PR_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA6FC
+Path = /57CD8D81/594AA6DF
+Reference = LS1;
+ValeurCmp = Speaker;
+IdModule  = mouse:SMT-0440-S-R;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA74D
+Path = /592ADBF2/59340164
+Reference = P19;
+ValeurCmp = ENC_Slave;
+IdModule  = mouse:STAND_AS_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA779
+Path = /59347BCD/59340164
+Reference = P23;
+ValeurCmp = ENC_Slave;
+IdModule  = mouse:STAND_AS_SLAVE;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA76F
+Path = /59347BCD/59340673
+Reference = P22;
+ValeurCmp = ENC_Host;
+IdModule  = mouse:STAND_AS_HOST;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA743
+Path = /592ADBF2/59340673
+Reference = P18;
+ValeurCmp = ENC_Host;
+IdModule  = mouse:STAND_AS_HOST;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED409
+Path = /597E1B39/589BE88F
+Reference = P30;
+ValeurCmp = PR_Host;
+IdModule  = mouse:STAND_PR_HOST;
+EndCmp
+
+BeginCmp
+TimeStamp = 596ED3E1
+Path = /597E1B35/589BE88F
+Reference = P24;
+ValeurCmp = PR_Host;
+IdModule  = mouse:STAND_PR_HOST;
+EndCmp
+
+BeginCmp
+TimeStamp = 58A1AE2B
+Path = /57CF0B09/589BE88F
+Reference = P5;
+ValeurCmp = PR_Host;
+IdModule  = mouse:STAND_PR_HOST;
+EndCmp
+
+BeginCmp
+TimeStamp = 58A1AE61
+Path = /57CF2A30/589BE88F
+Reference = P11;
+ValeurCmp = PR_Host;
+IdModule  = mouse:STAND_PR_HOST;
+EndCmp
+
+BeginCmp
+TimeStamp = 596EA755
+Path = /592B9AF5/592AB778
+Reference = P20;
+ValeurCmp = ToF_Host;
+IdModule  = mouse:STAND_PR_HOST;
+EndCmp
+
+BeginCmp
 TimeStamp = 596ED417
 Path = /597E1B39/59497B18
 Reference = P32;
@@ -1022,142 +1158,6 @@ Path = /57CF0B09/59497CF1
 Reference = P9;
 ValeurCmp = Partition;
 IdModule  = mouse:Partition_Long_Host;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA743
-Path = /592ADBF2/59340673
-Reference = P18;
-ValeurCmp = ENC_Host;
-IdModule  = mouse:STAND_AS_HOST;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA76F
-Path = /59347BCD/59340673
-Reference = P22;
-ValeurCmp = ENC_Host;
-IdModule  = mouse:STAND_AS_HOST;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA75D
-Path = /592B9AF5/592AB803
-Reference = P21;
-ValeurCmp = ToF_Slave;
-IdModule  = mouse:STAND_PR_SLAVE;
-EndCmp
-
-BeginCmp
-TimeStamp = 58A1AE6A
-Path = /57CF2A30/589BE652
-Reference = P12;
-ValeurCmp = PR_Slave;
-IdModule  = mouse:STAND_PR_SLAVE;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED411
-Path = /597E1B39/589BE652
-Reference = P31;
-ValeurCmp = PR_Slave;
-IdModule  = mouse:STAND_PR_SLAVE;
-EndCmp
-
-BeginCmp
-TimeStamp = 597A96FB
-Path = 
-Reference = G***;
-ValeurCmp = LOGO;
-IdModule  = mouse:KERI_9mm;
-EndCmp
-
-BeginCmp
-TimeStamp = 58B94B99
-Path = /57CA18F6/57CA1E0F
-Reference = U4;
-ValeurCmp = DRV8835;
-IdModule  = mouse:DRV8835;
-EndCmp
-
-BeginCmp
-TimeStamp = 59700E0E
-Path = /57CF0B09/59497D43
-Reference = P10;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_long_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 59700E18
-Path = /57CF2A30/59497D43
-Reference = P16;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_long_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 59700E22
-Path = /597E1B35/59497D43
-Reference = P29;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_long_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 59700E2C
-Path = /597E1B39/59497D43
-Reference = P35;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_long_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA725
-Path = /57CF2A30/59497CA2
-Reference = P14;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA70D
-Path = /57CF0B09/59497CA2
-Reference = P8;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3F5
-Path = /597E1B35/59497CA2
-Reference = P27;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED41D
-Path = /597E1B39/59497CA2
-Reference = P33;
-ValeurCmp = Partition;
-IdModule  = mouse:Partition_Slave;
-EndCmp
-
-BeginCmp
-TimeStamp = 596EA7EF
-Path = /594A458D
-Reference = U2;
-ValeurCmp = ESP32;
-IdModule  = mouse:ESP32;
-EndCmp
-
-BeginCmp
-TimeStamp = 596ED3E9
-Path = /597E1B35/589BE652
-Reference = P25;
-ValeurCmp = PR_Slave;
-IdModule  = mouse:STAND_PR_SLAVE;
 EndCmp
 
 EndListe
