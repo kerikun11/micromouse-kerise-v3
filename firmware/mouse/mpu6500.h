@@ -47,6 +47,10 @@ class MPU6500: public TaskBase {
       pinMode(MPU6500_CS_PIN, OUTPUT);
       digitalWrite(MPU6500_CS_PIN, HIGH);
 
+      // calibration semaphore
+      calibration_start_semaphore = xSemaphoreCreateBinary();
+      calibration_end_semaphore = xSemaphoreCreateBinary();
+
       create_task();
     }
     struct Parameter {
@@ -71,27 +75,18 @@ class MPU6500: public TaskBase {
       }
     };
     Parameter accel, velocity, gyro, angle;
-    void calibration(bool waitUntilTheEnd = true) {
-      delete_task();
-      writeReg(0x19, 0x07);
-      writeReg(0x1b, 0x18);
-      writeReg(0x1c, 0x18);
-      delay(100);
-      create_task();
-      delay(100);
-      calibration_flag = true;
-      if (waitUntilTheEnd) {
-        calibrationWait();
-      }
+    void calibration(bool waitForEnd = true) {
+      xSemaphoreTake(calibration_end_semaphore, 0);
+      xSemaphoreGive(calibration_start_semaphore);
+      if (waitForEnd) calibrationWait();
     }
     void calibrationWait() {
-      while (calibration_flag) {
-        vTaskDelay(1 / portTICK_RATE_MS);
-      }
+      xSemaphoreTake(calibration_end_semaphore, portMAX_DELAY);
     }
     void print() {
       printf("angle:\t(%.3f,\t%.3f,\t%.3f)\n", angle.x * 180 / PI, angle.y * 180 / PI, angle.z * 180 / PI);
     }
+
   private:
     //    spi_device_handle_t spi_handle;
     SPIClass spi;
@@ -99,23 +94,50 @@ class MPU6500: public TaskBase {
     Parameter gyro_offset;
     Parameter accel_prev;
     Parameter gyro_prev;
-    bool calibration_flag;
+
+    SemaphoreHandle_t calibration_start_semaphore;
+    SemaphoreHandle_t calibration_end_semaphore;
 
     virtual void task() {
-      writeReg(0x19, 0x07);
-      writeReg(0x1b, 0x18);
-      writeReg(0x1c, 0x18);
-      delay(100);
-
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         update();
+
+        // calculation of angle and velocity from motion sensor
         velocity += (accel + accel_prev) / 2 * MPU6500_UPDATE_PERIOD_US / 1000000;
         accel_prev = accel;
         angle += (gyro + gyro_prev) / 2 * MPU6500_UPDATE_PERIOD_US / 1000000;
         gyro_prev = gyro;
+
+        if (xSemaphoreTake(calibration_start_semaphore, 0) == pdTRUE) {
+          reset();
+          Parameter accel_sum, gyro_sum;
+          const int ave_count = 2000;
+          for (int i = 0; i < ave_count; i++) {
+            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+            update();
+            accel_sum += accel;
+            gyro_sum += gyro;
+          }
+          accel_offset += accel_sum / ave_count;
+          gyro_offset += gyro_sum / ave_count;
+          velocity = Parameter();
+          angle = Parameter();
+          xSemaphoreGive(calibration_end_semaphore);
+        }
+      }
+    }
+    void reset() {
+      writeReg(0x19, 0x07);
+      delay(100);
+      writeReg(0x6b, 0x01); //< power management 1
+      writeReg(0x1b, 0x18); //< gyro range
+      writeReg(0x1c, 0x18); //< accel range
+      delay(100);
+      if (readReg(117) != 0x12) {
+        log_e("whoami failed:(");
       }
     }
     void writeReg(uint8_t reg, uint8_t data) {
@@ -146,6 +168,11 @@ class MPU6500: public TaskBase {
       spi.endTransaction();
       digitalWrite(MPU6500_CS_PIN, HIGH);
     }
+    uint8_t readReg(uint8_t reg) {
+      uint8_t data;
+      readReg(reg, &data, 1);
+      return data;
+    }
     void update() {
       union {
         int16_t i;
@@ -169,24 +196,6 @@ class MPU6500: public TaskBase {
       gyro.y = bond.i / MPU6500_GYRO_FACTOR * PI / 180 - gyro_offset.y;
       bond.h = rx[12]; bond.l = rx[13];
       gyro.z = bond.i / MPU6500_GYRO_FACTOR * PI / 180 - gyro_offset.z;
-
-      if (calibration_flag) {
-        static Parameter accel_sum, gyro_sum;
-        accel_sum += accel;
-        gyro_sum += gyro;
-        static int calibration_counter;
-        const int ave_count = 1000;
-        if (++calibration_counter >= ave_count) {
-          accel_offset += accel_sum / ave_count;
-          gyro_offset += gyro_sum / ave_count;
-          calibration_counter = 0;
-          calibration_flag = false;
-          accel_sum = Parameter();
-          gyro_sum = Parameter();
-          velocity = Parameter();
-          angle = Parameter();
-        }
-      }
     }
 };
 

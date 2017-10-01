@@ -83,16 +83,18 @@ void loop() {
   fan_test();
 #elif TEST == 3
   straight_test();
+#elif TEST == 4
+  // reflector display
+  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
+  delay(10);
 #else
   //  mpu.print();
   //  as.print();
-  //  wd.print();
-  //  delay(100);
+  wd.print();
+  delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
-  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
-  delay(10);
 #endif
 }
 

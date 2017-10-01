@@ -202,7 +202,7 @@ class SearchRun: TaskBase {
     void turn(const float angle) {
       const float speed = 1.0 * M_PI;
       const float accel = 24 * M_PI;
-      const float back_gain = 200.0f;
+      const float back_gain = 120.0f;
       int ms = 0;
       delay(200);
       while (1) {
@@ -284,7 +284,7 @@ class SearchRun: TaskBase {
       }
       sc.disable();
       mt.drive(-200, -200);
-      delay(200);
+      delay(300);
       mt.drive(-100, -100);
       delay(100);
       sc.enable();

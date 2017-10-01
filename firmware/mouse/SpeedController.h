@@ -97,7 +97,7 @@ class Position {
 
 #define SPEED_CONTROLLER_KM   0.01f
 
-#define SPEED_CONTROLLER_KP   1.5f
+#define SPEED_CONTROLLER_KP   1.8f
 #define SPEED_CONTROLLER_KI   96.0f
 #define SPEED_CONTROLLER_KD   0.0f
 

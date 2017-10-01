@@ -9,9 +9,9 @@
 #define WALL_DETECTOR_TASK_PRIORITY 4
 #define WALL_DETECTOR_STACK_SIZE    4096
 
-#define WALL_DETECTOR_FLONT_RATIO   1.62f
+#define WALL_DETECTOR_FLONT_RATIO   1.5f
 #define WALL_SIDE_DIV               1.8f  //< Response
-#define WALL_FRONT_DIV              4.2f  //< Response
+#define WALL_FRONT_DIV              7.0f  //< Response
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -87,14 +87,6 @@ class WallDetector : TaskBase {
             _wall.front[i] = true;
           else if (value < _wall_ref.front[i] * 0.98)
             _wall.front[i] = false;
-          //          _wall_difference.front[i] = (_wall_distance.front[i] - value) / _wall_distance.front[i];
-        }
-        for (int i = 0; i < 2; i++) {
-          int16_t value = ref.front(i);
-          //          if (value > _wall_ref.front[i] * 1.02)
-          //            _wall.front[i] = true;
-          //          else if (value < _wall_ref.front[i] * 0.98)
-          //            _wall.front[i] = false;
           _wall_difference.front[i] =  (_wall_distance.front[i] * WALL_DETECTOR_FLONT_RATIO - value) / _wall_distance.front[i];
         }
 
