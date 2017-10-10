@@ -286,7 +286,7 @@ class SearchRun: TaskBase {
       mt.drive(-200, -200);
       delay(300);
       mt.drive(-100, -100);
-      delay(100);
+      delay(200);
       sc.enable();
       updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
       setPosition(origin);

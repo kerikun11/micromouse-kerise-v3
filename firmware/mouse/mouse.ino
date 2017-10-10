@@ -67,7 +67,7 @@ void setup() {
   as.init();
   em.init();
   ec.init();
-  ref.init();
+  ref.begin();
 
   wd.enable();
   //  lg.start();
