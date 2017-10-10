@@ -84,13 +84,17 @@ void loop() {
 #elif TEST == 3
   straight_test();
 #elif TEST == 4
-  // reflector display
-  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
+  ref.csv();
   delay(10);
-#else
-  //  mpu.print();
-  //  as.print();
+#elif TEST == 5
+  printf("0,1800,%d,%d\n", ref.read(Reflector::REF_CH_FL, 1), ref.read(Reflector::REF_CH_FR, 1));
+  delay(10);
+#elif TEST == 6
   wd.print();
+  delay(100);
+#else
+  mpu.print();
+  as.print();
   delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
@@ -240,12 +244,9 @@ void task() {
       ms.start();
       break;
     case 3:
-      fr.set_path("srsssrlssllrlrrlrlsslrrllrsrllrsllrlrlslrsss");
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(5, 6), Vector(5, 7), Vector(6, 6), Vector(6, 7)});
       bz.play(Buzzer::CONFIRM);
-      mpu.calibration();
-      fr.enable();
-      fr.waitForEnd();
-      fr.disable();
       break;
   }
   bz.play(Buzzer::SELECT);
@@ -254,7 +255,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0) > 1000 && ref.front(1) > 1600) {
+    if (ref.front(0, 0) > 1000 && ref.front(1, 0) > 1600) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }

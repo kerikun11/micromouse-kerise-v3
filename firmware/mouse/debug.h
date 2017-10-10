@@ -38,6 +38,11 @@ class ExternalController: TaskBase {
               mpu.calibration();
               wd.calibration();
               break;
+            case 'p':
+              mpu.print();
+              ref.print();
+              wd.print();
+              break;
           }
         }
       }

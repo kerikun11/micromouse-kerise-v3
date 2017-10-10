@@ -37,11 +37,8 @@ class WallDetector : TaskBase {
       }
     }
     void print() {
-      printf("Wall:\t%04u\t%04u\t%04u\t%04u\t|\t", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
-      printf("%05.3f\t%05.3f\t%05.3f\t%05.3f\t|\t", wall_difference().side[0], wall_difference().front[0],
-             wall_difference().front[1], wall_difference().side[1]);
-      printf("%s %s %s %s\n", wall().side[0] ? "X" : ".", wall().front[0] ? "X" : ".",
-             wall().front[1] ? "X" : ".", wall().side[1] ? "X" : ".");
+      printf("Wall:\t%05.3f\t%05.3f\t%05.3f\t%05.3f\t|\t", wall_difference().side[0], wall_difference().front[0], wall_difference().front[1], wall_difference().side[1]);
+      printf("%s %s %s %s\n", wall().side[0] ? "X" : ".", wall().front[0] ? "X" : ".", wall().front[1] ? "X" : ".", wall().side[1] ? "X" : ".");
     }
     struct WALL {
       bool side[2];
@@ -72,28 +69,35 @@ class WallDetector : TaskBase {
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
+        const int wall_threshold_side = 400;
+        const int wall_threshold_front = 400;
         for (int i = 0; i < 2; i++) {
-          int16_t value = ref.side(i);
-          if (value > _wall_ref.side[i] * 1.02)
+          int16_t value = ref.side(i, 0);
+          if (value > wall_threshold_side * 1.05)
             _wall.side[i] = true;
-          else if (value < _wall_ref.side[i] * 0.98)
+          else if (value < wall_threshold_side * 0.95)
             _wall.side[i] = false;
+        }
+        for (int i = 0; i < 2; i++) {
+          int16_t value = ref.front(i, 0);
+          if (value > wall_threshold_front * 1.05)
+            _wall.front[i] = true;
+          else if (value < wall_threshold_front * 0.95)
+            _wall.front[i] = false;
+        }
+        for (int i = 0; i < 2; i++) {
+          int16_t value = ref.side(i, 1);
           _wall_difference.side[i] = (_wall_distance.side[i] - value) / _wall_distance.side[i];
         }
         for (int i = 0; i < 2; i++) {
-          //          int16_t value = (ref.front(0) + ref.front(1)) / 2;
-          int16_t value = ref.front(i);
-          if (value > _wall_ref.front[i] * 1.02)
-            _wall.front[i] = true;
-          else if (value < _wall_ref.front[i] * 0.98)
-            _wall.front[i] = false;
+          int16_t value = ref.front(i, 1);
           _wall_difference.front[i] =  (_wall_distance.front[i] * WALL_DETECTOR_FLONT_RATIO - value) / _wall_distance.front[i];
         }
 
         if (calibration_flag) {
           static float sum[2] = {0, 0};
           for (int i = 0; i < 2; i++) {
-            sum[i] += ref.side(i);
+            sum[i] += ref.side(i, 1);
           }
 
           static int calibration_counter = 0;
