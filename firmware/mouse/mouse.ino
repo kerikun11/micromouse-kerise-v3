@@ -1,4 +1,4 @@
-/*
+/**
   KERISE v3
   Author:  kerikun11 (Github: kerikun11)
   Date:    2017.02.24
@@ -6,7 +6,6 @@
 
 #include <WiFi.h>
 #include <FS.h>
-#include "esp_deep_sleep.h"
 #include "config.h"
 
 #include "as5145.h"
@@ -23,6 +22,7 @@
 #include "SearchRun.h"
 #include "MazeSolver.h"
 
+/** 実体を定義 */
 AS5145 as;
 Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
 Button btn(BUTTON_PIN);
@@ -40,6 +40,21 @@ FastRun fr;
 SearchRun sr;
 MazeSolver ms;
 
+void batteryCheck() {
+  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
+  printf("Battery Voltage: %.3f\n", voltage);
+  if (voltage < 3.8f) {
+    printf("Battery Low!\n");
+    bz.play(Buzzer::LOW_BATTERY);
+    delay(3000);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
+    esp_deep_sleep_start();
+  }
+}
+
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
@@ -48,18 +63,7 @@ void setup() {
   printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
   led = 3;
 
-  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
-  printf("Battery Voltage: %.3f\n", voltage);
-  if (voltage < 3.8f) {
-    printf("Battery Low!\n");
-    bz.play(Buzzer::LOW_BATTERY);
-    delay(3000);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_start();
-  }
+  batteryCheck();
   bz.play(Buzzer::BOOT);
 
   delay(500);
@@ -227,6 +231,7 @@ void task() {
   switch (mode) {
     case 0:
       if (!waitForCover()) return;
+      led = 3;
       ms.start();
       break;
     case 1: {
@@ -234,18 +239,16 @@ void task() {
         fr.fast_speed = 200 + 200 * speed;
       }
       if (!waitForCover()) return;
-      ms.start();
       break;
     case 2: {
         int gain = waitForSelect(8);
         fr.fast_curve_gain = 0.1f + 0.1f * gain;
       }
       if (!waitForCover()) return;
-      ms.start();
       break;
     case 3:
       if (!waitForCover()) return;
-      ms.set_goal({Vector(5, 6), Vector(5, 7), Vector(6, 6), Vector(6, 7)});
+      ms.set_goal({Vector(1, 0)});
       bz.play(Buzzer::CONFIRM);
       break;
   }
@@ -255,7 +258,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0, 0) > 1000 && ref.front(1, 0) > 1600) {
+    if (ref.front(0, 0) > 1000 && ref.front(1, 0) > 1000) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }

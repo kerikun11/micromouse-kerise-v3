@@ -75,10 +75,10 @@ class MPU6500: public TaskBase {
       }
     };
     Parameter accel, velocity, gyro, angle;
-    void calibration(bool waitForEnd = true) {
+    void calibration(bool waitUntilTheEnd = true) {
       xSemaphoreTake(calibration_end_semaphore, 0);
       xSemaphoreGive(calibration_start_semaphore);
-      if (waitForEnd) calibrationWait();
+      if (waitUntilTheEnd) calibrationWait();
     }
     void calibrationWait() {
       xSemaphoreTake(calibration_end_semaphore, portMAX_DELAY);

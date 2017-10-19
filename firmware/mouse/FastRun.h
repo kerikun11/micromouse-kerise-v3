@@ -254,7 +254,7 @@ class FastRun: TaskBase {
     };
     float fast_speed;
     float fast_curve_gain;
-    void set_speed(const float speed = 1200, const float gain = 0.5) {
+    void set_speed(const float speed = 600, const float gain = 0.5) {
       fast_speed = speed;
       fast_curve_gain = gain;
     }

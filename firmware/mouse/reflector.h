@@ -125,9 +125,10 @@ class Reflector {
           int temp = offset[i] - analogRead(rx_pins[i]);
           raw[0][i][0] = (temp < 0) ? 1 : temp;
         }
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); // 放電時間
+        //        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); // 放電時間
 
         for (int i = 0; i < REF_CH_MAX; i++) {
+          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); // 放電時間
           digitalWrite(tx_pins[i], LOW);
           delayMicroseconds(30); // 充電時間
           digitalWrite(tx_pins[i], HIGH);
@@ -135,7 +136,7 @@ class Reflector {
           delayMicroseconds(sample_wait_us);
           int temp = offset[i] - analogRead(rx_pins[i]);
           raw[1][i][0] = (temp < 0) ? 1 : temp;
-          delayMicroseconds(30); // 放電時間
+          //          delayMicroseconds(30); // 放電時間
         }
 
         for (int k = 0; k < 2; k++) {

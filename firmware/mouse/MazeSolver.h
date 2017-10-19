@@ -22,7 +22,7 @@
 #define MAZE_SOLVER_STACK_SIZE    8192
 
 //#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
-//#define MAZE_GOAL {Vector(3,7), Vector(3,8), Vector(4,7), Vector(4,8)}
+//#define MAZE_GOAL {{Vector(5, 6), Vector(5, 7), Vector(6, 6), Vector(6, 7)}}
 #define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 
@@ -78,7 +78,7 @@ class MazeSolver: TaskBase {
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
-        delay(300);
+        //        delay(300);
         agent.updateWall(v, d + 1, wd.wall().side[0]); // left
         agent.updateWall(v, d + 0, wd.wall().front[0] && wd.wall().front[1]); // front
         agent.updateWall(v, d - 1, wd.wall().side[1]); // right
@@ -118,7 +118,8 @@ class MazeSolver: TaskBase {
             case Dir::North:
               calib += 3;
               if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
-                sr.set_action(SearchRun::TURN_LEFT_PUT);
+                //                sr.set_action(SearchRun::TURN_LEFT_PUT);
+                sr.set_action(SearchRun::TURN_LEFT_90);
                 calib = 0;
               } else {
                 sr.set_action(SearchRun::TURN_LEFT_90);
@@ -131,7 +132,8 @@ class MazeSolver: TaskBase {
             case Dir::South:
               calib ++;
               if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
-                sr.set_action(SearchRun::TURN_RIGHT_PUT);
+                //                sr.set_action(SearchRun::TURN_RIGHT_PUT);
+                sr.set_action(SearchRun::TURN_RIGHT_90);
                 calib = 0;
               } else {
                 sr.set_action(SearchRun::TURN_RIGHT_90);

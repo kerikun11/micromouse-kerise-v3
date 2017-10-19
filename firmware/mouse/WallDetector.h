@@ -9,9 +9,9 @@
 #define WALL_DETECTOR_TASK_PRIORITY 4
 #define WALL_DETECTOR_STACK_SIZE    4096
 
-#define WALL_DETECTOR_FLONT_RATIO   1.5f
-#define WALL_SIDE_DIV               1.8f  //< Response
-#define WALL_FRONT_DIV              7.0f  //< Response
+#define WALL_DETECTOR_FLONT_RATIO   2.4f
+//#define WALL_SIDE_DIV               1.8f  //< Response
+//#define WALL_FRONT_DIV              7.0f  //< Response
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -60,7 +60,7 @@ class WallDetector : TaskBase {
   private:
     bool calibration_flag;
     struct WALL _wall;
-    struct WALL_VALUE _wall_ref;
+    //    struct WALL_VALUE _wall_ref;
     struct WALL_VALUE _wall_distance;
     struct WALL_VALUE _wall_difference;
     virtual void task() {
@@ -69,8 +69,8 @@ class WallDetector : TaskBase {
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
-        const int wall_threshold_side = 400;
-        const int wall_threshold_front = 400;
+        const int wall_threshold_side = 500;
+        const int wall_threshold_front = 270;
         for (int i = 0; i < 2; i++) {
           int16_t value = ref.side(i, 0);
           if (value > wall_threshold_side * 1.05)
@@ -105,11 +105,11 @@ class WallDetector : TaskBase {
           if (++calibration_counter >= ave_count) {
             for (int i = 0; i < 2; i++) {
               _wall_distance.side[i] = sum[i] / ave_count;
-              _wall_ref.side[i] = _wall_distance.side[i] / WALL_SIDE_DIV;
+              //              _wall_ref.side[i] = _wall_distance.side[i] / WALL_SIDE_DIV;
             }
             for (int i = 0; i < 2; i++) {
               _wall_distance.front[i] =  (_wall_distance.side[0] + _wall_distance.side[1]) / 2;
-              _wall_ref.front[i] = _wall_distance.front[i] / WALL_FRONT_DIV;
+              //              _wall_ref.front[i] = _wall_distance.front[i] / WALL_FRONT_DIV;
             }
             printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) _wall_distance.side[0],
                    (int) _wall_distance.front[0], (int) _wall_distance.front[1], (int) _wall_distance.side[1]);
