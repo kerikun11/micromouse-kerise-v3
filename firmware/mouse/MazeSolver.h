@@ -78,10 +78,11 @@ class MazeSolver: TaskBase {
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
-        //        delay(300);
-        agent.updateWall(v, d + 1, wd.wall().side[0]); // left
-        agent.updateWall(v, d + 0, wd.wall().front[0] && wd.wall().front[1]); // front
-        agent.updateWall(v, d - 1, wd.wall().side[1]); // right
+        //        delay(300); // センサが安定するのを待つ
+        ref.oneshot();
+        agent.updateWall(v, d + 1, ref.getOneshotValue(Reflector::REF_CH_SL)); // left
+        agent.updateWall(v, d + 0, ref.getOneshotValue(Reflector::REF_CH_FL) && ref.getOneshotValue(Reflector::REF_CH_FR)); // front
+        agent.updateWall(v, d - 1, ref.getOneshotValue(Reflector::REF_CH_SR)); // right
 
         agent.calcNextDir();
         Agent::State newState = agent.getState();

@@ -84,8 +84,7 @@ class WallDetector {
           for (int i = 0; i < 2; i++) for (int j = 0; j < ave_count; j++) sum[i] += ref.side(i);
           for (int i = 0; i < 2; i++) _wall_distance.side[i] = sum[i] / ave_count;
           for (int i = 0; i < 2; i++) _wall_distance.front[i] =  (_wall_distance.side[0] + _wall_distance.side[1]) / 2;
-          printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) _wall_distance.side[0],
-                 (int) _wall_distance.front[0], (int) _wall_distance.front[1], (int) _wall_distance.side[1]);
+          printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) _wall_distance.side[0], (int) _wall_distance.front[0], (int) _wall_distance.front[1], (int) _wall_distance.side[1]);
           xSemaphoreGive(calibrationEndSemaphore);
         }
       }

@@ -14,7 +14,7 @@
 #include "SpeedController.h"
 
 #define SEARCH_WALL_ATTACH_ENABLED     true
-#define SEARCH_WALL_AVOID_ENABLED      false
+#define SEARCH_WALL_AVOID_ENABLED      true
 #define SEARCH_WALL_AVOID_GAIN         0.00002f
 
 #define SEARCH_LOOK_AHEAD   6
@@ -172,20 +172,22 @@ class SearchRun: TaskBase {
     void wall_avoid() {
 #if SEARCH_WALL_AVOID_ENABLED
       const float gain = SEARCH_WALL_AVOID_GAIN;
-      if (wd.wall().side[0]) {
-        fixPosition(Position(0, wd.wall_difference().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      const float threashold_ratio = 1.0f;
+      if (wd.wall_ratio().side[0] < threashold_ratio) {
+        fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
-      if (wd.wall().side[1]) {
-        fixPosition(Position(0, -wd.wall_difference().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (wd.wall_ratio().side[1] < threashold_ratio) {
+        fixPosition(Position(0, -wd.wall_ratio().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
 #endif
     }
     void wall_attach() {
 #if SEARCH_WALL_ATTACH_ENABLED
-      if (wd.wall().front[0] && wd.wall().front[1]) {
+      ref.oneshot();
+      if (ref.getOneshotValue(Reflector::REF_CH_FL) && ref.getOneshotValue(Reflector::REF_CH_FR)) {
         while (1) {
-          float trans = (wd.wall_difference().front[0] + wd.wall_difference().front[1]) * 10;
-          float rot = (wd.wall_difference().front[1] - wd.wall_difference().front[0]) * 2;
+          float trans = (wd.wall_ratio().front[0] + wd.wall_ratio().front[1]) * 10;
+          float rot = (wd.wall_ratio().front[1] - wd.wall_ratio().front[0]) * 2;
           if (fabs(trans) < 0.5f && fabs(rot) < 0.2f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -292,7 +294,6 @@ class SearchRun: TaskBase {
       fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
     }
     void uturn(const float velocity, const float v_end) {
-      WallDetector::WALL wall = wd.wall();
       if (mpu.angle.z > 0) {
         wall_attach();
         turn(-M_PI / 2);

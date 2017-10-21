@@ -313,11 +313,12 @@ class FastRun: TaskBase {
     void wall_avoid() {
 #if FAST_WALL_AVOID
       const float gain = FAST_WALL_AVOID_GAIN;
-      if (wd.wall().side[0]) {
-        fixPosition(Position(0, wd.wall_difference().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      const float threashold_ratio = 1.0f;
+      if (wd.wall_ratio().side[0] < threashold_ratio) {
+        fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
-      if (wd.wall().side[1]) {
-        fixPosition(Position(0, -wd.wall_difference().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (wd.wall_ratio().side[1] < threashold_ratio) {
+        fixPosition(Position(0, -wd.wall_ratio().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
 #endif
     }

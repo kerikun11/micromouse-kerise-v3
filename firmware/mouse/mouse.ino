@@ -72,8 +72,8 @@ void setup() {
   em.init();
   ec.init();
   ref.begin();
+  wd.begin();
 
-  wd.enable();
   //  lg.start();
 }
 
@@ -258,7 +258,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0, 0) > 1000 && ref.front(1, 0) > 1000) {
+    if (ref.front(0) > 120 && ref.front(1) > 120) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }
