@@ -15,9 +15,9 @@
 
 #define SEARCH_WALL_ATTACH_ENABLED     true
 #define SEARCH_WALL_AVOID_ENABLED      true
-#define SEARCH_WALL_AVOID_GAIN         0.00002f
+#define SEARCH_WALL_AVOID_GAIN         0.00005f
 
-#define SEARCH_LOOK_AHEAD   6
+#define SEARCH_LOOK_AHEAD   5
 #define SEARCH_PROP_GAIN    30
 
 #define SEARCH_RUN_TASK_PRIORITY   3
@@ -172,7 +172,7 @@ class SearchRun: TaskBase {
     void wall_avoid() {
 #if SEARCH_WALL_AVOID_ENABLED
       const float gain = SEARCH_WALL_AVOID_GAIN;
-      const float threashold_ratio = 1.0f;
+      const float threashold_ratio = 0.4f;
       if (wd.wall_ratio().side[0] < threashold_ratio) {
         fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
@@ -183,12 +183,12 @@ class SearchRun: TaskBase {
     }
     void wall_attach() {
 #if SEARCH_WALL_ATTACH_ENABLED
-      ref.oneshot();
-      if (ref.getOneshotValue(Reflector::REF_CH_FL) && ref.getOneshotValue(Reflector::REF_CH_FR)) {
+      uint8_t wall = wd.wallDetect();
+      if ((wall & 6) == 6) {
         while (1) {
-          float trans = (wd.wall_ratio().front[0] + wd.wall_ratio().front[1]) * 10;
-          float rot = (wd.wall_ratio().front[1] - wd.wall_ratio().front[0]) * 2;
-          if (fabs(trans) < 0.5f && fabs(rot) < 0.2f) break;
+          float trans = (wd.wall_ratio().front[0] + wd.wall_ratio().front[1]) * 50;
+          float rot = (wd.wall_ratio().front[1] - wd.wall_ratio().front[0]) * 10;
+          if (fabs(trans) < 0.5f && fabs(rot) < 0.1f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         }
@@ -196,7 +196,6 @@ class SearchRun: TaskBase {
         printPosition("wall_attach");
         fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
         bz.play(Buzzer::SELECT);
-        //        delay(1000);
       }
 #endif
     }
@@ -285,9 +284,7 @@ class SearchRun: TaskBase {
       }
       sc.disable();
       mt.drive(-200, -200);
-      delay(300);
-      mt.drive(-100, -100);
-      delay(200);
+      delay(1000);
       sc.enable();
       updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
       setPosition(origin);
@@ -348,8 +345,6 @@ class SearchRun: TaskBase {
             while (q.size()) {
               q.pop();
             }
-            //            vTaskDelete(NULL);
-            //            handle = NULL;
             while (1) {
               delay(1000);
             }
@@ -363,6 +358,7 @@ class SearchRun: TaskBase {
             for (int i = 0; i < num; i++) {
               S90 tr(false);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
+              //              if (wd.wall_ratio() > )
               trace(tr, tr.velocity);
               straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
             }

@@ -13,8 +13,8 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define FAST_WALL_AVOID         false
-#define FAST_WALL_AVOID_GAIN    0.000016f
+#define FAST_WALL_AVOID         true
+#define FAST_WALL_AVOID_GAIN    0.00002f
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -581,10 +581,10 @@ class FastRun: TaskBase {
       fan.drive(0);
       delay(100);
       sc.disable();
-      last_path = path;
-      path = "";
       printPosition("E3");
       bz.play(Buzzer::COMPLETE);
+      last_path = path;
+      path = "";
       while (1) {
         delay(1000);
       }
