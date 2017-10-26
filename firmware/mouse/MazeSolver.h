@@ -108,41 +108,33 @@ class MazeSolver: TaskBase {
           sr.disable();
           return false;
         }
+        int straight_count = 0;
         for (auto nextDir : nextDirs) {
-          const int calib_max = 5;
           Vector nextVec = agent.getCurVec().next(nextDir);
           switch (Dir(nextDir - agent.getCurDir())) {
             case Dir::East:
-              calib++;
-              sr.set_action(SearchRun::GO_STRAIGHT);
+              straight_count++;
               break;
             case Dir::North:
-              calib += 3;
-              if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
-                //                sr.set_action(SearchRun::TURN_LEFT_PUT);
-                sr.set_action(SearchRun::TURN_LEFT_90);
-                calib = 0;
-              } else {
-                sr.set_action(SearchRun::TURN_LEFT_90);
-              }
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
+              sr.set_action(SearchRun::TURN_LEFT_90);
               break;
             case Dir::West:
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
               sr.set_action(SearchRun::TURN_BACK);
-              calib = 0;
               break;
             case Dir::South:
-              calib ++;
-              if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
-                //                sr.set_action(SearchRun::TURN_RIGHT_PUT);
-                sr.set_action(SearchRun::TURN_RIGHT_90);
-                calib = 0;
-              } else {
-                sr.set_action(SearchRun::TURN_RIGHT_90);
-              }
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
+              sr.set_action(SearchRun::TURN_RIGHT_90);
               break;
           }
           agent.updateCurVecDir(nextVec, nextDir);
         }
+        if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+        straight_count = 0;
         maze_backup.push(maze);
         if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop();
       }

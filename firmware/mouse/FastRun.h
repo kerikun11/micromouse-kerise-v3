@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          30
+#define FAST_PROP_GAIN          60
 
 //#define printf  lg.printf
 
@@ -313,7 +313,7 @@ class FastRun: TaskBase {
     void wall_avoid() {
 #if FAST_WALL_AVOID
       const float gain = FAST_WALL_AVOID_GAIN;
-      const float threashold_ratio = 1.0f;
+      const float threashold_ratio = 0.3f;
       if (wd.wall_ratio().side[0] < threashold_ratio) {
         fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
