@@ -4,16 +4,8 @@
 #include "driver/spi_master.h"
 #include "esp_err.h"
 
-#define ICM20602_MOSI_PIN  23
-#define ICM20602_MISO_PIN  19
-#define ICM20602_SCLK_PIN  18
-#define ICM20602_CS_PIN    14
-
 #define ICM20602_TASK_PRIORITY    5
 #define ICM20602_TASK_STACK_SIZE  2048
-
-#define ICM20602_SPI              HSPI_HOST
-#define ICM20602_DMA_CHAIN        1
 
 #define ICM20602_UPDATE_PERIOD_US 1000
 
@@ -31,7 +23,7 @@ class ICM20602 {
       device_cfg.clock_speed_hz = 10000000;
       device_cfg.spics_io_num = ICM20602_CS_PIN;
       device_cfg.queue_size = 1;
-      ESP_ERROR_CHECK(spi_bus_add_device(ICM20602_SPI, &device_cfg, &spi_handle));
+      ESP_ERROR_CHECK(spi_bus_add_device(ICM20602_SPI_HOST, &device_cfg, &spi_handle));
       // calibration semaphore
       calibration_start_semaphore = xSemaphoreCreateBinary();
       calibration_end_semaphore = xSemaphoreCreateBinary();
@@ -155,7 +147,7 @@ class ICM20602 {
     void writeReg(uint8_t reg, uint8_t data) {
       static spi_transaction_t tx = {0};
       tx.flags |= SPI_TRANS_USE_TXDATA;
-      tx.address = (uint32_t)reg << 24;
+      tx.addr = reg;
       tx.tx_data[0] = data;
       tx.length = 8;
       ESP_ERROR_CHECK(spi_device_transmit(spi_handle, &tx));
@@ -163,14 +155,14 @@ class ICM20602 {
     uint8_t readReg(const uint8_t reg) {
       static spi_transaction_t tx = {0};
       tx.flags |= SPI_TRANS_USE_RXDATA;
-      tx.address = (uint32_t)(0x80 | reg) << 24;
+      tx.addr = 0x80 | reg;
       tx.length = 8;
       ESP_ERROR_CHECK(spi_device_transmit(spi_handle, &tx));
       return tx.rx_data[0];
     }
     void readReg(const uint8_t reg, uint8_t *rx_buffer, size_t length) {
       static spi_transaction_t tx = {0};
-      tx.address = (uint32_t)(0x80 | reg) << 24;
+      tx.addr = 0x80 | reg;
       tx.tx_buffer = NULL;
       tx.rx_buffer = rx_buffer;
       tx.length = 8 * length;

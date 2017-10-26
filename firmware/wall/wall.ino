@@ -5,28 +5,17 @@
 
 #include <WiFi.h>
 
-#define BAT_VOL_PIN             36
-#define MOTOR_L_CTRL1_PIN       18
-#define MOTOR_L_CTRL2_PIN       23
-#define MOTOR_R_CTRL1_PIN       19
-#define MOTOR_R_CTRL2_PIN       22
-#define FAN_PIN                 15
 //#define BAT_VOL_PIN             35
-//#define MOTOR_L_CTRL1_PIN       16
-//#define MOTOR_L_CTRL2_PIN       17
-//#define MOTOR_R_CTRL1_PIN       25
-//#define MOTOR_R_CTRL2_PIN       26
-//#define FAN_PIN                 33
+//#define PR_TX_PINS              {12, 13, 12, 13}
+//#define PR_RX_PINS              {36, 38, 39, 37}
+#define BAT_VOL_PIN             36
+#define PR_TX_PINS              {16, 17, 16, 17}
+#define PR_RX_PINS              {12, 13, 32, 33}
 
-#define LEDC_CH_MOTOR_L_CTRL1   0
-#define LEDC_CH_MOTOR_L_CTRL2   1
-#define LEDC_CH_MOTOR_R_CTRL1   2
-#define LEDC_CH_MOTOR_R_CTRL2   3
-
-#define LEDC_CH_FAN             6
-
-#include "motor.h"
-Motor mt;
+#include "reflector.h"
+#include "WallDetector.h"
+Reflector ref(PR_TX_PINS, PR_RX_PINS);
+WallDetector wd;
 
 void batteryCheck() {
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
@@ -46,29 +35,34 @@ void batteryCheck() {
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
-  log_i("KERISE v3");
-
+  log_i("KERISE Reflector Sample");
   batteryCheck();
 
-  //  xTaskCreate(task, "test", 1024, NULL, 0, NULL);
-
-  delay(1000);
-  printf("drive\n");
-  mt.drive(200, 200);
-  delay(3000);
-  printf("free\n");
-  mt.free();
+  ref.begin();
+  wd.begin();
+  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
 void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    wd.wallDetect();
   }
 }
 
 void loop() {
+  wd.print();
   delay(100);
+  if (Serial.available()) {
+    switch (Serial.read()) {
+      case 't':
+        wd.calibration();
+        break;
+      default:
+        break;
+    }
+  }
 }
 

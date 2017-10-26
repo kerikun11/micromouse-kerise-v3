@@ -6,15 +6,15 @@
 #include "TaskBase.h"
 #include "config.h"
 #include "logger.h"
-#include "as5048a.h"
+#include "as5145.h"
 #include "motor.h"
-#include "icm20602.h"
+#include "mpu6500.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define FAST_WALL_AVOID         false
-#define FAST_WALL_AVOID_GAIN    0.000016f
+#define FAST_WALL_AVOID         true
+#define FAST_WALL_AVOID_GAIN    0.00002f
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          20
+#define FAST_PROP_GAIN          60
 
 //#define printf  lg.printf
 
@@ -254,7 +254,7 @@ class FastRun: TaskBase {
     };
     float fast_speed;
     float fast_curve_gain;
-    void set_speed(const float speed = 600, const float gain = 0.3) {
+    void set_speed(const float speed = 600, const float gain = 0.5) {
       fast_speed = speed;
       fast_curve_gain = gain;
     }
@@ -313,17 +313,18 @@ class FastRun: TaskBase {
     void wall_avoid() {
 #if FAST_WALL_AVOID
       const float gain = FAST_WALL_AVOID_GAIN;
-      if (wd.wall().side[0]) {
-        fixPosition(Position(0, wd.wall_difference().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      const float threashold_ratio = 0.3f;
+      if (wd.wall_ratio().side[0] < threashold_ratio) {
+        fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
-      if (wd.wall().side[1]) {
-        fixPosition(Position(0, -wd.wall_difference().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (wd.wall_ratio().side[1] < threashold_ratio) {
+        fixPosition(Position(0, -wd.wall_ratio().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 6000;
-      const float decel = 6000;
+      const float accel = 1200;
+      const float decel = 1200;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
@@ -401,7 +402,7 @@ class FastRun: TaskBase {
       printPosition("S");
       int path_index = 0;
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
-      fan.drive(0.5);
+      fan.drive(0.3);
       delay(500);
       while (1) {
         if (path_index > (int) path.length() - 1) break;
@@ -580,10 +581,10 @@ class FastRun: TaskBase {
       fan.drive(0);
       delay(100);
       sc.disable();
-      last_path = path;
-      path = "";
       printPosition("E3");
       bz.play(Buzzer::COMPLETE);
+      last_path = path;
+      path = "";
       while (1) {
         delay(1000);
       }

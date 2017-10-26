@@ -3,14 +3,6 @@
 #include <Arduino.h>
 #include "driver/spi_master.h"
 #include "esp_err.h"
-#include "config.h"
-
-#define AS5048A_MOSI_PIN   23
-#define AS5048A_MISO_PIN   19
-#define AS5048A_SCLK_PIN   18
-#define AS5048A_CS_PIN     15
-
-#define AS5048A_SPI               HSPI_HOST
 
 #define AS5048A_TASK_PRIORITY     5
 #define AS5048A_TASK_STACK_SIZE   2048
@@ -21,13 +13,14 @@ class AS5048A {
   public:
     AS5048A() {}
     void begin() {
+      // ESP-IDF SPI device initialization
       spi_device_interface_config_t AS5048A_dev_cfg = {0};
       AS5048A_dev_cfg.mode = 1;
       AS5048A_dev_cfg.clock_speed_hz = 10000000;
       //      AS5048A_dev_cfg.spics_io_num = AS5048A_CS_PIN;
       AS5048A_dev_cfg.spics_io_num = -1;
       AS5048A_dev_cfg.queue_size = 1;
-      ESP_ERROR_CHECK(spi_bus_add_device(AS5048A_SPI, &AS5048A_dev_cfg, &AS5048A_spi));
+      ESP_ERROR_CHECK(spi_bus_add_device(AS5048A_SPI_HOST, &AS5048A_dev_cfg, &AS5048A_spi));
       digitalWrite(AS5048A_CS_PIN, HIGH);
       pinMode(AS5048A_CS_PIN, OUTPUT);
 
@@ -53,6 +46,10 @@ class AS5048A {
       int value = pulses[ch];
       if (ch == 0)value = -value;
       return value;
+    }
+    void csv() {
+      //      printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
+      printf("0,%d,%d,%d\n", AS5048A_PULSES, getRaw(0), getRaw(1));
     }
   private:
     xTaskHandle task_handle;

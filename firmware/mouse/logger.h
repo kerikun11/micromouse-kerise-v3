@@ -1,9 +1,10 @@
 #pragma once
 
 #include <Arduino.h>
-#include <WiFiUdp.h>
 #include "TaskBase.h"
 #include "config.h"
+
+#include "Reflector.h"
 
 #define LOGGER_TASK_PRIORITY 1
 #define LOGGER_STACK_SIZE    4096
@@ -30,10 +31,9 @@ class Logger: TaskBase {
       vsnprintf(s, buf_size, format, args);
       va_end(args);
       Serial.print(s);
-      //      log += String(millis(), DEC) + ": " + s;
+      log += String(millis(), DEC) + ": " + s;
     }
   private:
-    WiFiUDP udp;
     String log;
     virtual void task() {
       portTickType xLastWakeTime;

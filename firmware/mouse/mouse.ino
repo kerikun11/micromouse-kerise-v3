@@ -1,4 +1,4 @@
-/*
+/**
   KERISE v3
   Author:  kerikun11 (Github: kerikun11)
   Date:    2017.02.24
@@ -6,78 +6,82 @@
 
 #include <WiFi.h>
 #include <FS.h>
-#include "esp_deep_sleep.h"
 #include "config.h"
 
-#include "as5048a.h"
+/* Hardware */
 #include "UserInterface.h"
+#include "motor.h"
+#include "mpu6500.h"
+#include "as5145.h"
+#include "reflector.h"
+
+Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
+Button btn(BUTTON_PIN);
+LED led(LED_PINS);
+Motor mt;
+Fan fan;
+MPU6500 mpu;
+AS5145 as;
+Reflector ref(PR_TX_PINS, PR_RX_PINS);
+
+/* Software */
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
-#include "motor.h"
-#include "icm20602.h"
-#include "reflector.h"
-#include "ToF.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "FastRun.h"
 #include "SearchRun.h"
 #include "MazeSolver.h"
 
-AS5048A as;
-Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
-Button btn(BUTTON_PIN);
-LED led(LED0_PIN, LED1_PIN, LED2_PIN, LED3_PIN);
 Emergency em;
 ExternalController ec;
 Logger lg;
-Motor mt;
-Fan fan;
-ICM20602 icm;
-Reflector ref;
-ToF tof;
 WallDetector wd;
 SpeedController sc;
 FastRun fr;
 SearchRun sr;
 MazeSolver ms;
 
-void setup() {
-  WiFi.mode(WIFI_OFF);
-  Serial.begin(115200);
-  pinMode(RX, INPUT_PULLUP);
-  printf("\n************ KERISE v3-2 ************\n");
-  printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
-  led = 0xf;
-
+void batteryCheck() {
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
   printf("Battery Voltage: %.3f\n", voltage);
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
     bz.play(Buzzer::LOW_BATTERY);
     delay(3000);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
     esp_deep_sleep_start();
   }
+}
+
+void setup() {
+  WiFi.mode(WIFI_OFF);
+  Serial.begin(115200);
+  pinMode(RX, INPUT_PULLUP);
+  printf("\n************ KERISE v3 ************\n");
+  printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
+  led = 0xf;
+
+  batteryCheck();
   bz.play(Buzzer::BOOT);
 
   delay(500);
-  icm.begin();
-  as.begin();
+  mpu.init();
+  as.init();
   em.init();
   ec.init();
-  ref.init();
-//  tof.init();
+  ref.begin();
+  wd.begin();
 
-  wd.enable();
   //  lg.start();
 }
 
 void loop() {
-#define TEST -1
+#define TEST 0
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
@@ -87,33 +91,21 @@ void loop() {
 #elif TEST == 3
   straight_test();
 #elif TEST == 4
-  if (btn.pressed) {
-    delay(1000);
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    mt.drive(100, 100);
-    delay(500);
-    mt.free();
-  }
-  if (btn.long_pressed_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    fan.drive(0.4);
-    delay(1000);
-    fan.drive(0);
-  }
+  ref.csv();
+  delay(10);
+#elif TEST == 5
+  printf("0,1800,%d,%d\n", ref.read(Reflector::REF_CH_FL, 1), ref.read(Reflector::REF_CH_FR, 1));
+  delay(10);
+#elif TEST == 6
+  wd.print();
+  delay(100);
 #else
-  icm.print();
+  mpu.print();
   as.print();
-  //    wd.print();
-//  tof.print();
-  ref.print();
   delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
   //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
   //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
-  //  printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
-  //  delay(10);
 #endif
 }
 
@@ -137,15 +129,15 @@ void trapizoid_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    icm.calibration();
+    mpu.calibration();
     bool suction = true;
-    if (suction) fan.drive(0.3);
+    if (suction) fan.drive(0.5);
     delay(500);
     lg.start();
     sc.enable(suction);
-    const float accel = 3000;
-    const float decel = 3000;
-    const float v_max = 600;
+    const float accel = 12000;
+    const float decel = 12000;
+    const float v_max = 2400;
     const float v_start = 0;
     float T = 1.5f * (v_max - v_start) / accel;
     for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -192,7 +184,7 @@ void straight_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    icm.calibration();
+    mpu.calibration();
     sc.enable(true);
     lg.start();
     sc.getPosition().reset();
@@ -242,6 +234,7 @@ void task() {
   switch (mode) {
     case 0:
       if (!waitForCover()) return;
+      led = 3;
       ms.start();
       break;
     case 1: {
@@ -249,22 +242,17 @@ void task() {
         fr.fast_speed = 200 + 200 * speed;
       }
       if (!waitForCover()) return;
-      ms.start();
       break;
     case 2: {
         int gain = waitForSelect(8);
         fr.fast_curve_gain = 0.1f + 0.1f * gain;
       }
       if (!waitForCover()) return;
-      ms.start();
       break;
     case 3:
-      fr.set_path("srsssrlssllrlrrlrlsslrrllrsrllrsllrlrlslrsss");
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(1, 0)});
       bz.play(Buzzer::CONFIRM);
-      icm.calibration();
-      fr.enable();
-      fr.waitForEnd();
-      fr.disable();
       break;
   }
   bz.play(Buzzer::SELECT);
@@ -273,7 +261,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0) > 1000 && ref.front(1) > 1600) {
+    if (ref.front(0) > 120 && ref.front(1) > 120) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }
@@ -293,8 +281,8 @@ Position getRelativePosition() {
 #define TEST_PROP_GAIN  20
 
 void straight_x(const float distance, const float v_max, const float v_end) {
-  const float accel = 9000;
-  const float decel = 9000;
+  const float accel = 3000;
+  const float decel = 3000;
   portTickType xLastWakeTime = xTaskGetTickCount();
   int ms = 0;
   const float v_start = sc.actual.trans;

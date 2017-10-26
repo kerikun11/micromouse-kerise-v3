@@ -5,13 +5,13 @@
 #include "config.h"
 #include "Maze.h"
 
-#include "as5048a.h"
+#include "as5145.h"
 #include "UserInterface.h"
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
 #include "motor.h"
-#include "icm20602.h"
+#include "mpu6500.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -22,7 +22,7 @@
 #define MAZE_SOLVER_STACK_SIZE    8192
 
 //#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
-//#define MAZE_GOAL {Vector(3,7), Vector(3,8), Vector(4,7), Vector(4,8)}
+//#define MAZE_GOAL {{Vector(5, 6), Vector(5, 7), Vector(6, 6), Vector(6, 7)}}
 #define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 
@@ -66,9 +66,9 @@ class MazeSolver: TaskBase {
 
       sr.set_action(SearchRun::START_STEP);
       agent.updateCurVecDir(Vector(0, 1), Dir::North);
-      icm.calibration(false);
+      mpu.calibration(false);
       wd.calibration();
-      icm.calibrationWait();
+      mpu.calibrationWait();
       bz.play(Buzzer::CONFIRM);
       sr.enable();
       Agent::State prevState = agent.getState();
@@ -78,10 +78,11 @@ class MazeSolver: TaskBase {
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
-//        delay(200);
-        agent.updateWall(v, d + 1, wd.wall().side[0]); // left
-        agent.updateWall(v, d + 0, wd.wall().front[0] && wd.wall().front[1]); // front
-        agent.updateWall(v, d - 1, wd.wall().side[1]); // right
+        //        delay(300); // センサが安定するのを待つ
+        uint8_t wall = wd.wallDetect();
+        agent.updateWall(v, d + 1, wall & 1); // left
+        agent.updateWall(v, d + 0, (wall & 6) == 6); // front
+        agent.updateWall(v, d - 1, wall & 8); // right
 
         agent.calcNextDir();
         Agent::State newState = agent.getState();
@@ -107,39 +108,33 @@ class MazeSolver: TaskBase {
           sr.disable();
           return false;
         }
+        int straight_count = 0;
         for (auto nextDir : nextDirs) {
-          const int calib_max = 5;
           Vector nextVec = agent.getCurVec().next(nextDir);
           switch (Dir(nextDir - agent.getCurDir())) {
             case Dir::East:
-              calib++;
-              sr.set_action(SearchRun::GO_STRAIGHT);
+              straight_count++;
               break;
             case Dir::North:
-              calib += 3;
-              if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
-                sr.set_action(SearchRun::TURN_LEFT_PUT);
-                calib = 0;
-              } else {
-                sr.set_action(SearchRun::TURN_LEFT_90);
-              }
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
+              sr.set_action(SearchRun::TURN_LEFT_90);
               break;
             case Dir::West:
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
               sr.set_action(SearchRun::TURN_BACK);
-              calib = 0;
               break;
             case Dir::South:
-              calib ++;
-              if (calib > calib_max && maze.nWall(agent.getCurVec()) == 2) {
-                sr.set_action(SearchRun::TURN_RIGHT_PUT);
-                calib = 0;
-              } else {
-                sr.set_action(SearchRun::TURN_RIGHT_90);
-              }
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
+              sr.set_action(SearchRun::TURN_RIGHT_90);
               break;
           }
           agent.updateCurVecDir(nextVec, nextDir);
         }
+        if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+        straight_count = 0;
         maze_backup.push(maze);
         if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop();
       }
@@ -179,7 +174,7 @@ class MazeSolver: TaskBase {
 
       // start drive
       bz.play(Buzzer::CONFIRM);
-      icm.calibration();
+      mpu.calibration();
       fr.enable();
       fr.waitForEnd();
       fr.disable();

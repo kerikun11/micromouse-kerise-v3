@@ -4,9 +4,9 @@
 #include "TaskBase.h"
 #include "config.h"
 
-#include "as5048a.h"
+#include "as5145.h"
 #include "motor.h"
-#include "icm20602.h"
+#include "mpu6500.h"
 
 class Position {
   public:
@@ -97,8 +97,8 @@ class Position {
 
 #define SPEED_CONTROLLER_KM   0.01f
 
-#define SPEED_CONTROLLER_KP   1.2f
-#define SPEED_CONTROLLER_KI   84.0f
+#define SPEED_CONTROLLER_KP   1.8f
+#define SPEED_CONTROLLER_KI   96.0f
 #define SPEED_CONTROLLER_KD   0.0f
 
 //#define SPEED_CONTROLLER_KP_SUCTION 1.8f
@@ -110,7 +110,9 @@ class Position {
 class SpeedController : TaskBase {
   public:
     SpeedController() : TaskBase("Speed Controller", SPEED_CONTROLLER_TASK_PRIORITY, SPEED_CONTROLLER_STACK_SIZE) {
+      enabled = false;
       reset();
+      create_task();
     }
     virtual ~SpeedController() {}
     struct WheelParameter {
@@ -166,12 +168,11 @@ class SpeedController : TaskBase {
         Kd = SPEED_CONTROLLER_KD;
       }
       reset();
-      create_task();
+      enabled = true;
       printf("Speed Controller Enabled\n");
     }
     void disable() {
-      delete_task();
-      mt.free();
+      enabled = false;
     }
     void set_target(float trans, float rot) {
       target.trans = trans;
@@ -190,6 +191,7 @@ class SpeedController : TaskBase {
     float Ki = SPEED_CONTROLLER_KI;
     float Kd = SPEED_CONTROLLER_KD;
   private:
+    bool enabled;
     static const int ave_num = 4;
     float wheel_position[ave_num][2];
     float accel[ave_num];
@@ -203,6 +205,10 @@ class SpeedController : TaskBase {
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        if (!enabled) {
+          mt.free();
+          continue;
+        }
         for (int i = 0; i < 2; i++) {
           for (int j = ave_num - 1; j > 0; j--) {
             wheel_position[j][i] = wheel_position[j - 1][i];
@@ -213,8 +219,8 @@ class SpeedController : TaskBase {
           accel[j] = accel[j - 1];
           gyro[j] = gyro[j - 1];
         }
-        accel[0] = icm.accel.y;
-        gyro[0] = icm.gyro.z;
+        accel[0] = mpu.accel.y;
+        gyro[0] = mpu.gyro.z;
         float sum_accel = 0.0f;
         float sum_gyro = 0.0f;
         for (int j = 0; j < ave_num; j++) {
@@ -225,7 +231,7 @@ class SpeedController : TaskBase {
           actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
         }
         actual.wheel2pole();
-        actual.rot = icm.gyro.z;
+        actual.rot = mpu.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
