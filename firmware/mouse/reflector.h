@@ -104,6 +104,7 @@ class Reflector {
           delayMicroseconds(sample_wait_us);
           int temp = offset[i] - analogRead(rx_pins[i]);
           value[i] = (temp < 0) ? 1 : temp;
+          delayMicroseconds(100); // 放電時間
         }
         // oneshotが要求されていれば実行
         if (xSemaphoreTake(oneshotStartSemaphore, 0) == pdTRUE) {

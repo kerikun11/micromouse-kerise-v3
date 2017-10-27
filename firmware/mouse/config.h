@@ -4,63 +4,46 @@
 #define KERISE_VERSION          3
 
 /* Hardware Mapping */
-#if KERISE_VERSION == 3
-
-#define BAT_VOL_PIN             36
-
-#define PR_TX_PINS              {16, 17, 16, 17}
-#define PR_RX_PINS              {12, 13, 32, 33}
-
-#define BUZZER_PIN              21
-#define LED_PINS                {5, 2}
-#define BUTTON_PIN              0
-
-#define MOTOR_L_CTRL1_PIN       18
-#define MOTOR_L_CTRL2_PIN       23
-#define MOTOR_R_CTRL1_PIN       19
-#define MOTOR_R_CTRL2_PIN       22
-
-#define FAN_PIN                 15
-
-#define AS5145_MISO_PIN         34
-#define AS5145_MOSI_PIN         38
-#define AS5145_SCLK_PIN         4
-#define AS5145_CS_PIN           14
-
-#define MPU6500_MOSI_PIN        27
-#define MPU6500_MISO_PIN        35
-#define MPU6500_SCLK_PIN        26
-#define MPU6500_CS_PIN          25
-
-#elif KERISE_VERSION == 3.2
+//#define BAT_VOL_PIN             36
+//#define PR_TX_PINS              {16, 17, 16, 17}
+//#define PR_RX_PINS              {12, 13, 32, 33}
+//#define BUZZER_PIN              21
+//#define LED_PINS                {5, 2}
+//#define BUTTON_PIN              0
+//#define MOTOR_L_CTRL1_PIN       18
+//#define MOTOR_L_CTRL2_PIN       23
+//#define MOTOR_R_CTRL1_PIN       19
+//#define MOTOR_R_CTRL2_PIN       22
+//#define FAN_PIN                 15
+//#define AS5145_MISO_PIN         34
+//#define AS5145_MOSI_PIN         38
+//#define AS5145_SCLK_PIN         4
+//#define AS5145_CS_PIN           14
+//#define MPU6500_MOSI_PIN        27
+//#define MPU6500_MISO_PIN        35
+//#define MPU6500_SCLK_PIN        26
+//#define MPU6500_CS_PIN          25
 
 #define BAT_VOL_PIN             35
-
 #define PR_TX_PINS              {12, 13, 12, 13}
 #define PR_RX_PINS              {36, 38, 39, 37}
-
 #define BUZZER_PIN              32
 #define LED_PINS                {2, 4, 5, 27}
 #define BUTTON_PIN              0
-
 #define MOTOR_L_CTRL1_PIN       16
 #define MOTOR_L_CTRL2_PIN       17
 #define MOTOR_R_CTRL1_PIN       25
 #define MOTOR_R_CTRL2_PIN       26
-
 #define FAN_PIN                 33
-
-#define AS5145_MISO_PIN         34
-#define AS5145_MOSI_PIN         38
-#define AS5145_SCLK_PIN         4
-#define AS5145_CS_PIN           14
-
-#define MPU6500_MOSI_PIN        27
-#define MPU6500_MISO_PIN        35
-#define MPU6500_SCLK_PIN        26
-#define MPU6500_CS_PIN          25
-
-#endif
+#define SPI_MOSI_PIN        23
+#define SPI_MISO_PIN        19
+#define SPI_SCLK_PIN        18
+#define SPI_HOST_SEL        HSPI_HOST
+#define SPI_DMA_CHAIN       1
+#define ICM20602_CS_PIN     14
+#define ICM20602_SPI_HOST   HSPI_HOST
+#define AS5048A_CS_PIN      15
+#define AS5048A_SPI_HOST    HSPI_HOST
 
 /* LEDC Channel */
 #define LEDC_CH_MOTOR_L_CTRL1   0
@@ -73,9 +56,9 @@
 #define LEDC_CH_BUZZER          4
 
 /* Machine Size Parameter */
-#define MACHINE_ROTATION_RADIUS 16.7f
+#define MACHINE_ROTATION_RADIUS 16.75f
 #define MACHINE_GEAR_RATIO      (13.0f/41.0f) //< 10/30
-#define MACHINE_WHEEL_DIAMETER  13.5f
+#define MACHINE_WHEEL_DIAMETER  13.28f
 #define MACHINE_TAIL_LENGTH     18.4f
 
 /* Field Size Parameter */

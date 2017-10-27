@@ -11,8 +11,8 @@
 /* Hardware */
 #include "UserInterface.h"
 #include "motor.h"
-#include "mpu6500.h"
-#include "as5145.h"
+#include "icm20602.h"
+#include "as5048a.h"
 #include "reflector.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
@@ -20,8 +20,8 @@ Button btn(BUTTON_PIN);
 LED led(LED_PINS);
 Motor mt;
 Fan fan;
-MPU6500 mpu;
-AS5145 as;
+ICM20602 icm;
+AS5048A as;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
 
 /* Software */
@@ -62,16 +62,15 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   pinMode(RX, INPUT_PULLUP);
-  printf("\n************ KERISE v3 ************\n");
+  printf("\n************ KERISE v3-2 ************\n");
   printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
   led = 0xf;
 
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  delay(500);
-  mpu.init();
-  as.init();
+  icm.begin();
+  as.begin();
   em.init();
   ec.init();
   ref.begin();
@@ -100,7 +99,7 @@ void loop() {
   wd.print();
   delay(100);
 #else
-  mpu.print();
+  icm.print();
   as.print();
   delay(100);
   //  printf("%f,%f\n", as.position(0), as.position(1));
@@ -129,7 +128,7 @@ void trapizoid_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    mpu.calibration();
+    icm.calibration();
     bool suction = true;
     if (suction) fan.drive(0.5);
     delay(500);
@@ -184,7 +183,7 @@ void straight_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    mpu.calibration();
+    icm.calibration();
     sc.enable(true);
     lg.start();
     sc.getPosition().reset();

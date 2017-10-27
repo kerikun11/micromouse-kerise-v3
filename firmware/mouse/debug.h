@@ -4,10 +4,10 @@
 #include "TaskBase.h"
 #include "config.h"
 
-#include "as5145.h"
 #include "UserInterface.h"
 #include "motor.h"
-#include "mpu6500.h"
+#include "icm20602.h"
+#include "as5048a.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -35,11 +35,11 @@ class ExternalController: TaskBase {
           switch (c) {
             case 't':
               bz.play(Buzzer::CONFIRM);
-              mpu.calibration();
+              icm.calibration();
               wd.calibration();
               break;
             case 'p':
-              mpu.print();
+              icm.print();
               ref.print();
               wd.print();
               break;

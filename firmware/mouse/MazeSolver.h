@@ -5,13 +5,10 @@
 #include "config.h"
 #include "Maze.h"
 
-#include "as5145.h"
 #include "UserInterface.h"
 #include "Emergency.h"
-#include "debug.h"
 #include "logger.h"
 #include "motor.h"
-#include "mpu6500.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -66,13 +63,12 @@ class MazeSolver: TaskBase {
 
       sr.set_action(SearchRun::START_STEP);
       agent.updateCurVecDir(Vector(0, 1), Dir::North);
-      mpu.calibration(false);
+      icm.calibration(false);
       wd.calibration();
-      mpu.calibrationWait();
+      icm.calibrationWait();
       bz.play(Buzzer::CONFIRM);
       sr.enable();
       Agent::State prevState = agent.getState();
-      int calib = 0;
       while (1) {
         sr.waitForEnd();
 
@@ -174,7 +170,7 @@ class MazeSolver: TaskBase {
 
       // start drive
       bz.play(Buzzer::CONFIRM);
-      mpu.calibration();
+      icm.calibration();
       fr.enable();
       fr.waitForEnd();
       fr.disable();

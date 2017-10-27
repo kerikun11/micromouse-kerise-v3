@@ -4,9 +4,9 @@
 #include "TaskBase.h"
 #include "config.h"
 
-#include "as5145.h"
 #include "motor.h"
-#include "mpu6500.h"
+#include "icm20602.h"
+#include "as5048a.h"
 
 class Position {
   public:
@@ -219,8 +219,8 @@ class SpeedController : TaskBase {
           accel[j] = accel[j - 1];
           gyro[j] = gyro[j - 1];
         }
-        accel[0] = mpu.accel.y;
-        gyro[0] = mpu.gyro.z;
+        accel[0] = icm.accel.y;
+        gyro[0] = icm.gyro.z;
         float sum_accel = 0.0f;
         float sum_gyro = 0.0f;
         for (int j = 0; j < ave_num; j++) {
@@ -231,7 +231,7 @@ class SpeedController : TaskBase {
           actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
         }
         actual.wheel2pole();
-        actual.rot = mpu.gyro.z;
+        actual.rot = icm.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
