@@ -19,7 +19,7 @@
 
 #define MACHINE_ROTATION_RADIUS 16.7f
 #define MACHINE_GEAR_RATIO      (1.0f/3.0f) //< 10/30
-#define MACHINE_WHEEL_DIAMETER  13.6f
+#define MACHINE_WHEEL_DIAMETER  13.28f
 #define MACHINE_TAIL_LENGTH     18.4f
 
 #include "icm20602.h"
@@ -46,21 +46,22 @@ void setup() {
   as.begin();
   delay(1000);
   icm.calibration();
-  //  xTaskCreate(task, "test", 1024, NULL, 0, NULL);
+  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
 void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
+    as.csv();
   }
 }
 
 void loop() {
-  icm.print();
+  //  icm.print();
   //  as.print();
-  delay(100);
+  //  delay(100);
   if (Serial.available()) {
     switch (Serial.read()) {
       case 't':

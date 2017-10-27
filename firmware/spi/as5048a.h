@@ -34,22 +34,23 @@ class AS5048A {
     }
     float position(uint8_t ch) {
       float value = ((float)pulses_ovf[ch] * AS5048A_PULSES + pulses[ch]) * MACHINE_WHEEL_DIAMETER * M_PI * MACHINE_GEAR_RATIO / AS5048A_PULSES;
-      if (ch == 0)value = -value;
+      if (ch == 1)value = -value;
       return value;
     }
     int getPulses(uint8_t ch) {
       int value = pulses_ovf[ch] * AS5048A_PULSES + pulses[ch];
-      if (ch == 0)value = -value;
+      if (ch == 1)value = -value;
       return value;
     }
     int getRaw(uint8_t ch) {
       int value = pulses[ch];
-      if (ch == 0)value = -value;
+      if (ch == 1)value = -value;
       return value;
     }
     void csv() {
       //      printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
-      printf("0,%d,%d,%d\n", AS5048A_PULSES, getRaw(0), getRaw(1));
+      //      printf("0,%d,%d,%d\n", AS5048A_PULSES, getRaw(0), getRaw(1));
+      printf("0,%f,%f\n", position(0), position(1));
     }
   private:
     xTaskHandle task_handle;
