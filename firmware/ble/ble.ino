@@ -6,14 +6,9 @@
 #include <WiFi.h>
 
 #define BAT_VOL_PIN             35
-#define PR_TX_PINS              {12, 13, 12, 13}
-#define PR_RX_PINS              {36, 38, 39, 37}
-//#define BAT_VOL_PIN             36
-//#define PR_TX_PINS              {16, 17, 16, 17}
-//#define PR_RX_PINS              {12, 13, 32, 33}
 
-#include "reflector.h"
-Reflector ref(PR_TX_PINS, PR_RX_PINS);
+#include "BLETransmitter.h"
+BLETransmitter ble;
 
 void batteryCheck() {
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
@@ -30,14 +25,13 @@ void batteryCheck() {
 }
 
 void setup() {
-  WiFi.mode(WIFI_OFF);
+    WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
-  log_i("KERISE Reflector Sample");
-  batteryCheck();
+  log_i("KERISE BLE Sample");
+  //  batteryCheck();
 
-  ref.begin();
-  delay(1000);
-  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
+  ble.begin();
+  xTaskCreate(task, "test", 8192, NULL, 0, NULL);
 }
 
 void task(void* arg) {
@@ -45,12 +39,15 @@ void task(void* arg) {
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1000 / portTICK_RATE_MS);
-    //    ref.oneshot();
+    int us = micros();
+    for (int i = 0; i < 10; i++) {
+      ble.printf("micros(): %d", micros());
+    }
+    log_d("end:\t%ld", micros() - us);
   }
 }
 
 void loop() {
-  ref.csv();
-  delay(20);
+  delay(3000);
 }
 
