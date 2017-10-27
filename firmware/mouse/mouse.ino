@@ -8,32 +8,35 @@
 #include <FS.h>
 #include "config.h"
 
-#include "as5145.h"
+/* Hardware */
 #include "UserInterface.h"
+#include "motor.h"
+#include "mpu6500.h"
+#include "as5145.h"
+#include "reflector.h"
+
+Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
+Button btn(BUTTON_PIN);
+LED led(LED_PINS);
+Motor mt;
+Fan fan;
+MPU6500 mpu;
+AS5145 as;
+Reflector ref(PR_TX_PINS, PR_RX_PINS);
+
+/* Software */
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
-#include "motor.h"
-#include "mpu6500.h"
-#include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "FastRun.h"
 #include "SearchRun.h"
 #include "MazeSolver.h"
 
-/** 実体を定義 */
-AS5145 as;
-Buzzer bz(BUZZER_PIN, LEDC_BUZZER_CH);
-Button btn(BUTTON_PIN);
-LED led(LED_L_PIN, LED_R_PIN);
 Emergency em;
 ExternalController ec;
 Logger lg;
-Motor mt;
-Fan fan;
-MPU6500 mpu;
-Reflector ref;
 WallDetector wd;
 SpeedController sc;
 FastRun fr;
@@ -61,7 +64,7 @@ void setup() {
   pinMode(RX, INPUT_PULLUP);
   printf("\n************ KERISE v3 ************\n");
   printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
-  led = 3;
+  led = 0xf;
 
   batteryCheck();
   bz.play(Buzzer::BOOT);

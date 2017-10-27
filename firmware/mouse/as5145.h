@@ -7,11 +7,6 @@
 #include "esp_err.h"
 #include "config.h"
 
-#define AS5145_MISO_PIN   34
-#define AS5145_MOSI_PIN   38
-#define AS5145_SCLK_PIN   4
-#define AS5145_CS_PIN     14
-
 #define AS5145_SPI        HSPI_HOST
 #define AS5145_DMA_CHAIN  1
 

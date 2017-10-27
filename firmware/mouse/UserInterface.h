@@ -1,26 +1,22 @@
 #pragma once
 
 #include <Arduino.h>
-#include "TaskBase.h"
-#include "config.h"
-
-#define BUZZER_PIN          21
-#define LEDC_BUZZER_CH      4
 
 #define BUZZER_TASK_PRIORITY    1
 #define BUZZER_TASK_STACK_SIZE  4096
 
 #define BUZZER_QUEUE_SIZE   5
 
-class Buzzer : private TaskBase {
+class Buzzer {
   public:
-    Buzzer(int pin, uint8_t channel): TaskBase("Buzzer", BUZZER_TASK_PRIORITY, BUZZER_TASK_STACK_SIZE), pin(pin), channel(channel) {
+    Buzzer(int pin, uint8_t channel): pin(pin), channel(channel) {
       playList = xQueueCreate(BUZZER_QUEUE_SIZE, sizeof(enum Music));
-      ledcSetup(LEDC_BUZZER_CH, 880, 4);
-      ledcAttachPin(BUZZER_PIN, LEDC_BUZZER_CH);
-      create_task();
+      ledcSetup(LEDC_CH_BUZZER, 880, 4);
+      ledcAttachPin(BUZZER_PIN, LEDC_CH_BUZZER);
+      xTaskCreate([](void* obj) {
+        static_cast<Buzzer*>(obj)->task();
+      }, "Buzzer", BUZZER_TASK_STACK_SIZE, this, BUZZER_TASK_PRIORITY, NULL);
     }
-    virtual ~Buzzer() {}
     enum Music {
       BOOT,
       LOW_BATTERY,
@@ -40,14 +36,14 @@ class Buzzer : private TaskBase {
     uint8_t channel;
     xQueueHandle playList;
     void sound(const note_t note, uint8_t octave, uint32_t time_ms) {
-      ledcWriteNote(LEDC_BUZZER_CH, note, octave);
+      ledcWriteNote(LEDC_CH_BUZZER, note, octave);
       vTaskDelay(time_ms / portTICK_RATE_MS);
     }
     void mute(uint32_t time_ms = 400) {
-      ledcWrite(LEDC_BUZZER_CH, 0);
+      ledcWrite(LEDC_CH_BUZZER, 0);
       vTaskDelay(time_ms / portTICK_RATE_MS);
     }
-    virtual void task() {
+    void task() {
       while (1) {
         Music music;
         if (xQueueReceive(playList, &music, (1000 - 100) / portTICK_RATE_MS) == pdFALSE) {
@@ -129,30 +125,25 @@ class Buzzer : private TaskBase {
     }
 };
 
-#define LED_L_PIN           5
-#define LED_R_PIN           2
+#include <vector>
 
-#define LED_TASK_PRIORITY   1
-#define LED_STACK_SIZE      1024
-
-class LED: TaskBase {
+class LED {
   public:
-    LED(int pin1, int pin2): TaskBase("LED", LED_TASK_PRIORITY, LED_STACK_SIZE), pin1(pin1), pin2(pin2) {
-      pinMode(pin1, OUTPUT);
-      pinMode(pin2, OUTPUT);
+    LED(const std::vector<int> pins): pins(pins) {
+      for (auto pin : pins) pinMode(pin, OUTPUT);
     }
-    virtual ~LED() {}
-    uint8_t operator=(uint8_t value) {
-      digitalWrite(pin1, (value & 0x01) ? HIGH : LOW);
-      digitalWrite(pin2, (value & 0x02) ? HIGH : LOW);
+    operator uint8_t() const {
+      return value;
+    }
+    uint8_t operator=(uint8_t new_value) {
+      value = new_value;
+      for (int i = 0; i < pins.size(); i++) digitalWrite(pins[i], (value & (1 << i)) ? HIGH : LOW);
       return value;
     }
   private:
-    int pin1, pin2;
-    virtual void task() {}
+    const std::vector<int> pins;
+    uint8_t value;
 };
-
-#define BUTTON_PIN          0
 
 #define BUTTON_SAMPLING_MS        20
 
@@ -164,14 +155,15 @@ class LED: TaskBase {
 #define BUTTON_TASK_PRIORITY      1
 #define BUTTON_STACK_SIZE         1024
 
-class Button: TaskBase {
+class Button {
   public:
-    Button(int pin) : TaskBase("Button", BUTTON_TASK_PRIORITY, BUTTON_STACK_SIZE) {
+    Button(int pin) : pin(pin) {
       pinMode(pin, INPUT_PULLUP);
       flags = 0x00;
-      create_task();
+      xTaskCreate([](void* obj) {
+        static_cast<Button*>(obj)->task();
+      }, "Button", BUTTON_STACK_SIZE, this, BUTTON_TASK_PRIORITY, NULL);
     }
-    virtual ~Button() {}
     union {
       uint8_t flags;           /**< all flags */
       struct {
@@ -189,7 +181,7 @@ class Button: TaskBase {
     int pin;
     int counter;
 
-    virtual void task() {
+    void task() {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
@@ -220,21 +212,6 @@ class Button: TaskBase {
       }
     }
 };
-
-//#define SELECTOR_TASK_PRIORITY  1
-//#define SELECTOR_STACK_SIZE     2048
-//
-//class Selector : TaskBase {
-//  public:
-//    Selector(): TaskBase("Selector", SELECTOR_TASK_PRIORITY, SELECTOR_STACK_SIZE) {
-//    }
-//    int waitForButton() {
-//      while (1) {
-//        int value = (as.posistion(0) + as.posistion(1)) / 10;
-//        delay(1);
-//      }
-//    }
-//}
 
 extern Buzzer bz;
 extern Button btn;

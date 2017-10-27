@@ -49,8 +49,8 @@ class WallDetector {
       uint8_t wall = 0;
       const int threshold[4] = {500, 270, 270, 500};
       ref.oneshot();
-      for (int i = 0; i < 4; i++) {
-        if (ref.getOneshotValue(static_cast<enum Reflector::REF_CH>(i)) > threshold[i]) wall |= 1 << i;
+      for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
+        if (ref.getOneshotValue(i) > threshold[i]) wall |= 1 << i;
       }
       printf("Wall: ");
       for (int i = 0; i < 4; i++) printf("%s ", ((wall >> i) & 1) ? "X" : ".");

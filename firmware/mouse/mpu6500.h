@@ -1,15 +1,11 @@
 #pragma once
 
 #include <Arduino.h>
+#include <SPI.h>
 #include "driver/spi_master.h"
 #include "esp_err.h"
 #include "TaskBase.h"
 #include "config.h"
-
-#define MPU6500_MOSI_PIN  27
-#define MPU6500_MISO_PIN  35
-#define MPU6500_SCLK_PIN  26
-#define MPU6500_CS_PIN    25
 
 #define MPU6500_SPI               VSPI_HOST
 #define MPU6500_DMA_CHAIN         2
