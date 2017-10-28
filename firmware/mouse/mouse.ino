@@ -69,8 +69,8 @@ void setup() {
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  icm.begin();
-  as.begin();
+  icm.begin(true);
+  as.begin(false);
   em.init();
   ec.init();
   ref.begin();

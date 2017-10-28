@@ -15,15 +15,17 @@
 class ICM20602 {
   public:
     ICM20602() {}
-    void begin() {
-      // ESP-IDF SPI bus initialization
-      spi_bus_config_t bus_cfg = {0};
-      bus_cfg.mosi_io_num = SPI_MOSI_PIN;
-      bus_cfg.miso_io_num = SPI_MISO_PIN;
-      bus_cfg.sclk_io_num = SPI_SCLK_PIN;
-      bus_cfg.quadwp_io_num = -1;
-      bus_cfg.max_transfer_sz = 0; // defaults to 4094 if 0
-      ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST_SEL, &bus_cfg, SPI_DMA_CHAIN));
+    void begin(bool spi_initializing) {
+      if (spi_initializing) {
+        // ESP-IDF SPI bus initialization
+        spi_bus_config_t bus_cfg = {0};
+        bus_cfg.mosi_io_num = SPI_MOSI_PIN;
+        bus_cfg.miso_io_num = SPI_MISO_PIN;
+        bus_cfg.sclk_io_num = SPI_SCLK_PIN;
+        bus_cfg.quadwp_io_num = -1;
+        bus_cfg.max_transfer_sz = 0; // defaults to 4094 if 0
+        ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST_SEL, &bus_cfg, SPI_DMA_CHAIN));
+      }
       // ESP-IDF SPI device initialization
       spi_device_interface_config_t device_cfg = {0};
       device_cfg.address_bits = 8;
