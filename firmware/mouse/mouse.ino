@@ -14,6 +14,7 @@
 #include "icm20602.h"
 #include "as5048a.h"
 #include "reflector.h"
+#include "ToF.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
 Button btn(BUTTON_PIN);
@@ -23,11 +24,13 @@ Fan fan;
 ICM20602 icm;
 AS5048A as;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
+ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
+#include "BLETransmitter.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "FastRun.h"
@@ -37,6 +40,7 @@ Reflector ref(PR_TX_PINS, PR_RX_PINS);
 Emergency em;
 ExternalController ec;
 Logger lg;
+BLETransmitter ble;
 WallDetector wd;
 SpeedController sc;
 FastRun fr;
@@ -74,7 +78,9 @@ void setup() {
   em.init();
   ec.init();
   ref.begin();
+  tof.begin();
   wd.begin();
+  //  ble.begin();
 
   //  lg.start();
 }

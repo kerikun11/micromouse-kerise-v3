@@ -27,7 +27,7 @@ class ToF {
       log_d("ToF: %d\n", getDistance());
     }
     void csv() {
-      log_d("0,1000,%d\n", getDistance());
+      log_d("0,90,180,270,360,%d\n", getDistance());
     }
   private:
     const int pin_sda, pin_scl;

@@ -44,6 +44,8 @@
 #define ICM20602_SPI_HOST   HSPI_HOST
 #define AS5048A_CS_PIN      15
 #define AS5048A_SPI_HOST    HSPI_HOST
+#define TOF_SDA_PIN             21
+#define TOF_SCL_PIN             22
 
 /* LEDC Channel */
 #define LEDC_CH_MOTOR_L_CTRL1   0
