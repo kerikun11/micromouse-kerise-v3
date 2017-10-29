@@ -24,13 +24,19 @@ class AS5048A {
         ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST_SEL, &bus_cfg, SPI_DMA_CHAIN));
       }
       // ESP-IDF SPI device initialization
-      spi_device_interface_config_t AS5048A_dev_cfg = {0};
-      AS5048A_dev_cfg.mode = 1;
-      AS5048A_dev_cfg.clock_speed_hz = 10000000;
-      //      AS5048A_dev_cfg.spics_io_num = AS5048A_CS_PIN;
-      AS5048A_dev_cfg.spics_io_num = -1;
-      AS5048A_dev_cfg.queue_size = 1;
-      ESP_ERROR_CHECK(spi_bus_add_device(AS5048A_SPI_HOST, &AS5048A_dev_cfg, &AS5048A_spi));
+      spi_device_interface_config_t as5048a_dev_cfg = {0};
+      as5048a_dev_cfg.mode = 1;
+      as5048a_dev_cfg.clock_speed_hz = 10000000;
+      //      as5048a_dev_cfg.spics_io_num = AS5048A_CS_PIN;
+      as5048a_dev_cfg.spics_io_num = -1;
+      as5048a_dev_cfg.queue_size = 1;
+      as5048a_dev_cfg.pre_cb = [](spi_transaction_t* tx) {
+        digitalWrite(AS5048A_CS_PIN, LOW);
+      };
+      as5048a_dev_cfg.post_cb = [](spi_transaction_t* tx) {
+        digitalWrite(AS5048A_CS_PIN, HIGH);
+      };
+      ESP_ERROR_CHECK(spi_bus_add_device(AS5048A_SPI_HOST, &as5048a_dev_cfg, &as5048a_spi));
       digitalWrite(AS5048A_CS_PIN, HIGH);
       pinMode(AS5048A_CS_PIN, OUTPUT);
 
@@ -39,8 +45,7 @@ class AS5048A {
       }, "AS5048A", AS5048A_TASK_STACK_SIZE, this, AS5048A_TASK_PRIORITY, &task_handle);
     }
     void print() {
-      //      printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
-      printf("0,%d,%d,%d\n", AS5048A_PULSES, getRaw(0), getRaw(1));
+      printf("L: %d\tR: %d\n", getRaw(0), getRaw(1));
     }
     float position(uint8_t ch) {
       float value = ((float)pulses_ovf[ch] * AS5048A_PULSES + pulses[ch]) * MACHINE_WHEEL_DIAMETER * M_PI * MACHINE_GEAR_RATIO / AS5048A_PULSES;
@@ -58,13 +63,13 @@ class AS5048A {
       return value;
     }
     void csv() {
-      //      printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
-      //      printf("0,%d,%d,%d\n", AS5048A_PULSES, getRaw(0), getRaw(1));
-      printf("0,%f,%f\n", position(0), position(1));
+      //      printf("0,%d,%d,%d,%d\n", AS5048A_PULSES, -AS5048A_PULSES, getRaw(0), getRaw(1));
+      printf("0,%d,%d,%d,%d\n", AS5048A_PULSES, -AS5048A_PULSES, getPulses(0), getPulses(1));
+      //      printf("0,%f,%f\n", position(0), position(1));
     }
   private:
     xTaskHandle task_handle;
-    spi_device_handle_t AS5048A_spi;
+    spi_device_handle_t as5048a_spi;
     int pulses[2];
     int pulses_prev[2];
     int pulses_ovf[2];
@@ -81,9 +86,9 @@ class AS5048A {
         tx.tx_data[0] = 0xFF; tx.tx_data[1] = 0xFF; tx.tx_data[2] = 0xFF; tx.tx_data[3] = 0xFF;
         tx.rx_buffer = rxbuf;
         tx.length = 32;
-        digitalWrite(AS5048A_CS_PIN, LOW);
-        ESP_ERROR_CHECK(spi_device_transmit(AS5048A_spi, &tx));
-        digitalWrite(AS5048A_CS_PIN, HIGH);
+        //        digitalWrite(AS5048A_CS_PIN, LOW);
+        ESP_ERROR_CHECK(spi_device_transmit(as5048a_spi, &tx));
+        //        digitalWrite(AS5048A_CS_PIN, HIGH);
 
         pulses[1] = ((uint16_t)(0x3F & (rxbuf[0])) << 8) | rxbuf[1];
         pulses[0] = ((uint16_t)(0x3F & (rxbuf[2])) << 8) | rxbuf[3];

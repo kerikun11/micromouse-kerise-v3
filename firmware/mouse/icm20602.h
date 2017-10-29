@@ -9,7 +9,7 @@
 
 #define ICM20602_UPDATE_PERIOD_US 1000
 
-#define ICM20602_ACCEL_FACTOR     2048.0f
+#define ICM20602_ACCEL_FACTOR     (2048.0f*1.116132271f)
 #define ICM20602_GYRO_FACTOR      16.4f
 
 class ICM20602 {
@@ -44,9 +44,7 @@ class ICM20602 {
     }
     struct MotionParameter {
       float x, y, z;
-      MotionParameter(float x = 0, float y = 0, float z = 0) :
-        x(x), y(y), z(z) {
-      }
+      MotionParameter(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
       inline MotionParameter operator+(const MotionParameter& obj) const {
         return MotionParameter(x + obj.x, y + obj.y, z + obj.z);
       }
@@ -103,18 +101,22 @@ class ICM20602 {
 
         if (xSemaphoreTake(calibration_start_semaphore, 0) == pdTRUE) {
           reset();
-          MotionParameter accel_sum, gyro_sum;
-          const int ave_count = 2000;
-          for (int i = 0; i < ave_count; i++) {
-            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-            update();
-            accel_sum += accel;
-            gyro_sum += gyro;
+          for (int i = 0; i < 4 ; i++) {
+            MotionParameter accel_sum, gyro_sum;
+            const int ave_count = 500;
+            for (int i = 0; i < ave_count; i++) {
+              vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+              update();
+              accel_sum += accel;
+              gyro_sum += gyro;
+            }
+            accel_offset += accel_sum / ave_count;
+            gyro_offset += gyro_sum / ave_count;
           }
-          accel_offset += accel_sum / ave_count;
-          gyro_offset += gyro_sum / ave_count;
           velocity = MotionParameter();
           angle = MotionParameter();
+          log_d("gyro_offset: %f\t%f\t%f", gyro_offset.x, gyro_offset.y, gyro_offset.z);
+          log_d("accel_offset: %f\t%f\t%f", accel_offset.x, accel_offset.y, accel_offset.z);
           xSemaphoreGive(calibration_end_semaphore);
         }
       }
