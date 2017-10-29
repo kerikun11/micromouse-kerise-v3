@@ -12,9 +12,10 @@ class ToF {
     ToF(const int pin_sda, const int pin_scl): pin_sda(pin_sda), pin_scl(pin_scl) {}
     void begin() {
       Wire.begin(pin_sda, pin_scl);
-      sensor.init();
       sensor.setTimeout(500);
-      sensor.setAddress(0x55);
+      sensor.init();
+      //      sensor.setAddress(0x55);
+      sensor.setMeasurementTimingBudget(20000);
       sensor.startContinuous();
       xTaskCreate([](void* obj) {
         static_cast<ToF*>(obj)->task();
@@ -46,3 +47,4 @@ class ToF {
     }
 };
 
+extern ToF tof;

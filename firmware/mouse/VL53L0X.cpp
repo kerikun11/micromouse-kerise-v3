@@ -820,6 +820,7 @@ uint16_t VL53L0X::readRangeContinuousMillimeters(void)
       did_timeout = true;
       return 65535;
     }
+    delay(1);
   }
 
   // assumptions: Linearity Corrective Gain is 1000 (default);

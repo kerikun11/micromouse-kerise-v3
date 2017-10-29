@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "TaskBase.h"
 #include "config.h"
+#include "SpeedController.h"
 
 #define LOGGER_TASK_PRIORITY 1
 #define LOGGER_STACK_SIZE    4096
@@ -40,9 +41,8 @@ class Logger: TaskBase {
         vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
         char str[64];
         const int i = 0;
-        //        sprintf(str, "%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * (0 - sc.integral.wheel[i]), sc.Kd * (0 - sc.differential.wheel[i]));
+        sprintf(str, "%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * (0 - sc.integral.wheel[i]), sc.Kd * (0 - sc.differential.wheel[i]));
         log += str;
-        //        printf("0,1800,%d,%d,%d,%d\n", ref.side(0), ref.front(0), ref.front(1), ref.side(1));
       }
     }
 };

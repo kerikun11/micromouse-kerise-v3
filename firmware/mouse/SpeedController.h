@@ -95,10 +95,10 @@ class Position {
 #define SPEED_CONTROLLER_TASK_PRIORITY  4
 #define SPEED_CONTROLLER_STACK_SIZE     4096
 
-#define SPEED_CONTROLLER_KM   0.01f
+#define SPEED_CONTROLLER_KM   0.0f
 
-#define SPEED_CONTROLLER_KP   1.8f
-#define SPEED_CONTROLLER_KI   96.0f
+#define SPEED_CONTROLLER_KP   1.0f
+#define SPEED_CONTROLLER_KI   120.0f
 #define SPEED_CONTROLLER_KD   0.0f
 
 //#define SPEED_CONTROLLER_KP_SUCTION 1.8f
@@ -182,7 +182,6 @@ class SpeedController : TaskBase {
     Position& getPosition() {
       return position;
     }
-    //    WheelParameter real;  /* debug */
     WheelParameter target;
     WheelParameter actual;
     WheelParameter integral;
@@ -192,7 +191,7 @@ class SpeedController : TaskBase {
     float Kd = SPEED_CONTROLLER_KD;
   private:
     bool enabled;
-    static const int ave_num = 4;
+    static const int ave_num = 8;
     float wheel_position[ave_num][2];
     float accel[ave_num];
     float gyro[ave_num];

@@ -13,8 +13,8 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define SEARCH_WALL_ATTACH_ENABLED     true
-#define SEARCH_WALL_AVOID_ENABLED      true
+#define SEARCH_WALL_ATTACH_ENABLED     false
+#define SEARCH_WALL_AVOID_ENABLED      false
 #define SEARCH_WALL_AVOID_GAIN         0.00005f
 
 #define SEARCH_LOOK_AHEAD   5
