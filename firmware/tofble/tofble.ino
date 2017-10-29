@@ -6,6 +6,11 @@
 #include <WiFi.h>
 
 #define BAT_VOL_PIN             35
+#define TOF_SDA_PIN             21
+#define TOF_SCL_PIN             22
+
+#include "ToF.h"
+ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 #include "BLETransmitter.h"
 BLETransmitter ble;
@@ -15,6 +20,7 @@ void batteryCheck() {
   printf("Battery Voltage: %.3f\n", voltage);
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
+    //    bz.play(Buzzer::LOW_BATTERY);
     delay(3000);
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
@@ -27,27 +33,25 @@ void batteryCheck() {
 void setup() {
   //  WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
-  log_i("KERISE BLE Sample");
-  //  batteryCheck();
+  log_i("KERISE");
 
+//  batteryCheck();
+  tof.begin();
   ble.begin();
-  xTaskCreate(task, "test", 8192, NULL, 0, NULL);
+
+  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
 void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1000 / portTICK_RATE_MS);
-    int us = micros();
-    for (int i = 0; i < 10; i++) {
-      ble.printf("micros(): %d", micros());
-    }
-    log_d("end:\t%ld", micros() - us);
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    int dist = tof.getDistance();
+    ble.printf("%d [mm]", dist);
   }
 }
 
 void loop() {
-  delay(3000);
 }
 

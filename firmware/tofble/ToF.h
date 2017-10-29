@@ -15,7 +15,8 @@ class ToF {
       sensor.setTimeout(500);
       sensor.init();
       //      sensor.setAddress(0x55);
-      sensor.setMeasurementTimingBudget(20000);
+//      sensor.setMeasurementTimingBudget(20000);
+      sensor.setMeasurementTimingBudget(200000);
       sensor.startContinuous();
       xTaskCreate([](void* obj) {
         static_cast<ToF*>(obj)->task();
