@@ -41,7 +41,7 @@ class Logger: TaskBase {
         vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
         char str[64];
         const int i = 0;
-        sprintf(str, "%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * (0 - sc.integral.wheel[i]), sc.Kd * (0 - sc.differential.wheel[i]));
+        printf("%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * sc.integral.wheel[i], sc.Kd * sc.differential.wheel[i]);
         log += str;
       }
     }

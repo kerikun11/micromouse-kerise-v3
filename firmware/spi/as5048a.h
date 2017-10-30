@@ -64,8 +64,8 @@ class AS5048A {
     }
     void csv() {
       //      printf("0,%d,%d,%d,%d\n", AS5048A_PULSES, -AS5048A_PULSES, getRaw(0), getRaw(1));
-      printf("0,%d,%d,%d,%d\n", AS5048A_PULSES, -AS5048A_PULSES, getPulses(0), getPulses(1));
-      //      printf("0,%f,%f\n", position(0), position(1));
+      //      printf("0,%d,%d,%d,%d\n", AS5048A_PULSES, -AS5048A_PULSES, getPulses(0), getPulses(1));
+      printf("0,%f,%f\n", position(0), position(1));
     }
   private:
     xTaskHandle task_handle;

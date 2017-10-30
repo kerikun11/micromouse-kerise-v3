@@ -30,20 +30,24 @@
 #define BUZZER_PIN              32
 #define LED_PINS                {2, 4, 5, 27}
 #define BUTTON_PIN              0
-#define MOTOR_L_CTRL1_PIN       16
-#define MOTOR_L_CTRL2_PIN       17
-#define MOTOR_R_CTRL1_PIN       25
-#define MOTOR_R_CTRL2_PIN       26
+//#define MOTOR_L_CTRL1_PIN       16
+//#define MOTOR_L_CTRL2_PIN       17
+//#define MOTOR_R_CTRL1_PIN       25
+//#define MOTOR_R_CTRL2_PIN       26
+#define MOTOR_L_CTRL1_PIN       25
+#define MOTOR_L_CTRL2_PIN       26
+#define MOTOR_R_CTRL1_PIN       16
+#define MOTOR_R_CTRL2_PIN       17
 #define FAN_PIN                 33
-#define SPI_MOSI_PIN        23
-#define SPI_MISO_PIN        19
-#define SPI_SCLK_PIN        18
-#define SPI_HOST_SEL        HSPI_HOST
-#define SPI_DMA_CHAIN       1
-#define ICM20602_CS_PIN     14
-#define ICM20602_SPI_HOST   HSPI_HOST
-#define AS5048A_CS_PIN      15
-#define AS5048A_SPI_HOST    HSPI_HOST
+#define SPI_MOSI_PIN            23
+#define SPI_MISO_PIN            19
+#define SPI_SCLK_PIN            18
+#define SPI_HOST_SEL            HSPI_HOST
+#define SPI_DMA_CHAIN           1
+#define ICM20602_CS_PIN         14
+#define ICM20602_SPI_HOST       HSPI_HOST
+#define AS5048A_CS_PIN          15
+#define AS5048A_SPI_HOST        HSPI_HOST
 #define TOF_SDA_PIN             21
 #define TOF_SCL_PIN             22
 

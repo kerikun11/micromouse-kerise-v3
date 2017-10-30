@@ -11,11 +11,16 @@
 //#define MOTOR_R_CTRL1_PIN       19
 //#define MOTOR_R_CTRL2_PIN       22
 //#define FAN_PIN                 15
+
 #define BAT_VOL_PIN             35
-#define MOTOR_L_CTRL1_PIN       16
-#define MOTOR_L_CTRL2_PIN       17
-#define MOTOR_R_CTRL1_PIN       25
-#define MOTOR_R_CTRL2_PIN       26
+//#define MOTOR_L_CTRL1_PIN       16
+//#define MOTOR_L_CTRL2_PIN       17
+//#define MOTOR_R_CTRL1_PIN       25
+//#define MOTOR_R_CTRL2_PIN       26
+#define MOTOR_L_CTRL1_PIN       25
+#define MOTOR_L_CTRL2_PIN       26
+#define MOTOR_R_CTRL1_PIN       16
+#define MOTOR_R_CTRL2_PIN       17
 #define FAN_PIN                 33
 
 #define LEDC_CH_MOTOR_L_CTRL1   0
@@ -55,8 +60,13 @@ void setup() {
 
   delay(1000);
   printf("drive\n");
-  mt.drive(200, 200);
-  fan.drive(0.5);
+  mt.drive(50, 0);
+  delay(1000);
+  mt.drive(0, 50);
+  delay(1000);
+  mt.drive(50, 50);
+  delay(1000);
+  //  fan.drive(0.5);
   delay(600);
   printf("free\n");
   mt.free();

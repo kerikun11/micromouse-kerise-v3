@@ -84,6 +84,17 @@ void setup() {
   //  ble.begin();
 
   //  lg.start();
+  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
+}
+
+void task(void* arg) {
+  portTickType xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
+    const int i = 0;
+    printf("%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * sc.integral.wheel[i], sc.Kd * sc.differential.wheel[i]);
+  }
 }
 
 void loop() {
@@ -205,12 +216,12 @@ void position_test() {
     bz.play(Buzzer::SELECT);
     icm.calibration();
     sc.enable();
-    sc.set_target(0, 0);
     bz.play(Buzzer::CANCEL);
   }
-  Position cur = sc.getPosition();
-  printf("Position:\t%f\t%f\t%f\n", cur.x, cur.y, cur.theta * 180 / PI);
-  delay(100);
+  //  Position cur = sc.getPosition();
+  //  printf("Position:\t%f\t%f\t%f\n", cur.x, cur.y, cur.theta * 180 / PI);
+  //  sc.set_target(0, -icm.angle.z);
+  delay(1);
 }
 
 void trapizoid_test() {
@@ -224,9 +235,9 @@ void trapizoid_test() {
     delay(500);
     lg.start();
     sc.enable(suction);
-    const float accel = 9000;
-    const float decel = 6000;
-    const float v_max = 1500;
+    const float accel = 1200;
+    const float decel = 1200;
+    const float v_max = 900;
     const float v_start = 0;
     float T = 1.5f * (v_max - v_start) / accel;
     for (int ms = 0; ms / 1000.0f < T; ms++) {

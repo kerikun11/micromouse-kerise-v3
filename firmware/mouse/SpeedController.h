@@ -97,8 +97,8 @@ class Position {
 
 #define SPEED_CONTROLLER_KM   0.0f
 
-#define SPEED_CONTROLLER_KP   1.0f
-#define SPEED_CONTROLLER_KI   120.0f
+#define SPEED_CONTROLLER_KP   1.5f
+#define SPEED_CONTROLLER_KI   48.0f
 #define SPEED_CONTROLLER_KD   0.0f
 
 //#define SPEED_CONTROLLER_KP_SUCTION 1.8f
@@ -221,26 +221,25 @@ class SpeedController : TaskBase {
         accel[0] = icm.accel.y;
         gyro[0] = icm.gyro.z;
         float sum_accel = 0.0f;
-        float sum_gyro = 0.0f;
-        for (int j = 0; j < ave_num; j++) {
+        for (int j = 0; j < ave_num - 1; j++) {
           sum_accel += accel[j];
-          sum_gyro += gyro[j];
         }
         for (int i = 0; i < 2; i++) {
           actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
+          //          actual.wheel[i] = (wheel_position[0][i] - wheel_position[1][i]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
         }
         actual.wheel2pole();
         actual.rot = icm.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
-          integral.wheel[i] += (actual.wheel[i] - target.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
+          integral.wheel[i] += (target.wheel[i] - actual.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         }
-        differential.trans = (accel[0] + accel[1] + accel[2]) / 3 - (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000;
-        differential.rot = (gyro[0] - gyro[ave_num - 1]) / (ave_num - 1) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (target.rot - target_prev.rot) / SPEED_CONTROLLER_PERIOD_US * 1000000;
+        differential.trans = (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (accel[0] + accel[1] + accel[2]) / 3;
+        differential.rot = (target.rot - target_prev.rot) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (gyro[0] - gyro[ave_num - 1]) / (ave_num - 1) / SPEED_CONTROLLER_PERIOD_US * 1000000;
         differential.pole2wheel();
         float pwm_value[2];
         for (int i = 0; i < 2; i++) {
-          pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Ki * (0 - integral.wheel[i]) + Kd * (0 - differential.wheel[i]);
+          pwm_value[i] = Kp * (target.wheel[i] - actual.wheel[i]) + Ki * integral.wheel[i] + Kd * differential.wheel[i];
         }
         const float Km = SPEED_CONTROLLER_KM;
         mt.drive(pwm_value[0] + Km * actual.wheel[0], pwm_value[1] + Km * actual.wheel[1]);
