@@ -6,6 +6,7 @@
 #include <WiFi.h>
 
 #define BAT_VOL_PIN         35
+
 #define ICM20602_CS_PIN     14
 #define ICM20602_SPI_HOST   HSPI_HOST
 #define AS5048A_CS_PIN      15
@@ -28,10 +29,26 @@
 ICM20602 icm;
 AS5048A as;
 
+void batteryCheck() {
+  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
+  printf("Battery Voltage: %.3f\n", voltage);
+  if (voltage < 3.8f) {
+    printf("Battery Low!\n");
+    //    bz.play(Buzzer::LOW_BATTERY);
+    delay(3000);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
+    esp_deep_sleep_start();
+  }
+}
+
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   log_i("KERISE v3-2");
+  batteryCheck();
 
   icm.begin(true);
   as.begin(false);
@@ -47,6 +64,8 @@ void task(void* arg) {
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
     //    as.csv();
     //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 1000);
+    //    printf("0,%f,%f,%f,%f,%f\n", 9806.65f, -9806.65f, icm.accel.x, icm.accel.y, icm.accel.z);
+    //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 100);
   }
 }
 

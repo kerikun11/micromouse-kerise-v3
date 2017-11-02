@@ -116,8 +116,8 @@ class ICM20602 {
           }
           velocity = MotionParameter();
           angle = MotionParameter();
-          log_d("gyro_offset: %f\t%f\t%f", gyro_offset.x, gyro_offset.y, gyro_offset.z);
-          log_d("accel_offset: %f\t%f\t%f", accel_offset.x, accel_offset.y, accel_offset.z);
+          //          log_d("gyro_offset: %f\t%f\t%f", gyro_offset.x, gyro_offset.y, gyro_offset.z);
+          //          log_d("accel_offset: %f\t%f\t%f", accel_offset.x, accel_offset.y, accel_offset.z);
           xSemaphoreGive(calibration_end_semaphore);
         }
       }
@@ -128,6 +128,7 @@ class ICM20602 {
       writeReg(0x6b, 0x01); //< power management 1
       writeReg(0x1b, 0x18); //< gyro range
       writeReg(0x1c, 0x18); //< accel range
+      writeReg(0x1A, 0x06); //< DLPF_CFG
       delay(100);
       if (readReg(117) != 0x12) {
         log_e("whoami failed:(");
