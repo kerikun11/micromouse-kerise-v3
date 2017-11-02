@@ -1,7 +1,7 @@
 /**
-  KERISE v3
+  KERISE v3-2
   Author:  kerikun11 (Github: kerikun11)
-  Date:    2017.02.24
+  Date:    2017.10.25
 */
 
 #include <WiFi.h>
@@ -14,7 +14,7 @@
 #include "icm20602.h"
 #include "as5048a.h"
 #include "reflector.h"
-#include "ToF.h"
+//#include "ToF.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
 Button btn(BUTTON_PIN);
@@ -24,13 +24,13 @@ Fan fan;
 ICM20602 icm;
 AS5048A as;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
-ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
+//ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
-#include "BLETransmitter.h"
+//#include "BLETransmitter.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "FastRun.h"
@@ -40,7 +40,7 @@ ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 Emergency em;
 ExternalController ec;
 Logger lg;
-BLETransmitter ble;
+//BLETransmitter ble;
 WallDetector wd;
 SpeedController sc;
 FastRun fr;
@@ -64,7 +64,7 @@ void batteryCheck() {
 }
 
 void setup() {
-  //  WiFi.mode(WIFI_OFF);
+  WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
   pinMode(RX, INPUT_PULLUP);
   printf("\n************ KERISE v3-2 ************\n");
@@ -83,7 +83,7 @@ void setup() {
   wd.begin();
   //  ble.begin();
 
-  //  lg.start();
+  //    lg.start();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
@@ -91,9 +91,18 @@ void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
     const int i = 0;
-    printf("%.0f,%.0f,%.0f,%.0f,%.0f\n", sc.actual.wheel[i], sc.target.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * sc.integral.wheel[i], sc.Kd * sc.differential.wheel[i]);
+    //    printf("%.0f,%.0f,%.0f,%.0f,%.0f,%f\n",
+    //           sc.actual.wheel[i], sc.target.wheel[i],
+    //           sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]),
+    //           sc.Ki * sc.integral.wheel[i],
+    //           sc.Kd * sc.differential.wheel[i],
+    //           icm.accel.y / 100);
+    //           as.position(0));
+
+    //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 10);
+    printf("0,%f,%f,%f\n", PI, -PI, icm.angle.z * 10);
   }
 }
 
@@ -196,7 +205,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0) > 120 && ref.front(1) > 120) {
+    if (ref.front(0) > 300 && ref.front(1) > 300) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }
@@ -212,16 +221,31 @@ void position_test() {
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    delay(1000);
-    bz.play(Buzzer::SELECT);
-    icm.calibration();
-    sc.enable();
-    bz.play(Buzzer::CANCEL);
+    //    delay(1000);
+    //    bz.play(Buzzer::SELECT);
+    //    icm.calibration();
+    //    sc.enable();
+    //    bz.play(Buzzer::CANCEL);
+    //    lg.start();
+    //    for (int i = 0; i < 300; i++) {
+    //      sc.set_target(i, 0);
+    //      delay(1);
+    //    }
+    //    delay(2000);
+    //    sc.set_target(0, 0);
+    mt.drive(200, 200);
+    delay(5000);
+    mt.drive(0, 0);
+    //    lg.end();
+    //    sc.disable();
   }
-  //  Position cur = sc.getPosition();
-  //  printf("Position:\t%f\t%f\t%f\n", cur.x, cur.y, cur.theta * 180 / PI);
-  //  sc.set_target(0, -icm.angle.z);
-  delay(1);
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
+  delay(100);
+//  ref.oneshot();
 }
 
 void trapizoid_test() {
@@ -237,7 +261,7 @@ void trapizoid_test() {
     sc.enable(suction);
     const float accel = 1200;
     const float decel = 1200;
-    const float v_max = 900;
+    const float v_max = 600;
     const float v_start = 0;
     float T = 1.5f * (v_max - v_start) / accel;
     for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -311,31 +335,6 @@ Position getRelativePosition() {
 
 #define TEST_LOOK_AHEAD 60
 #define TEST_PROP_GAIN  120
-
-//void straight_x(const float distance, const float v_max, const float v_end) {
-//  const float accel = 1200;
-//  const float decel = 1200;
-//  portTickType xLastWakeTime = xTaskGetTickCount();
-//  int ms = 0;
-//  const float v_start = sc.actual.trans;
-//  const float T = 1.5f * (v_max - v_start) / accel;
-//  while (1) {
-//    Position cur = getRelativePosition();
-//    if (v_end >= 1.0f && cur.x > distance - TEST_LOOK_AHEAD) break;
-//    if (v_end < 1.0f && cur.x > distance - 1.0f) break;
-//    float extra = distance - cur.x;
-//    float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
-//    float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
-//    float velocity = v_max;
-//    if (velocity > velocity_d) velocity = velocity_d;
-//    if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-//    float theta = atan2f(-cur.y, TEST_LOOK_AHEAD * (1 + velocity / 600.0f)) - cur.theta;
-//    sc.set_target(velocity, TEST_PROP_GAIN * theta);
-//    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-//    ms++;
-//  }
-//  sc.set_target(v_end, 0);
-//}
 
 void straight_x(const float distance, const float v_max, const float v_end) {
   const float accel = 600;
