@@ -35,8 +35,8 @@ void setup() {
 
   icm.begin(true);
   as.begin(false);
-  delay(2000);
-  icm.calibration();
+  //  delay(2000);
+  //  icm.calibration();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
@@ -45,13 +45,13 @@ void task(void* arg) {
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
-    as.csv();
+    //    as.csv();
     //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 1000);
   }
 }
 
 void loop() {
-  //  icm.print();
+  icm.print();
   //  as.print();
   delay(100);
   if (Serial.available()) {
