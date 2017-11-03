@@ -59,8 +59,8 @@ class WallDetector {
     }
   private:
     xTaskHandle task_handle;
-    SemaphoreHandle_t calibrationStartSemaphore;
-    SemaphoreHandle_t calibrationEndSemaphore;
+    volatile SemaphoreHandle_t calibrationStartSemaphore;
+    volatile SemaphoreHandle_t calibrationEndSemaphore;
     struct WALL_VALUE _wall_distance;
     struct WALL_VALUE _wall_ratio;
     void task() {

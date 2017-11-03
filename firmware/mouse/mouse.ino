@@ -78,27 +78,44 @@ void setup() {
   wd.begin();
 
   //  lg.start();
+  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
+}
+
+void task(void* arg) {
+  portTickType xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
+    //    printf("0,%f,%f,%f\n", PI, -PI, mpu.gyro.z * 10);
+    //    printf("0,%f,%f,%f\n", PI, -PI, mpu.angle.z * 10);
+    //    printf("0,%f,%f,%f\n", 9800.0f, -9800.0f, mpu.accel.y);
+  }
 }
 
 void loop() {
-#define TEST 0
+#define TEST 2
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
   trapizoid_test();
 #elif TEST == 2
-  fan_test();
+  turn_test();
 #elif TEST == 3
   straight_test();
 #elif TEST == 4
   ref.csv();
   delay(10);
 #elif TEST == 5
-  printf("0,1800,%d,%d\n", ref.read(Reflector::REF_CH_FL, 1), ref.read(Reflector::REF_CH_FR, 1));
-  delay(10);
-#elif TEST == 6
   wd.print();
   delay(100);
+#elif TEST == 7
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    mt.drive(200, 200);
+    delay(5000);
+    mt.drive(0, 0);
+  }
 #else
   mpu.print();
   as.print();
@@ -116,7 +133,7 @@ void normal_drive() {
     if (ms.isRunning()) ms.terminate();
     task();
   }
-  if (btn.long_pressed_1) {
+  if (btn.long_pressing_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     ms.print();
@@ -136,8 +153,8 @@ void trapizoid_test() {
     lg.start();
     sc.enable(suction);
     const float accel = 12000;
-    const float decel = 12000;
-    const float v_max = 2400;
+    const float decel = 6000;
+    const float v_max = 1500;
     const float v_start = 0;
     float T = 1.5f * (v_max - v_start) / accel;
     for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -146,17 +163,75 @@ void trapizoid_test() {
       delay(1);
     }
     bz.play(Buzzer::SELECT);
-    delay(100);
+    delay(150);
     bz.play(Buzzer::SELECT);
     for (float v = v_max; v > 0; v -= decel / 1000) {
       sc.set_target(v, 0);
       delay(1);
     }
     sc.set_target(0, 0);
-    delay(300);
+    delay(150);
     bz.play(Buzzer::CANCEL);
     sc.disable();
     fan.drive(0);
+    lg.end();
+  }
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
+}
+
+void turn(const float angle) {
+  const float speed = 3 * M_PI;
+  const float accel = 36 * M_PI;
+  const float decel = 12 * M_PI;
+  const float back_gain = 10.0f;
+  int ms = 0;
+  portTickType xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    if (fabs(sc.actual.rot) > speed) break;
+    float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
+    if (angle > 0) {
+      sc.set_target(-delta * back_gain, ms / 1000.0f * accel);
+    } else {
+      sc.set_target(-delta * back_gain, -ms / 1000.0f * accel);
+    }
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    ms++;
+  }
+  while (1) {
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    float extra = angle - getRelativePosition().theta;
+    if (fabs(sc.actual.rot) < 0.1 && abs(extra) < 0.1) break;
+    float target_speed = sqrt(2 * decel * fabs(extra));
+    float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
+    target_speed = (target_speed > speed) ? speed : target_speed;
+    if (extra > 0) {
+      sc.set_target(-delta * back_gain, target_speed);
+    } else {
+      sc.set_target(-delta * back_gain, -target_speed);
+    }
+  }
+  sc.set_target(0, 0);
+  //  updateOrigin(Position(0, 0, angle));
+  //  printPosition("Turn End");
+}
+
+void turn_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    delay(1000);
+    mpu.calibration();
+    bz.play(Buzzer::CONFIRM);
+    lg.start();
+    sc.enable();
+    turn(PI / 2);
+    sc.disable();
+    bz.play(Buzzer::CANCEL);
     lg.end();
   }
   if (btn.long_pressing_1) {

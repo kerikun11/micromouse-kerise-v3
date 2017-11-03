@@ -91,8 +91,8 @@ class MPU6500: public TaskBase {
     Parameter accel_prev;
     Parameter gyro_prev;
 
-    SemaphoreHandle_t calibration_start_semaphore;
-    SemaphoreHandle_t calibration_end_semaphore;
+    volatile SemaphoreHandle_t calibration_start_semaphore;
+    volatile SemaphoreHandle_t calibration_end_semaphore;
 
     virtual void task() {
       portTickType xLastWakeTime;
@@ -131,6 +131,10 @@ class MPU6500: public TaskBase {
       writeReg(0x6b, 0x01); //< power management 1
       writeReg(0x1b, 0x18); //< gyro range
       writeReg(0x1c, 0x18); //< accel range
+      writeReg(26, 0x01); //< gyro dlpf config
+      //      writeReg(27, 0x01); //< gyro dlpf config
+      writeReg(29, 0x03); //< accel dlpf config
+      //      writeReg(29, 0x08); //< accel dlpf config
       delay(100);
       if (readReg(117) != 0x12) {
         log_e("whoami failed:(");

@@ -13,12 +13,12 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define SEARCH_WALL_ATTACH_ENABLED     true
-#define SEARCH_WALL_AVOID_ENABLED      true
+#define SEARCH_WALL_ATTACH_ENABLED     false
+#define SEARCH_WALL_AVOID_ENABLED      false
 #define SEARCH_WALL_AVOID_GAIN         0.00005f
 
 #define SEARCH_LOOK_AHEAD   5
-#define SEARCH_PROP_GAIN    60
+#define SEARCH_PROP_GAIN    30
 
 #define SEARCH_RUN_TASK_PRIORITY   3
 #define SEARCH_RUN_STACK_SIZE      8192
@@ -186,8 +186,8 @@ class SearchRun: TaskBase {
       uint8_t wall = wd.wallDetect();
       if ((wall & 6) == 6) {
         while (1) {
-          float trans = (wd.wall_ratio().front[0] + wd.wall_ratio().front[1]) * 25;
-          float rot = (wd.wall_ratio().front[1] - wd.wall_ratio().front[0]) * 5;
+          float trans = (wd.wall_ratio().front[0] + wd.wall_ratio().front[1]) * 10;
+          float rot = (wd.wall_ratio().front[1] - wd.wall_ratio().front[0]) * 2;
           if (fabs(trans) < 0.1f && fabs(rot) < 0.05f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -200,11 +200,11 @@ class SearchRun: TaskBase {
 #endif
     }
     void turn(const float angle) {
-      const float speed = 1.0 * M_PI;
-      const float accel = 24 * M_PI;
-      const float back_gain = 120.0f;
+      const float speed = 4 * M_PI;
+      const float accel = 36 * M_PI;
+      const float decel = 12 * M_PI;
+      const float back_gain = 5.0f;
       int ms = 0;
-      delay(200);
       while (1) {
         if (fabs(sc.actual.rot) > speed) break;
         float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
@@ -220,7 +220,7 @@ class SearchRun: TaskBase {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         float extra = angle - getRelativePosition().theta;
         if (fabs(sc.actual.rot) < 0.1 && abs(extra) < 0.1) break;
-        float target_speed = sqrt(2 * accel * fabs(extra));
+        float target_speed = sqrt(2 * decel * fabs(extra));
         float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
         target_speed = (target_speed > speed) ? speed : target_speed;
         if (extra > 0) {

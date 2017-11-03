@@ -71,8 +71,8 @@ class Reflector {
     int16_t value[REFLECTOR_CH_SIZE];
     int16_t value_oneshot[REFLECTOR_CH_SIZE];
     int16_t offset[REFLECTOR_CH_SIZE];
-    SemaphoreHandle_t oneshotStartSemaphore;
-    SemaphoreHandle_t oneshotEndSemaphore;
+    volatile SemaphoreHandle_t oneshotStartSemaphore;
+    volatile SemaphoreHandle_t oneshotEndSemaphore;
 
     void calibration() {
       printf("Reflector Offset: ");
@@ -104,6 +104,7 @@ class Reflector {
           delayMicroseconds(sample_wait_us);
           int temp = offset[i] - analogRead(rx_pins[i]);
           value[i] = (temp < 0) ? 1 : temp;
+          delayMicroseconds(100); // 放電時間
         }
         // oneshotが要求されていれば実行
         if (xSemaphoreTake(oneshotStartSemaphore, 0) == pdTRUE) {
