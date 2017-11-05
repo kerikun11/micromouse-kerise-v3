@@ -28,7 +28,7 @@
 #define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 
-#define printf  lg.printf
+//#define printf  lg.printf
 
 #define MAZE_BACKUP_PATH    "/maze_backup.maze"
 
@@ -110,8 +110,8 @@ class MazeSolver: TaskBase {
         delay(100); // センサが安定するのを待つ
 
         us = micros();
-//        backup();
-        printf("backup(); %d [us]\n", micros() - us);
+        //        backup();
+        printf("backup(); %ld [us]\n", micros() - us);
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
@@ -130,11 +130,11 @@ class MazeSolver: TaskBase {
         agent.updateWall(v, d + 1, wall & 1); // left
         agent.updateWall(v, d + 0, (wall & 6) == 6); // front
         agent.updateWall(v, d - 1, wall & 8); // right
-        printf("wd.wallDetect(); %d [us]\n", micros() - us);
+        printf("wd.wallDetect(); %ld [us]\n", micros() - us);
 
         us = micros();
         agent.calcNextDir();
-        printf("agent.calcNextDir(); %d [us]\n", micros() - us);
+        printf("agent.calcNextDir(); %ld [us]\n", micros() - us);
         Agent::State newState = agent.getState();
         if (newState != prevState && newState == Agent::REACHED_START) break;
         if (newState != prevState && newState == Agent::REACHED_GOAL) {

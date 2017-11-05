@@ -64,8 +64,8 @@ class Position {
 #define SPEED_CONTROLLER_STACK_SIZE     4096
 
 #define SPEED_CONTROLLER_KP   1.2f
-#define SPEED_CONTROLLER_KI   96.0f
-#define SPEED_CONTROLLER_KD   0.03f
+#define SPEED_CONTROLLER_KI   144.0f
+#define SPEED_CONTROLLER_KD   0.01f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -152,7 +152,7 @@ class SpeedController {
     }
   private:
     bool enabled = false;
-    static const int ave_num = 4;
+    static const int ave_num = 5;
     float wheel_position[ave_num][2];
     float accel[ave_num];
     float gyro[ave_num];

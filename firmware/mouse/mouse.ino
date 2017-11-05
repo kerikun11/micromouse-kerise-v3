@@ -14,7 +14,7 @@
 #include "axis.h"
 #include "encoder.h"
 #include "reflector.h"
-#include "tof.h"
+//#include "tof.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
 Button btn(BUTTON_PIN);
@@ -24,7 +24,7 @@ Fan fan;
 Axis axis;
 Encoder enc;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
-ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
+//ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
 #include "Emergency.h"
@@ -73,13 +73,13 @@ void setup() {
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
+  //  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
   axis.begin(true);
   enc.begin(false);
   em.init();
   ec.init();
   ref.begin();
-  tof.begin();
+  //  tof.begin();
   wd.begin();
   //  ble.begin();
 
@@ -92,7 +92,7 @@ void task(void* arg) {
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
     const int i = 0;
-    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
+    //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
     //    printf("0,%f,%f,%f,%f,%f\n", PI, -PI, axis.angle.x * 10, axis.angle.y * 10, axis.angle.z * 10);
@@ -100,7 +100,7 @@ void task(void* arg) {
 }
 
 void loop() {
-#define TEST 2
+#define TEST 1
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
@@ -196,7 +196,6 @@ void task() {
       }
       break;
   }
-  bz.play(Buzzer::SELECT);
 }
 
 bool waitForCover() {
@@ -222,11 +221,11 @@ void position_test() {
     bz.play(Buzzer::SELECT);
     axis.calibration();
     bz.play(Buzzer::CANCEL);
-    sc.enable();
-    sc.set_target(0, 0);
-    //    mt.drive(200, 200);
-    //    delay(3000);
-    //    mt.drive(0, 0);
+    //    sc.enable();
+    //    sc.set_target(0, 0);
+    mt.drive(200, 200);
+    delay(5000);
+    mt.drive(0, 0);
   }
   if (btn.long_pressing_1) {
     btn.flags = 0;
@@ -248,7 +247,7 @@ void trapizoid_test() {
     sc.enable();
     const float accel = 9000;
     const float decel = 6000;
-    const float v_max = 1200;
+    const float v_max = 1500;
     const float v_start = 0;
     float T = 1.5f * (v_max - v_start) / accel;
     for (int ms = 0; ms / 1000.0f < T; ms++) {

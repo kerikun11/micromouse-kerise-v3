@@ -26,7 +26,7 @@ class Encoder {
       // ESP-IDF SPI device initialization
       spi_device_interface_config_t encoder_dev_cfg = {0};
       encoder_dev_cfg.mode = 1;
-      encoder_dev_cfg.clock_speed_hz = 10000000;
+      encoder_dev_cfg.clock_speed_hz = 1000000;
       //      encoder_dev_cfg.spics_io_num = AS5048A_CS_PIN;
       encoder_dev_cfg.spics_io_num = -1;
       encoder_dev_cfg.queue_size = 1;
