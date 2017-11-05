@@ -184,5 +184,5 @@ class ICM20602 {
     }
 };
 
-extern ICM20602 icm;
+extern ICM20602 axis;
 

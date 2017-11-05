@@ -49,7 +49,7 @@ const char mazedata1[32 + 1][32 + 1] = {
 Maze maze1(mazedata1);
 
 Maze maze;
-std::queue<Maze> maze_backup;
+std::deque<Maze> maze_backup;
 Agent agent(maze, MAZE_GOAL);
 const char maze_backup_path[] = "/maze_backup.maze";
 
@@ -60,9 +60,7 @@ bool backup() {
     log_e("Can't open file!");
     return false;
   }
-  while (!maze_backup.empty()) {
-    Maze& maze = maze_backup.front();
-    maze_backup.pop();
+  for (auto& maze : maze_backup) {
     file.write((const uint8_t*)(&maze), sizeof(Maze));
   }
   log_d("Backup: %d [us]", micros() - us);
@@ -80,8 +78,8 @@ bool restore() {
     file.read(data, sizeof(Maze));
     Maze m;
     memcpy((uint8_t*)(&m), data, sizeof(Maze));
-    maze_backup.push(m);
-    if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop();
+    maze_backup.push_back(m);
+    if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop_front();
   }
   return true;
 }
@@ -101,7 +99,7 @@ void loop() {
     Serial.println(c);
     switch (c) {
       case 'a':
-        maze_backup.push(maze1);
+        maze_backup.push_back(maze1);
         break;
       case 'b':
         backup();
@@ -110,12 +108,13 @@ void loop() {
         restore();
         break;
       case 'c':
-        while (!maze_backup.empty()) maze_backup.pop();
+        maze_backup.resize(0);
+        //        while (!maze_backup.empty()) maze_backup.pop();
         break;
       case 'p':
         while (!maze_backup.empty()) {
           maze_backup.front().printWall();
-          maze_backup.pop();
+          maze_backup.pop_front();
         }
         break;
     }

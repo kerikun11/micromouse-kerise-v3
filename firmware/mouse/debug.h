@@ -35,11 +35,11 @@ class ExternalController: TaskBase {
           switch (c) {
             case 't':
               bz.play(Buzzer::CONFIRM);
-              icm.calibration();
+              axis.calibration();
               wd.calibration();
               break;
             case 'p':
-              icm.print();
+              axis.print();
               ref.print();
               wd.print();
               break;

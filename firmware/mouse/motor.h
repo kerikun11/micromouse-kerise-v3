@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "config.h"
 
-#define MOTOR_CTRL_FREQUENCY  25000
+#define MOTOR_CTRL_FREQUENCY  250000
 #define MOTOR_CTRL_BIT_NUM    10
 #define MOTOR_DUTY_MAX        1023 //< 2 ^ MOTOR_CTRL_BIT_NUM - 1
 #define MOTOR_DUTY_SAT        1023

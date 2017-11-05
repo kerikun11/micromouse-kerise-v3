@@ -63,9 +63,9 @@ class MazeSolver: TaskBase {
 
       sr.set_action(SearchRun::START_STEP);
       agent.updateCurVecDir(Vector(0, 1), Dir::North);
-      icm.calibration(false);
+      axis.calibration(false);
       wd.calibration();
-      icm.calibrationWait();
+      axis.calibrationWait();
       bz.play(Buzzer::CONFIRM);
       sr.enable();
       Agent::State prevState = agent.getState();
@@ -170,7 +170,7 @@ class MazeSolver: TaskBase {
 
       // start drive
       bz.play(Buzzer::CONFIRM);
-      icm.calibration();
+      axis.calibration();
       fr.enable();
       fr.waitForEnd();
       fr.disable();

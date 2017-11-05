@@ -63,9 +63,9 @@ class Position {
 #define SPEED_CONTROLLER_TASK_PRIORITY  4
 #define SPEED_CONTROLLER_STACK_SIZE     4096
 
-#define SPEED_CONTROLLER_KP   1.0f
-#define SPEED_CONTROLLER_KI   24.0f
-#define SPEED_CONTROLLER_KD   0.0f
+#define SPEED_CONTROLLER_KP   1.2f
+#define SPEED_CONTROLLER_KI   96.0f
+#define SPEED_CONTROLLER_KD   0.03f
 
 #define SPEED_CONTROLLER_PERIOD_US  1000
 
@@ -96,16 +96,10 @@ class SpeedController {
           wheel[0] = 0;
           wheel[1] = 0;
         }
-        //        const struct WheelParameter& operator =(const struct WheelParameter& obj) {
-        //          trans = obj.trans;
-        //          rot = obj.rot;
-        //          wheel[0] = obj.wheel[0];
-        //          wheel[1] = obj.wheel[1];
-        //          return *this;
-        //        }
     };
     WheelParameter target;
     WheelParameter actual;
+    WheelParameter enconly;
     WheelParameter proportional;
     WheelParameter integral;
     WheelParameter differential;
@@ -129,10 +123,8 @@ class SpeedController {
       actual_prev.clear();
       target_prev.clear();
       for (int i = 0; i < 2; i++) {
-        wheel_buffer[i].resize(0);
-        float pos = as.position(i);
-        wheel_buffer[i].resize(ave_num, pos);
         for (int j = 0; j < ave_num; j++) {
+          wheel_position[j][i] = as.position(i);
           accel[j] = 0;
           gyro[j] = 0;
         }
@@ -160,12 +152,12 @@ class SpeedController {
     }
   private:
     bool enabled = false;
-    static const int ave_num = 16;
+    static const int ave_num = 4;
+    float wheel_position[ave_num][2];
     float accel[ave_num];
     float gyro[ave_num];
     WheelParameter actual_prev;
     WheelParameter target_prev;
-    std::deque<float> wheel_buffer[2];
     Position position;
 
     void task() {
@@ -176,27 +168,37 @@ class SpeedController {
         if (enabled == false) continue;
 
         for (int i = 0; i < 2; i++) {
-          wheel_buffer[i].push_back(as.position(i));
-          wheel_buffer[i].pop_front();
+          for (int j = ave_num - 1; j > 0; j--) {
+            wheel_position[j][i] = wheel_position[j - 1][i];
+          }
+          wheel_position[0][i] = as.position(i);
         }
         for (int j = ave_num - 1; j > 0; j--) {
           accel[j] = accel[j - 1];
           gyro[j] = gyro[j - 1];
         }
-        accel[0] = icm.accel.y;
-        gyro[0] = icm.gyro.z;
+        accel[0] = axis.accel.y;
+        gyro[0] = axis.gyro.z;
         float sum_accel = 0.0f;
         for (int j = 0; j < ave_num - 1; j++) sum_accel += accel[j];
-        for (int i = 0; i < 2; i++) actual.wheel[i] = (wheel_buffer[i].back() - wheel_buffer[i].front()) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
+        for (int i = 0; i < 2; i++) {
+          actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US + sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
+          //          actual.wheel[i] = (wheel_position[0][i] - wheel_position[ave_num - 1][i]) / (ave_num - 1)  * 1000000 / SPEED_CONTROLLER_PERIOD_US;
+          enconly.wheel[i] = (wheel_position[0][i] - wheel_position[1][i]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
+        }
+        enconly.wheel2pole();
+        //        enconly.rot = axis.gyro.z;
+        //        enconly.pole2wheel();
         actual.wheel2pole();
-        actual.rot = icm.gyro.z;
+        actual.rot = axis.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (target.wheel[i] - actual.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;
           proportional.wheel[i] = target.wheel[i] - actual.wheel[i];
         }
-        differential.trans = (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (accel[0] + accel[1] + accel[2]) / 3;
-        differential.rot = (target.rot - target_prev.rot) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (gyro[0] - gyro[ave_num - 1]) / (ave_num - 1) / SPEED_CONTROLLER_PERIOD_US * 1000000;
+        //        differential.trans = (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000 - accel[0];
+        differential.trans = (target.trans - target_prev.trans) / SPEED_CONTROLLER_PERIOD_US * 1000000;
+        differential.rot = (target.rot - target_prev.rot) / SPEED_CONTROLLER_PERIOD_US * 1000000 - (gyro[0] - gyro[1]) / SPEED_CONTROLLER_PERIOD_US * 1000000;
         differential.pole2wheel();
         float pwm_value[2];
         for (int i = 0; i < 2; i++) pwm_value[i] = Kp * proportional.wheel[i] + Ki * integral.wheel[i] + Kd * differential.wheel[i];
@@ -208,7 +210,6 @@ class SpeedController {
         position.theta += (actual_prev.rot + actual.rot) / 2 * SPEED_CONTROLLER_PERIOD_US / 1000000;
         position.x += (actual_prev.trans + actual.trans) / 2 * cos(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;
         position.y += (actual_prev.trans + actual.trans) / 2 * sin(position.theta) * SPEED_CONTROLLER_PERIOD_US / 1000000;
-
         actual_prev = actual;
         target_prev = target;
       }

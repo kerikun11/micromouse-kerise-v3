@@ -291,7 +291,7 @@ class SearchRun: TaskBase {
       fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
     }
     void uturn(const float velocity, const float v_end) {
-      if (icm.angle.z > 0) {
+      if (axis.angle.z > 0) {
         wall_attach();
         turn(-M_PI / 2);
         wall_attach();

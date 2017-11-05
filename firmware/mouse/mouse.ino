@@ -21,7 +21,7 @@ Button btn(BUTTON_PIN);
 LED led(LED_PINS);
 Motor mt;
 Fan fan;
-ICM20602 icm;
+ICM20602 axis;
 AS5048A as;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
 //ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
@@ -74,7 +74,7 @@ void setup() {
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  icm.begin(true);
+  axis.begin(true);
   as.begin(false);
   em.init();
   ec.init();
@@ -98,16 +98,17 @@ void task(void* arg) {
     //           sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]),
     //           sc.Ki * sc.integral.wheel[i],
     //           sc.Kd * sc.differential.wheel[i],
-    //           icm.accel.y / 100);
+    //           axis.accel.y / 100);
     //           as.position(0));
 
-    //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 10);
-    printf("0,%f,%f,%f\n", PI, -PI, icm.angle.z * 10);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
+    //        printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
+    //    printf("0,%f,%f,%f,%f,%f\n", PI, -PI, axis.angle.x * 10, axis.angle.y * 10, axis.angle.z * 10);
   }
 }
 
 void loop() {
-#define TEST 4
+#define TEST 1
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
@@ -127,7 +128,7 @@ void loop() {
   delay(10);
 #elif TEST == 6
   //  wd.print();
-  icm.print();
+  axis.print();
   delay(100);
 #else
 #endif
@@ -223,7 +224,7 @@ void position_test() {
     bz.play(Buzzer::CONFIRM);
     //    delay(1000);
     //    bz.play(Buzzer::SELECT);
-    //    icm.calibration();
+    //    axis.calibration();
     //    sc.enable();
     //    bz.play(Buzzer::CANCEL);
     //    lg.start();
@@ -234,7 +235,7 @@ void position_test() {
     //    delay(2000);
     //    sc.set_target(0, 0);
     mt.drive(200, 200);
-    delay(5000);
+    delay(3000);
     mt.drive(0, 0);
     //    lg.end();
     //    sc.disable();
@@ -245,7 +246,7 @@ void position_test() {
     lg.print();
   }
   delay(100);
-//  ref.oneshot();
+  //  ref.oneshot();
 }
 
 void trapizoid_test() {
@@ -253,15 +254,15 @@ void trapizoid_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    icm.calibration();
+    axis.calibration();
     bool suction = true;
-    if (suction) fan.drive(0.5);
+    if (suction) fan.drive(0.3);
     delay(500);
     lg.start();
     sc.enable(suction);
-    const float accel = 1200;
-    const float decel = 1200;
-    const float v_max = 600;
+    const float accel = 9000;
+    const float decel = 6000;
+    const float v_max = 1200;
     const float v_start = 0;
     float T = 1.5f * (v_max - v_start) / accel;
     for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -270,14 +271,14 @@ void trapizoid_test() {
       delay(1);
     }
     bz.play(Buzzer::SELECT);
-    delay(100);
+    delay(150);
     bz.play(Buzzer::SELECT);
     for (float v = v_max; v > 0; v -= decel / 1000) {
       sc.set_target(v, 0);
       delay(1);
     }
     sc.set_target(0, 0);
-    delay(300);
+    delay(150);
     bz.play(Buzzer::CANCEL);
     sc.disable();
     fan.drive(0);
@@ -309,7 +310,7 @@ void straight_test() {
     bz.play(Buzzer::CONFIRM);
     delay(2000);
     bz.play(Buzzer::SELECT);
-    icm.calibration();
+    axis.calibration();
     sc.enable(true);
     lg.start();
     sc.getPosition().reset();
