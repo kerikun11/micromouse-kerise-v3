@@ -6,7 +6,7 @@
 #include <WiFi.h>
 #include <SPIFFS.h>
 
-#include "Maze.h"
+#include "Agent.h"
 
 #define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
@@ -51,11 +51,11 @@ Maze maze1(mazedata1);
 Maze maze;
 std::deque<Maze> maze_backup;
 Agent agent(maze, MAZE_GOAL);
-const char maze_backup_path[] = "/maze_backup.maze";
+#define MAZE_BACKUP_PATH   "/maze_backup.maze"
 
 bool backup() {
   uint32_t us = micros();
-  File file = SPIFFS.open(maze_backup_path, FILE_WRITE);
+  File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_WRITE);
   if (!file) {
     log_e("Can't open file!");
     return false;
@@ -68,7 +68,7 @@ bool backup() {
 }
 
 bool restore() {
-  File file = SPIFFS.open(maze_backup_path, FILE_READ);
+  File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_READ);
   if (!file) {
     log_e("Can't open file!");
     return false;
@@ -98,6 +98,9 @@ void loop() {
     char c = Serial.read();
     Serial.println(c);
     switch (c) {
+      case 'd':
+        SPIFFS.remove(MAZE_BACKUP_PATH);
+        break;
       case 'a':
         maze_backup.push_back(maze1);
         break;
@@ -112,9 +115,8 @@ void loop() {
         //        while (!maze_backup.empty()) maze_backup.pop();
         break;
       case 'p':
-        while (!maze_backup.empty()) {
-          maze_backup.front().printWall();
-          maze_backup.pop_front();
+        for (auto& maze : maze_backup) {
+          maze.print();
         }
         break;
     }
