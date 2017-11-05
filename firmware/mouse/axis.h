@@ -4,14 +4,14 @@
 #include "driver/spi_master.h"
 #include "esp_err.h"
 
-#define Axis_TASK_PRIORITY    5
-#define Axis_TASK_STACK_SIZE  2048
+#define AXIS_TASK_PRIORITY    5
+#define AXIS_TASK_STACK_SIZE  2048
 
-#define Axis_UPDATE_PERIOD_US 1000
+#define AXIS_UPDATE_PERIOD_US 1000
 
-//#define Axis_ACCEL_FACTOR     (2048.0f*1.116132271f)
-#define Axis_ACCEL_FACTOR     2048.0f
-#define Axis_GYRO_FACTOR      16.4f
+//#define AXIS_ACCEL_FACTOR     (2048.0f*1.116132271f)
+#define AXIS_ACCEL_FACTOR     2048.0f
+#define AXIS_GYRO_FACTOR      16.4f
 
 class Axis {
   public:
@@ -32,16 +32,16 @@ class Axis {
       device_cfg.address_bits = 8;
       device_cfg.mode = 3;
       device_cfg.clock_speed_hz = 10000000;
-      device_cfg.spics_io_num = AXIS_CS_PIN;
+      device_cfg.spics_io_num = ICM20602_CS_PIN;
       device_cfg.queue_size = 1;
-      ESP_ERROR_CHECK(spi_bus_add_device(AXIS_SPI_HOST, &device_cfg, &spi_handle));
+      ESP_ERROR_CHECK(spi_bus_add_device(ICM20602_SPI_HOST, &device_cfg, &spi_handle));
       // calibration semaphore
       calibration_start_semaphore = xSemaphoreCreateBinary();
       calibration_end_semaphore = xSemaphoreCreateBinary();
       // sampling task execution
       xTaskCreate([](void* obj) {
         static_cast<Axis*>(obj)->task();
-      }, "Axis", Axis_TASK_STACK_SIZE, this, Axis_TASK_PRIORITY, &task_handle);
+      }, "Axis", AXIS_TASK_STACK_SIZE, this, AXIS_TASK_PRIORITY, &task_handle);
     }
     struct MotionParameter {
       float x, y, z;
@@ -95,9 +95,9 @@ class Axis {
         update();
 
         // calculation of angle and velocity from motion sensor
-        velocity += (accel + accel_prev) / 2 * Axis_UPDATE_PERIOD_US / 1000000;
+        velocity += (accel + accel_prev) / 2 * AXIS_UPDATE_PERIOD_US / 1000000;
         accel_prev = accel;
-        angle += (gyro + gyro_prev) / 2 * Axis_UPDATE_PERIOD_US / 1000000;
+        angle += (gyro + gyro_prev) / 2 * AXIS_UPDATE_PERIOD_US / 1000000;
         gyro_prev = gyro;
 
         if (xSemaphoreTake(calibration_start_semaphore, 0) == pdTRUE) {
@@ -145,18 +145,18 @@ class Axis {
       uint8_t rx[14];
       readReg(0x3b, rx, 14);
       bond.h = rx[0]; bond.l = rx[1];
-      accel.x = bond.i / Axis_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
+      accel.x = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
       bond.h = rx[2]; bond.l = rx[3];
-      accel.y = bond.i / Axis_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
+      accel.y = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
       bond.h = rx[4]; bond.l = rx[5];
-      accel.z = bond.i / Axis_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
+      accel.z = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
 
       bond.h = rx[8]; bond.l = rx[9];
-      gyro.x = bond.i / Axis_GYRO_FACTOR * PI / 180 - gyro_offset.x;
+      gyro.x = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.x;
       bond.h = rx[10]; bond.l = rx[11];
-      gyro.y = bond.i / Axis_GYRO_FACTOR * PI / 180 - gyro_offset.y;
+      gyro.y = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.y;
       bond.h = rx[12]; bond.l = rx[13];
-      gyro.z = bond.i / Axis_GYRO_FACTOR * PI / 180 - gyro_offset.z;
+      gyro.z = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.z;
     }
     void writeReg(uint8_t reg, uint8_t data) {
       static spi_transaction_t tx = {0};

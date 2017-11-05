@@ -27,18 +27,18 @@ class Encoder {
       spi_device_interface_config_t encoder_dev_cfg = {0};
       encoder_dev_cfg.mode = 1;
       encoder_dev_cfg.clock_speed_hz = 10000000;
-      //      encoder_dev_cfg.spics_io_num = ENCODER_CS_PIN;
+      //      encoder_dev_cfg.spics_io_num = AS5048A_CS_PIN;
       encoder_dev_cfg.spics_io_num = -1;
       encoder_dev_cfg.queue_size = 1;
       encoder_dev_cfg.pre_cb = [](spi_transaction_t* tx) {
-        digitalWrite(ENCODER_CS_PIN, LOW);
+        digitalWrite(AS5048A_CS_PIN, LOW);
       };
       encoder_dev_cfg.post_cb = [](spi_transaction_t* tx) {
-        digitalWrite(ENCODER_CS_PIN, HIGH);
+        digitalWrite(AS5048A_CS_PIN, HIGH);
       };
-      ESP_ERROR_CHECK(spi_bus_add_device(ENCODER_SPI_HOST, &encoder_dev_cfg, &encoder_spi));
-      digitalWrite(ENCODER_CS_PIN, HIGH);
-      pinMode(ENCODER_CS_PIN, OUTPUT);
+      ESP_ERROR_CHECK(spi_bus_add_device(AS5048A_SPI_HOST, &encoder_dev_cfg, &encoder_spi));
+      digitalWrite(AS5048A_CS_PIN, HIGH);
+      pinMode(AS5048A_CS_PIN, OUTPUT);
 
       xTaskCreate([](void* obj) {
         static_cast<Encoder*>(obj)->task();

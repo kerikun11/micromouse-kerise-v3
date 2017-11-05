@@ -44,10 +44,10 @@
 #define SPI_SCLK_PIN            18
 #define SPI_HOST_SEL            HSPI_HOST
 #define SPI_DMA_CHAIN           1
-#define AXIS_CS_PIN             14
-#define AXIS_SPI_HOST           HSPI_HOST
-#define ENCODER_CS_PIN          15
-#define ENCODER_SPI_HOST        HSPI_HOST
+#define ICM20602_CS_PIN         14
+#define ICM20602_SPI_HOST       HSPI_HOST
+#define AS5048A_CS_PIN          15
+#define AS5048A_SPI_HOST        HSPI_HOST
 #define TOF_SDA_PIN             21
 #define TOF_SCL_PIN             22
 

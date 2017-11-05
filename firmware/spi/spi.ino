@@ -23,11 +23,11 @@
 #define MACHINE_WHEEL_DIAMETER  13.28f
 #define MACHINE_TAIL_LENGTH     18.4f
 
-#include "icm20602.h"
-#include "as5048a.h"
+#include "axis.h"
+#include "encoder.h"
 
-ICM20602 icm;
-AS5048A as;
+Axis axis;
+Encoder enc;
 
 void batteryCheck() {
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
@@ -50,10 +50,10 @@ void setup() {
   log_i("KERISE v3-2");
   batteryCheck();
 
-  icm.begin(true);
-  as.begin(false);
+  axis.begin(true);
+  enc.begin(false);
   //  delay(2000);
-  //  icm.calibration();
+  //  axis.calibration();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
@@ -62,21 +62,21 @@ void task(void* arg) {
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
-    //    as.csv();
-    //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 1000);
-    //    printf("0,%f,%f,%f,%f,%f\n", 9806.65f, -9806.65f, icm.accel.x, icm.accel.y, icm.accel.z);
-    //    printf("0,%f,%f,%f\n", PI, -PI, icm.gyro.z * 100);
+    //    enc.csv();
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 1000);
+    //    printf("0,%f,%f,%f,%f,%f\n", 9806.65f, -9806.65f, axis.accel.x, axis.accel.y, axis.accel.z);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 100);
   }
 }
 
 void loop() {
-  icm.print();
-  //  as.print();
+  axis.print();
+  //  enc.print();
   delay(100);
   if (Serial.available()) {
     switch (Serial.read()) {
       case 't':
-        icm.calibration();
+        axis.calibration();
         break;
       default:
         break;
