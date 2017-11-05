@@ -6,8 +6,8 @@
 
 #include "UserInterface.h"
 #include "motor.h"
-#include "icm20602.h"
-#include "as5048a.h"
+#include "axis.h"
+#include "encoder.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"

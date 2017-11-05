@@ -4,8 +4,8 @@
 #include <deque>
 
 #include "motor.h"
-#include "icm20602.h"
-#include "as5048a.h"
+#include "axis.h"
+#include "encoder.h"
 
 class Position {
   public:
@@ -124,7 +124,7 @@ class SpeedController {
       target_prev.clear();
       for (int i = 0; i < 2; i++) {
         for (int j = 0; j < ave_num; j++) {
-          wheel_position[j][i] = as.position(i);
+          wheel_position[j][i] = enc.position(i);
           accel[j] = 0;
           gyro[j] = 0;
         }
@@ -171,7 +171,7 @@ class SpeedController {
           for (int j = ave_num - 1; j > 0; j--) {
             wheel_position[j][i] = wheel_position[j - 1][i];
           }
-          wheel_position[0][i] = as.position(i);
+          wheel_position[0][i] = enc.position(i);
         }
         for (int j = ave_num - 1; j > 0; j--) {
           accel[j] = accel[j - 1];

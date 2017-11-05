@@ -1,14 +1,19 @@
 #pragma once
 
 #include <Arduino.h>
+#include <SPIFFS.h>
 #include "TaskBase.h"
 #include "config.h"
 #include "Maze.h"
+#include "Agent.h"
 
+#include "encoder.h"
 #include "UserInterface.h"
 #include "Emergency.h"
+#include "debug.h"
 #include "logger.h"
 #include "motor.h"
+#include "axis.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -23,12 +28,14 @@
 #define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 
-//#define printf  lg.printf
+#define printf  lg.printf
+
+#define MAZE_BACKUP_PATH    "/maze_backup.maze"
 
 class MazeSolver: TaskBase {
   public:
     MazeSolver(): TaskBase("Maze Solver", MAZE_SOLVER_TASK_PRIORITY, MAZE_SOLVER_STACK_SIZE), agent(maze, MAZE_GOAL) {
-      maze_backup.push(maze);
+      maze_backup.push_back(maze);
     }
     virtual ~MazeSolver() {}
     void start() {
@@ -41,6 +48,11 @@ class MazeSolver: TaskBase {
       fr.disable();
     }
     void print() {
+      int i = 0;
+      for (auto& maze : maze_backup) {
+        printf("Backup Maze %d:\n", i++);
+        maze.print();
+      }
       agent.printInfo();
     }
     bool isRunning() {
@@ -49,38 +61,80 @@ class MazeSolver: TaskBase {
     void set_goal(const std::vector<Vector>& goal) {
       agent.reset(goal);
     }
+    bool backup() {
+      uint32_t us = micros();
+      File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_WRITE);
+      if (!file) {
+        log_e("Can't open file!");
+        return false;
+      }
+      for (auto& maze : maze_backup) {
+        file.write((const uint8_t*)(&maze), sizeof(Maze));
+      }
+      log_d("Backup: %d [us]", micros() - us);
+      return true;
+    }
+    bool restore() {
+      File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_READ);
+      if (!file) {
+        log_e("Can't open file!");
+        return false;
+      }
+      while (file.available() >= sizeof(Maze)) {
+        uint8_t data[sizeof(Maze)];
+        file.read(data, sizeof(Maze));
+        Maze m;
+        memcpy((uint8_t*)(&m), data, sizeof(Maze));
+        maze_backup.push_back(m);
+        if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop_front();
+      }
+      maze = maze_backup.back();
+      agent.reset();
+      return true;
+    }
   private:
     Maze maze;
-    std::queue<Maze> maze_backup;
+    std::deque<Maze> maze_backup;
     Agent agent;
 
     bool search_run() {
-      maze = maze_backup.back();
-      agent.reset();
-      if (agent.getState() == Agent::REACHED_START) return true;
-      maze = maze_backup.front();
-      agent.reset();
-
       sr.set_action(SearchRun::START_STEP);
       agent.updateCurVecDir(Vector(0, 1), Dir::North);
-      axis.calibration(false);
-      wd.calibration();
-      axis.calibrationWait();
-      bz.play(Buzzer::CONFIRM);
       sr.enable();
       Agent::State prevState = agent.getState();
       while (1) {
+        uint32_t us;
+
         sr.waitForEnd();
+
+        delay(100); // センサが安定するのを待つ
+
+        us = micros();
+//        backup();
+        printf("backup(); %d [us]\n", micros() - us);
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
-        //        delay(300); // センサが安定するのを待つ
-        uint8_t wall = wd.wallDetect();
+        printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), agent.stateString(agent.getState()));
+        us = micros();
+        uint8_t wall = 0xff;
+        while (1) {
+          uint8_t now = wd.wallDetect();
+          //          printf("Oneshot: \t%04d\t%04d\t%04d\t%04d\n", ref.getOneshotValue(0), ref.getOneshotValue(1), ref.getOneshotValue(2), ref.getOneshotValue(3));
+          if (wall == now) {
+            wall = now;
+            break;
+          }
+          wall = now;
+        }
         agent.updateWall(v, d + 1, wall & 1); // left
         agent.updateWall(v, d + 0, (wall & 6) == 6); // front
         agent.updateWall(v, d - 1, wall & 8); // right
+        printf("wd.wallDetect(); %d [us]\n", micros() - us);
 
+        us = micros();
         agent.calcNextDir();
+        printf("agent.calcNextDir(); %d [us]\n", micros() - us);
         Agent::State newState = agent.getState();
         if (newState != prevState && newState == Agent::REACHED_START) break;
         if (newState != prevState && newState == Agent::REACHED_GOAL) {
@@ -131,23 +185,22 @@ class MazeSolver: TaskBase {
         }
         if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
         straight_count = 0;
-        maze_backup.push(maze);
-        if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop();
+        maze_backup.push_back(maze);
+        if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop_front();
       }
       if (agent.getState() != Agent::REACHED_START) return false;
       sr.set_action(SearchRun::START_INIT);
       sr.waitForEnd();
       sr.disable();
+      if (!agent.calcShortestDirs()) {
+        printf("Couldn't solve the maze!\n");
+        bz.play(Buzzer::ERROR);
+        return false;
+      }
       bz.play(Buzzer::COMPLETE);
       return true;
     }
     void fast_run() {
-      maze = maze_backup.back();
-      if (!agent.calcShortestDirs()) {
-        printf("Couldn't solve the maze!\n");
-        bz.play(Buzzer::ERROR);
-        return;
-      }
       auto path = agent.getShortestDirs();
       path.erase(path.begin());
       Dir prev_dir = Dir::North;
@@ -209,21 +262,45 @@ class MazeSolver: TaskBase {
       sr.disable();
       bz.play(Buzzer::CANCEL);
     }
-    virtual void task() {
-      delay(500);
-      if (!search_run()) {
-        while (1) {
-          delay(1000);
+    void readyToStartWait() {
+      for (int ms = 0; ms < 3000; ms++) {
+        delay(1);
+        if (fabs(axis.accel.z) > 9800 * 0.5) {
+          bz.play(Buzzer::CANCEL);
+          while (1) delay(1000);
         }
       }
-      delay(2000);
+    }
+    virtual void task() {
+      bz.play(Buzzer::CONFIRM);
+      axis.calibration(false);
+      wd.calibration();
+      axis.calibrationWait();
+      bz.play(Buzzer::CANCEL);
+
+      maze = maze_backup.back();
+      agent.reset();
+      if (agent.getState() != Agent::REACHED_START) {
+        maze = maze_backup.front();
+        agent.reset();
+        if (!search_run()) {
+          while (1) delay(1000);
+        }
+        readyToStartWait();
+      }
+
+      if (!agent.calcShortestDirs()) {
+        printf("Couldn't solve the maze!\n");
+        bz.play(Buzzer::ERROR);
+      }
       while (1) {
         fast_run();
-        delay(3000);
         fr.fast_speed *= 1.1;
         fr.fast_curve_gain *= 1.1;
+        readyToStartWait();
         bz.play(Buzzer::CONFIRM);
-        delay(2000);
+        axis.calibration();
+        bz.play(Buzzer::CANCEL);
       }
     }
 };

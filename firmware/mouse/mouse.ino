@@ -11,8 +11,8 @@
 /* Hardware */
 #include "UserInterface.h"
 #include "motor.h"
-#include "icm20602.h"
-#include "as5048a.h"
+#include "axis.h"
+#include "encoder.h"
 #include "reflector.h"
 //#include "ToF.h"
 
@@ -21,8 +21,8 @@ Button btn(BUTTON_PIN);
 LED led(LED_PINS);
 Motor mt;
 Fan fan;
-ICM20602 axis;
-AS5048A as;
+Axis axis;
+Encoder enc;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
 //ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
@@ -75,7 +75,7 @@ void setup() {
   bz.play(Buzzer::BOOT);
 
   axis.begin(true);
-  as.begin(false);
+  enc.begin(false);
   em.init();
   ec.init();
   ref.begin();
@@ -99,7 +99,7 @@ void task(void* arg) {
     //           sc.Ki * sc.integral.wheel[i],
     //           sc.Kd * sc.differential.wheel[i],
     //           axis.accel.y / 100);
-    //           as.position(0));
+    //           enc.position(0));
 
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
     //        printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
@@ -108,23 +108,23 @@ void task(void* arg) {
 }
 
 void loop() {
-#define TEST 1
+#define TEST 2
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
   trapizoid_test();
 #elif TEST == 2
-  fan_test();
+  turn_test();
 #elif TEST == 3
   straight_test();
 #elif TEST == 4
   position_test();
 #elif TEST == 5
   //  ref.csv();
-  as.csv();
-  //  printf("%f,%f\n", as.position(0), as.position(1));
-  //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
-  //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
+  enc.csv();
+  //  printf("%f,%f\n", enc.position(0), enc.position(1));
+  //  printf("%d,%d\n", enc.getPulses(0), enc.getPulses(1));
+  //  printf("%d,%d\n", enc.getRaw(0), enc.getRaw(1));
   delay(10);
 #elif TEST == 6
   //  wd.print();
@@ -153,7 +153,7 @@ int waitForSelect(int range = 16) {
   uint8_t prev = 0;
   while (1) {
     delay(10);
-    uint8_t value = (as.position(0) + as.position(1)) / 5;
+    uint8_t value = (enc.position(0) + enc.position(1)) / 5;
     value %= range;
     if (value != prev) {
       prev = value;
@@ -196,8 +196,12 @@ void task() {
       break;
     case 3:
       if (!waitForCover()) return;
-      ms.set_goal({Vector(1, 0)});
-      bz.play(Buzzer::CONFIRM);
+      //      ms.set_goal({Vector(1, 0)});
+      if (ms.restore()) {
+        bz.play(Buzzer::COMPLETE);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
       break;
   }
   bz.play(Buzzer::SELECT);
@@ -282,6 +286,64 @@ void trapizoid_test() {
     bz.play(Buzzer::CANCEL);
     sc.disable();
     fan.drive(0);
+    lg.end();
+  }
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
+}
+
+void turn(const float angle) {
+  const float speed = 3 * M_PI;
+  const float accel = 36 * M_PI;
+  const float decel = 12 * M_PI;
+  const float back_gain = 10.0f;
+  int ms = 0;
+  portTickType xLastWakeTime;
+  xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    if (fabs(sc.actual.rot) > speed) break;
+    float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
+    if (angle > 0) {
+      sc.set_target(-delta * back_gain, ms / 1000.0f * accel);
+    } else {
+      sc.set_target(-delta * back_gain, -ms / 1000.0f * accel);
+    }
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    ms++;
+  }
+  while (1) {
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    float extra = angle - getRelativePosition().theta;
+    if (fabs(sc.actual.rot) < 0.1 && abs(extra) < 0.1) break;
+    float target_speed = sqrt(2 * decel * fabs(extra));
+    float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
+    target_speed = (target_speed > speed) ? speed : target_speed;
+    if (extra > 0) {
+      sc.set_target(-delta * back_gain, target_speed);
+    } else {
+      sc.set_target(-delta * back_gain, -target_speed);
+    }
+  }
+  sc.set_target(0, 0);
+  //  updateOrigin(Position(0, 0, angle));
+  //  printPosition("Turn End");
+}
+
+void turn_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    delay(1000);
+    axis.calibration();
+    bz.play(Buzzer::CONFIRM);
+    lg.start();
+    sc.enable();
+    turn(PI / 2);
+    sc.disable();
+    bz.play(Buzzer::CANCEL);
     lg.end();
   }
   if (btn.long_pressing_1) {
