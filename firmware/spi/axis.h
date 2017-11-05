@@ -6,12 +6,10 @@
 
 #define AXIS_TASK_PRIORITY    5
 #define AXIS_TASK_STACK_SIZE  2048
-
 #define AXIS_UPDATE_PERIOD_US 1000
 
-//#define AXIS_ACCEL_FACTOR     (2048.0f*1.116132271f)
-#define AXIS_ACCEL_FACTOR     2048.0f
-#define AXIS_GYRO_FACTOR      16.4f
+#define ICM20602_ACCEL_FACTOR 2048.0f
+#define ICM20602_GYRO_FACTOR  16.4f
 
 class Axis {
   public:
@@ -20,12 +18,12 @@ class Axis {
       if (spi_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
-        bus_cfg.mosi_io_num = SPI_MOSI_PIN;
-        bus_cfg.miso_io_num = SPI_MISO_PIN;
-        bus_cfg.sclk_io_num = SPI_SCLK_PIN;
+        bus_cfg.mosi_io_num = ICM20602_MOSI_PIN;
+        bus_cfg.miso_io_num = ICM20602_MISO_PIN;
+        bus_cfg.sclk_io_num = ICM20602_SCLK_PIN;
         bus_cfg.quadwp_io_num = -1;
         bus_cfg.max_transfer_sz = 0; // defaults to 4094 if 0
-        ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST_SEL, &bus_cfg, SPI_DMA_CHAIN));
+        ESP_ERROR_CHECK(spi_bus_initialize(ICM20602_SPI_HOST, &bus_cfg, ICM20602_SPI_DMA_CHAIN));
       }
       // ESP-IDF SPI device initialization
       spi_device_interface_config_t device_cfg = {0};
@@ -145,18 +143,18 @@ class Axis {
       uint8_t rx[14];
       readReg(0x3b, rx, 14);
       bond.h = rx[0]; bond.l = rx[1];
-      accel.x = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
+      accel.x = bond.i / ICM20602_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
       bond.h = rx[2]; bond.l = rx[3];
-      accel.y = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
+      accel.y = bond.i / ICM20602_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
       bond.h = rx[4]; bond.l = rx[5];
-      accel.z = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
+      accel.z = bond.i / ICM20602_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
 
       bond.h = rx[8]; bond.l = rx[9];
-      gyro.x = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.x;
+      gyro.x = bond.i / ICM20602_GYRO_FACTOR * PI / 180 - gyro_offset.x;
       bond.h = rx[10]; bond.l = rx[11];
-      gyro.y = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.y;
+      gyro.y = bond.i / ICM20602_GYRO_FACTOR * PI / 180 - gyro_offset.y;
       bond.h = rx[12]; bond.l = rx[13];
-      gyro.z = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.z;
+      gyro.z = bond.i / ICM20602_GYRO_FACTOR * PI / 180 - gyro_offset.z;
     }
     void writeReg(uint8_t reg, uint8_t data) {
       static spi_transaction_t tx = {0};

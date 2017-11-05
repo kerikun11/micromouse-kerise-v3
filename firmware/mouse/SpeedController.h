@@ -131,7 +131,7 @@ class SpeedController {
       }
       position.reset();
     }
-    void enable(bool suction = false) {
+    void enable() {
       reset();
       enabled = true;
       printf("Speed Controller Enabled\n");

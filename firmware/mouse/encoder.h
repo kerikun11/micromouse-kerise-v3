@@ -16,12 +16,12 @@ class Encoder {
       if (spi_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
-        bus_cfg.mosi_io_num = SPI_MOSI_PIN;
-        bus_cfg.miso_io_num = SPI_MISO_PIN;
-        bus_cfg.sclk_io_num = SPI_SCLK_PIN;
+        bus_cfg.mosi_io_num = AS5048A_MOSI_PIN;
+        bus_cfg.miso_io_num = AS5048A_MISO_PIN;
+        bus_cfg.sclk_io_num = AS5048A_SCLK_PIN;
         bus_cfg.quadwp_io_num = -1;
         bus_cfg.max_transfer_sz = 0; // defaults to 4094 if 0
-        ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOST_SEL, &bus_cfg, SPI_DMA_CHAIN));
+        ESP_ERROR_CHECK(spi_bus_initialize(AS5048A_SPI_HOST, &bus_cfg, AS5048A_SPI_DMA_CHAIN));
       }
       // ESP-IDF SPI device initialization
       spi_device_interface_config_t encoder_dev_cfg = {0};
@@ -86,9 +86,7 @@ class Encoder {
         tx.tx_data[0] = 0xFF; tx.tx_data[1] = 0xFF; tx.tx_data[2] = 0xFF; tx.tx_data[3] = 0xFF;
         tx.rx_buffer = rxbuf;
         tx.length = 32;
-        //        digitalWrite(ENCODER_CS_PIN, LOW);
         ESP_ERROR_CHECK(spi_device_transmit(encoder_spi, &tx));
-        //        digitalWrite(ENCODER_CS_PIN, HIGH);
 
         pulses[1] = ((uint16_t)(0x3F & (rxbuf[0])) << 8) | rxbuf[1];
         pulses[0] = ((uint16_t)(0x3F & (rxbuf[2])) << 8) | rxbuf[3];

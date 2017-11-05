@@ -397,7 +397,7 @@ class FastRun: TaskBase {
 
       const float v_max = fast_speed;
       const float curve_gain = fast_curve_gain;
-      sc.enable(true);
+      sc.enable();
       setPosition();
       printPosition("S");
       int path_index = 0;

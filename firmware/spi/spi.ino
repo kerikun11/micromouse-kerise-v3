@@ -5,18 +5,21 @@
 
 #include <WiFi.h>
 
-#define BAT_VOL_PIN         35
+#define BAT_VOL_PIN             35
 
-#define ICM20602_CS_PIN     14
-#define ICM20602_SPI_HOST   HSPI_HOST
-#define AS5048A_CS_PIN      15
-#define AS5048A_SPI_HOST    HSPI_HOST
+#define AS5048A_MOSI_PIN        23
+#define AS5048A_MISO_PIN        19
+#define AS5048A_SCLK_PIN        18
+#define AS5048A_CS_PIN          15
+#define AS5048A_SPI_HOST        HSPI_HOST
+#define AS5048A_SPI_DMA_CHAIN   1
 
-#define SPI_MOSI_PIN        23
-#define SPI_MISO_PIN        19
-#define SPI_SCLK_PIN        18
-#define SPI_HOST_SEL        HSPI_HOST
-#define SPI_DMA_CHAIN       1
+#define ICM20602_MOSI_PIN       23
+#define ICM20602_MISO_PIN       19
+#define ICM20602_SCLK_PIN       18
+#define ICM20602_CS_PIN         14
+#define ICM20602_SPI_HOST       HSPI_HOST
+#define ICM20602_SPI_DMA_CHAIN  1
 
 #define MACHINE_ROTATION_RADIUS 16.7f
 #define MACHINE_GEAR_RATIO      (1.0f/3.0f) //< 10/30

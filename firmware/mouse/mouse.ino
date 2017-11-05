@@ -5,7 +5,7 @@
 */
 
 #include <WiFi.h>
-#include <FS.h>
+#include <SPIFFS.h>
 #include "config.h"
 
 /* Hardware */
@@ -14,7 +14,7 @@
 #include "axis.h"
 #include "encoder.h"
 #include "reflector.h"
-//#include "tof.h"
+#include "tof.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
 Button btn(BUTTON_PIN);
@@ -24,7 +24,7 @@ Fan fan;
 Axis axis;
 Encoder enc;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
-//ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
+ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
 #include "Emergency.h"
@@ -50,11 +50,12 @@ MazeSolver ms;
 void batteryCheck() {
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
   printf("Battery Voltage: %.3f\n", voltage);
+  led = (uint8_t)((voltage - 3.6f) / (4.4f - 3.6f) * 16);
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
     bz.play(Buzzer::LOW_BATTERY);
-    led = 0;
     delay(3000);
+    led = 0;
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
@@ -68,22 +69,20 @@ void setup() {
   Serial.begin(115200);
   pinMode(RX, INPUT_PULLUP);
   printf("\n************ KERISE v3-2 ************\n");
-  printf("CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
   led = 0xf;
-
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
+  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
   axis.begin(true);
   enc.begin(false);
   em.init();
   ec.init();
   ref.begin();
-  //  tof.begin();
+  tof.begin();
   wd.begin();
   //  ble.begin();
 
-  //    lg.start();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
@@ -93,16 +92,9 @@ void task(void* arg) {
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
     const int i = 0;
-    //    printf("%.0f,%.0f,%.0f,%.0f,%.0f,%f\n",
-    //           sc.actual.wheel[i], sc.target.wheel[i],
-    //           sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]),
-    //           sc.Ki * sc.integral.wheel[i],
-    //           sc.Kd * sc.differential.wheel[i],
-    //           axis.accel.y / 100);
-    //           enc.position(0));
-
+    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
-    //        printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
     //    printf("0,%f,%f,%f,%f,%f\n", PI, -PI, axis.angle.x * 10, axis.angle.y * 10, axis.angle.z * 10);
   }
 }
@@ -226,31 +218,22 @@ void position_test() {
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    //    delay(1000);
-    //    bz.play(Buzzer::SELECT);
-    //    axis.calibration();
-    //    sc.enable();
-    //    bz.play(Buzzer::CANCEL);
-    //    lg.start();
-    //    for (int i = 0; i < 300; i++) {
-    //      sc.set_target(i, 0);
-    //      delay(1);
-    //    }
-    //    delay(2000);
-    //    sc.set_target(0, 0);
-    mt.drive(200, 200);
-    delay(3000);
-    mt.drive(0, 0);
-    //    lg.end();
-    //    sc.disable();
+    delay(1000);
+    bz.play(Buzzer::SELECT);
+    axis.calibration();
+    bz.play(Buzzer::CANCEL);
+    sc.enable();
+    sc.set_target(0, 0);
+    //    mt.drive(200, 200);
+    //    delay(3000);
+    //    mt.drive(0, 0);
   }
   if (btn.long_pressing_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     lg.print();
   }
-  delay(100);
-  //  ref.oneshot();
+  delay(10);
 }
 
 void trapizoid_test() {
@@ -259,11 +242,10 @@ void trapizoid_test() {
     bz.play(Buzzer::CONFIRM);
     delay(1000);
     axis.calibration();
-    bool suction = true;
-    if (suction) fan.drive(0.3);
+    fan.drive(0.3);
     delay(500);
     lg.start();
-    sc.enable(suction);
+    sc.enable();
     const float accel = 9000;
     const float decel = 6000;
     const float v_max = 1200;
@@ -373,7 +355,7 @@ void straight_test() {
     delay(2000);
     bz.play(Buzzer::SELECT);
     axis.calibration();
-    sc.enable(true);
+    sc.enable();
     lg.start();
     sc.getPosition().reset();
     //    fan.drive(0.5);

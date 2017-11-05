@@ -1,8 +1,5 @@
 #pragma once
 
-/* KERISE_VERSION */
-#define KERISE_VERSION          3
-
 /* Hardware Mapping */
 //#define BAT_VOL_PIN             36
 //#define PR_TX_PINS              {16, 17, 16, 17}
@@ -30,24 +27,23 @@
 #define BUZZER_PIN              32
 #define LED_PINS                {2, 4, 5, 27}
 #define BUTTON_PIN              0
-//#define MOTOR_L_CTRL1_PIN       16
-//#define MOTOR_L_CTRL2_PIN       17
-//#define MOTOR_R_CTRL1_PIN       25
-//#define MOTOR_R_CTRL2_PIN       26
-#define MOTOR_L_CTRL1_PIN       25
-#define MOTOR_L_CTRL2_PIN       26
-#define MOTOR_R_CTRL1_PIN       16
-#define MOTOR_R_CTRL2_PIN       17
+#define MOTOR_L_CTRL1_PIN       25 // 16
+#define MOTOR_L_CTRL2_PIN       26 // 17
+#define MOTOR_R_CTRL1_PIN       16 // 25
+#define MOTOR_R_CTRL2_PIN       17 // 26
 #define FAN_PIN                 33
-#define SPI_MOSI_PIN            23
-#define SPI_MISO_PIN            19
-#define SPI_SCLK_PIN            18
-#define SPI_HOST_SEL            HSPI_HOST
-#define SPI_DMA_CHAIN           1
-#define ICM20602_CS_PIN         14
-#define ICM20602_SPI_HOST       HSPI_HOST
+#define AS5048A_MOSI_PIN        23
+#define AS5048A_MISO_PIN        19
+#define AS5048A_SCLK_PIN        18
 #define AS5048A_CS_PIN          15
 #define AS5048A_SPI_HOST        HSPI_HOST
+#define AS5048A_SPI_DMA_CHAIN   1
+#define ICM20602_MOSI_PIN       23
+#define ICM20602_MISO_PIN       19
+#define ICM20602_SCLK_PIN       18
+#define ICM20602_CS_PIN         14
+#define ICM20602_SPI_HOST       HSPI_HOST
+#define ICM20602_SPI_DMA_CHAIN  1
 #define TOF_SDA_PIN             21
 #define TOF_SCL_PIN             22
 
