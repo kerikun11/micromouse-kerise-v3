@@ -69,6 +69,8 @@ void setup() {
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
+  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
+
   delay(500);
   mpu.init();
   as.init();
@@ -93,7 +95,7 @@ void task(void* arg) {
 }
 
 void loop() {
-#define TEST 2
+#define TEST 0
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
@@ -137,7 +139,7 @@ void normal_drive() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     ms.print();
-    //    lg.print();
+    lg.print();
   }
 }
 
@@ -326,11 +328,14 @@ void task() {
       break;
     case 3:
       if (!waitForCover()) return;
-      ms.set_goal({Vector(1, 0)});
-      bz.play(Buzzer::CONFIRM);
+      //      ms.set_goal({Vector(1, 0)});
+      if (ms.restore()) {
+        bz.play(Buzzer::COMPLETE);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
       break;
   }
-  bz.play(Buzzer::SELECT);
 }
 
 bool waitForCover() {

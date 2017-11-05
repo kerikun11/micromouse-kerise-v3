@@ -71,8 +71,8 @@ class Reflector {
     int16_t value[REFLECTOR_CH_SIZE];
     int16_t value_oneshot[REFLECTOR_CH_SIZE];
     int16_t offset[REFLECTOR_CH_SIZE];
-    volatile SemaphoreHandle_t oneshotStartSemaphore;
-    volatile SemaphoreHandle_t oneshotEndSemaphore;
+    SemaphoreHandle_t oneshotStartSemaphore;
+    SemaphoreHandle_t oneshotEndSemaphore;
 
     void calibration() {
       printf("Reflector Offset: ");

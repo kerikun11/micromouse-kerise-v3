@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          60
+#define FAST_PROP_GAIN          15
 
 //#define printf  lg.printf
 
@@ -323,8 +323,8 @@ class FastRun: TaskBase {
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 1200;
-      const float decel = 1200;
+      const float accel = 1500;
+      const float decel = 1000;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
@@ -365,7 +365,7 @@ class FastRun: TaskBase {
         path = "x" + path + "x";
       }
 
-      printf("Path: %s\n", path.c_str());
+      printf("Input Path: %s\n", path.c_str());
       path.replace("s", "xx");
       path.replace("l", "LL");
       path.replace("r", "RR");
@@ -393,7 +393,7 @@ class FastRun: TaskBase {
       path.replace("LR", "");
       path.replace("xRRx", "r");
       path.replace("xLLx", "l");
-      printf("Path: %s\n", path.c_str());
+      printf("Running Path: %s\n", path.c_str());
 
       const float v_max = fast_speed;
       const float curve_gain = fast_curve_gain;
@@ -404,8 +404,7 @@ class FastRun: TaskBase {
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
       fan.drive(0.3);
       delay(500);
-      while (1) {
-        if (path_index > (int) path.length() - 1) break;
+      for (int path_index = 0; path_index < path.length(); path_index++) {
         printPosition(String(path[path_index]).c_str());
         switch (path[path_index]) {
           case FAST_TURN_LEFT_45: {
@@ -569,19 +568,18 @@ class FastRun: TaskBase {
             straight += SEGMENT_DIAGONAL_WIDTH / 2;
             break;
         }
-        path_index++;
       }
-      printPosition("E1");
+      //      printPosition("E1");
       if (straight > 1.0f) {
         straight_x(straight, v_max, 0, true);
         straight = 0;
       }
-      printPosition("E2");
+      //      printPosition("E2");
       sc.set_target(0, 0);
       fan.drive(0);
       delay(100);
       sc.disable();
-      printPosition("E3");
+      //      printPosition("E3");
       bz.play(Buzzer::COMPLETE);
       last_path = path;
       path = "";

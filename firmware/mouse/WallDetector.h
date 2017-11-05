@@ -47,7 +47,7 @@ class WallDetector {
     }
     uint8_t wallDetect() {
       uint8_t wall = 0;
-      const int threshold[4] = {500, 270, 270, 500};
+      const int threshold[4] = {500, 300, 300, 500};
       ref.oneshot();
       for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
         if (ref.getOneshotValue(i) > threshold[i]) wall |= 1 << i;
