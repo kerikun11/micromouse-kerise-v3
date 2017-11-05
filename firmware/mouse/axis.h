@@ -7,22 +7,22 @@
 #include "TaskBase.h"
 #include "config.h"
 
-#define MPU6500_SPI               VSPI_HOST
-#define MPU6500_DMA_CHAIN         2
+#define AXIS_SPI               VSPI_HOST
+#define AXIS_DMA_CHAIN         2
 
-#define MPU6500_UPDATE_PERIOD_US  1000
+#define AXIS_UPDATE_PERIOD_US  1000
 
-#define MPU6500_ACCEL_FACTOR      2048.0f
-#define MPU6500_GYRO_FACTOR       16.3835f
+#define AXIS_ACCEL_FACTOR      2048.0f
+#define AXIS_GYRO_FACTOR       16.3835f
 
-#define MPU6500_TASK_PRIORITY   5
-#define MPU6500_TASK_STACK_SIZE 4096
+#define AXIS_TASK_PRIORITY   5
+#define AXIS_TASK_STACK_SIZE 4096
 
-class MPU6500: public TaskBase {
+class Axis: public TaskBase {
   public:
-    //    MPU6500(): TaskBase("MPU6500", MPU6500_TASK_PRIORITY, MPU6500_TASK_STACK_SIZE) {}
-    MPU6500(): TaskBase("MPU6500", MPU6500_TASK_PRIORITY, MPU6500_TASK_STACK_SIZE), spi(VSPI) {}
-    virtual ~MPU6500() {}
+    //    Axis(): TaskBase("Axis", AXIS_TASK_PRIORITY, AXIS_TASK_STACK_SIZE) {}
+    Axis(): TaskBase("Axis", AXIS_TASK_PRIORITY, AXIS_TASK_STACK_SIZE), spi(VSPI) {}
+    virtual ~Axis() {}
     void init() {
       //      static spi_bus_config_t bus_cfg = {0};
       //      bus_cfg.mosi_io_num = MPU6500_MOSI_PIN;
@@ -30,14 +30,14 @@ class MPU6500: public TaskBase {
       //      bus_cfg.sclk_io_num = MPU6500_SCLK_PIN;
       //      bus_cfg.quadwp_io_num = -1;
       //      bus_cfg.quadhd_io_num = -1;
-      //      ESP_ERROR_CHECK(spi_bus_initialize(MPU6500_SPI, &bus_cfg, MPU6500_DMA_CHAIN));
+      //      ESP_ERROR_CHECK(spi_bus_initialize(AXIS_SPI, &bus_cfg, AXIS_DMA_CHAIN));
       //      static spi_device_interface_config_t device_cfg = {0};
       //      device_cfg.address_bits = 8;
       //      device_cfg.mode = 0;
       //      device_cfg.clock_speed_hz = 10000000;
       //      device_cfg.spics_io_num = MPU6500_CS_PIN;
       //      device_cfg.queue_size = 1;
-      //      ESP_ERROR_CHECK(spi_bus_add_device(MPU6500_SPI, &device_cfg, &spi_handle));
+      //      ESP_ERROR_CHECK(spi_bus_add_device(AXIS_SPI, &device_cfg, &spi_handle));
 
       spi.begin(MPU6500_SCLK_PIN, MPU6500_MISO_PIN, MPU6500_MOSI_PIN, MPU6500_CS_PIN);
       pinMode(MPU6500_CS_PIN, OUTPUT);
@@ -102,9 +102,9 @@ class MPU6500: public TaskBase {
         update();
 
         // calculation of angle and velocity from motion sensor
-        velocity += (accel + accel_prev) / 2 * MPU6500_UPDATE_PERIOD_US / 1000000;
+        velocity += (accel + accel_prev) / 2 * AXIS_UPDATE_PERIOD_US / 1000000;
         accel_prev = accel;
-        angle += (gyro + gyro_prev) / 2 * MPU6500_UPDATE_PERIOD_US / 1000000;
+        angle += (gyro + gyro_prev) / 2 * AXIS_UPDATE_PERIOD_US / 1000000;
         gyro_prev = gyro;
 
         if (xSemaphoreTake(calibration_start_semaphore, 0) == pdTRUE) {
@@ -184,20 +184,20 @@ class MPU6500: public TaskBase {
       uint8_t rx[14];
       readReg(0x3B, rx, 14);
       bond.h = rx[0]; bond.l = rx[1];
-      accel.x = bond.i / MPU6500_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
+      accel.x = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
       bond.h = rx[2]; bond.l = rx[3];
-      accel.y = bond.i / MPU6500_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
+      accel.y = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
       bond.h = rx[4]; bond.l = rx[5];
-      accel.z = bond.i / MPU6500_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
+      accel.z = bond.i / AXIS_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
 
       bond.h = rx[8]; bond.l = rx[9];
-      gyro.x = bond.i / MPU6500_GYRO_FACTOR * PI / 180 - gyro_offset.x;
+      gyro.x = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.x;
       bond.h = rx[10]; bond.l = rx[11];
-      gyro.y = bond.i / MPU6500_GYRO_FACTOR * PI / 180 - gyro_offset.y;
+      gyro.y = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.y;
       bond.h = rx[12]; bond.l = rx[13];
-      gyro.z = bond.i / MPU6500_GYRO_FACTOR * PI / 180 - gyro_offset.z;
+      gyro.z = bond.i / AXIS_GYRO_FACTOR * PI / 180 - gyro_offset.z;
     }
 };
 
-extern MPU6500 mpu;
+extern Axis axis;
 

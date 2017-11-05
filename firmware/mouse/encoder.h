@@ -7,19 +7,19 @@
 #include "esp_err.h"
 #include "config.h"
 
-#define AS5145_SPI        HSPI_HOST
-#define AS5145_DMA_CHAIN  1
+#define ENCODER_TASK_PRIORITY   5
+#define ENCODER_TASK_STACK_SIZE 4096
 
-#define AS5145_TASK_PRIORITY    5
-#define AS5145_TASK_STACK_SIZE  4096
+#define ENCODER_SPI_HOST        HSPI_HOST
+#define ENCODER_DMA_CHAIN       1
 
-#define AS5145_PULSES           4096
+#define ENCODER_PULSES          4096
 
-class AS5145: private TaskBase {
+class Encoder: private TaskBase {
   public:
-    AS5145(): TaskBase("AS5145", AS5145_TASK_PRIORITY, AS5145_TASK_STACK_SIZE), spi(HSPI) {}
-    //    AS5145(): TaskBase("AS5145", AS5145_TASK_PRIORITY, AS5145_TASK_STACK_SIZE) {}
-    virtual ~AS5145() {}
+    Encoder(): TaskBase("Encoder", ENCODER_TASK_PRIORITY, ENCODER_TASK_STACK_SIZE), spi(HSPI) {}
+    //    Encoder(): TaskBase("Encoder", ENCODER_TASK_PRIORITY, ENCODER_TASK_STACK_SIZE) {}
+    virtual ~Encoder() {}
     void init() {
       //      static spi_bus_config_t bus_cfg = {0};
       //      bus_cfg.sclk_io_num = AS5145_SCLK_PIN;
@@ -27,15 +27,15 @@ class AS5145: private TaskBase {
       //      bus_cfg.mosi_io_num = -1;
       //      bus_cfg.quadhd_io_num = -1;
       //      bus_cfg.quadwp_io_num = -1;
-      //      ESP_ERROR_CHECK(spi_bus_initialize(AS5145_SPI, &bus_cfg, AS5145_DMA_CHAIN));
+      //      ESP_ERROR_CHECK(spi_bus_initialize(ENCODER_SPI, &bus_cfg, ENCODER_DMA_CHAIN));
       //
-      //      static spi_device_interface_config_t as5145_dev_cfg = {0};
-      //      as5145_dev_cfg.flags = 0;
-      //      as5145_dev_cfg.clock_speed_hz = 500000;
-      //      as5145_dev_cfg.mode = 4;
-      //      as5145_dev_cfg.spics_io_num = AS5145_CS_PIN;
-      //      as5145_dev_cfg.queue_size = 1;
-      //      ESP_ERROR_CHECK(spi_bus_add_device(AS5145_SPI, &as5145_dev_cfg, &as5145_spi));
+      //      static spi_device_interface_config_t encoder_dev_cfg = {0};
+      //      encoder_dev_cfg.flags = 0;
+      //      encoder_dev_cfg.clock_speed_hz = 500000;
+      //      encoder_dev_cfg.mode = 4;
+      //      encoder_dev_cfg.spics_io_num = AS5145_CS_PIN;
+      //      encoder_dev_cfg.queue_size = 1;
+      //      ESP_ERROR_CHECK(spi_bus_add_device(ENCODER_SPI, &encoder_dev_cfg, &ENCODER_SPI_HOST));
       spi.begin(AS5145_SCLK_PIN, AS5145_MISO_PIN, AS5145_MOSI_PIN, AS5145_CS_PIN);
       spi.setDataMode(SPI_MODE1);
       digitalWrite(AS5145_CS_PIN, HIGH);
@@ -46,12 +46,12 @@ class AS5145: private TaskBase {
       printf("L: %d\tR: %d\n", getPulses(0), getPulses(1));
     }
     float position(uint8_t ch) {
-      float value = ((float)pulses_ovf[ch] * AS5145_PULSES + pulses[ch]) * MACHINE_WHEEL_DIAMETER * M_PI * MACHINE_GEAR_RATIO / AS5145_PULSES;
+      float value = ((float)pulses_ovf[ch] * ENCODER_PULSES + pulses[ch]) * MACHINE_WHEEL_DIAMETER * M_PI * MACHINE_GEAR_RATIO / ENCODER_PULSES;
       if (ch == 0)value = -value;
       return value;
     }
     int getPulses(uint8_t ch) {
-      int value = pulses_ovf[ch] * AS5145_PULSES + pulses[ch];
+      int value = pulses_ovf[ch] * ENCODER_PULSES + pulses[ch];
       if (ch == 0)value = -value;
       return value;
     }
@@ -61,7 +61,7 @@ class AS5145: private TaskBase {
       return value;
     }
   private:
-    //    spi_device_handle_t as5145_spi;
+    //    spi_device_handle_t ENCODER_SPI_HOST;
     SPIClass spi;
     int pulses[2];
     int pulses_prev[2];
@@ -79,7 +79,7 @@ class AS5145: private TaskBase {
         //        tx.length = 38;
         //        tx.tx_buffer = txbuf;
         //        tx.rx_buffer = rxbuf;
-        //        ESP_ERROR_CHECK(spi_device_transmit(as5145_spi, &tx));
+        //        ESP_ERROR_CHECK(spi_device_transmit(ENCODER_SPI_HOST, &tx));
 
         uint8_t rxbuf[5];
         digitalWrite(AS5145_CS_PIN, LOW);
@@ -95,9 +95,9 @@ class AS5145: private TaskBase {
         pulses[0] = ((0x1F & (uint16_t)rxbuf[2]) << 7) | (rxbuf[3] >> 1);
         pulses[1] =  ((uint16_t)rxbuf[0] << 4) | (rxbuf[1] >> 4);
         for (int i = 0; i < 2; i++) {
-          if (pulses[i] > pulses_prev[i] + AS5145_PULSES / 2) {
+          if (pulses[i] > pulses_prev[i] + ENCODER_PULSES / 2) {
             pulses_ovf[i]--;
-          } else if (pulses[i] < pulses_prev[i] - AS5145_PULSES / 2) {
+          } else if (pulses[i] < pulses_prev[i] - ENCODER_PULSES / 2) {
             pulses_ovf[i]++;
           }
           pulses_prev[i] = pulses[i];
@@ -106,5 +106,5 @@ class AS5145: private TaskBase {
     }
 };
 
-extern AS5145 as;
+extern Encoder enc;
 

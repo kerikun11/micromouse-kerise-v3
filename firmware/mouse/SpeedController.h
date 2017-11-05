@@ -4,8 +4,8 @@
 #include <deque>
 
 #include "motor.h"
-#include "mpu6500.h"
-#include "as5145.h"
+#include "axis.h"
+#include "encoder.h"
 
 class Position {
   public:
@@ -124,7 +124,7 @@ class SpeedController {
       target_prev.clear();
       for (int i = 0; i < 2; i++) {
         for (int j = 0; j < ave_num; j++) {
-          wheel_position[j][i] = as.position(i);
+          wheel_position[j][i] = enc.position(i);
           accel[j] = 0;
           gyro[j] = 0;
         }
@@ -171,14 +171,14 @@ class SpeedController {
           for (int j = ave_num - 1; j > 0; j--) {
             wheel_position[j][i] = wheel_position[j - 1][i];
           }
-          wheel_position[0][i] = as.position(i);
+          wheel_position[0][i] = enc.position(i);
         }
         for (int j = ave_num - 1; j > 0; j--) {
           accel[j] = accel[j - 1];
           gyro[j] = gyro[j - 1];
         }
-        accel[0] = mpu.accel.y;
-        gyro[0] = mpu.gyro.z;
+        accel[0] = axis.accel.y;
+        gyro[0] = axis.gyro.z;
         float sum_accel = 0.0f;
         for (int j = 0; j < ave_num - 1; j++) sum_accel += accel[j];
         for (int i = 0; i < 2; i++) {
@@ -187,10 +187,10 @@ class SpeedController {
           enconly.wheel[i] = (wheel_position[0][i] - wheel_position[1][i]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
         }
         enconly.wheel2pole();
-        //        enconly.rot = mpu.gyro.z;
+        //        enconly.rot = axis.gyro.z;
         //        enconly.pole2wheel();
         actual.wheel2pole();
-        actual.rot = mpu.gyro.z;
+        actual.rot = axis.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (target.wheel[i] - actual.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;

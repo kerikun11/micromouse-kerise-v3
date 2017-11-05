@@ -11,8 +11,8 @@
 /* Hardware */
 #include "UserInterface.h"
 #include "motor.h"
-#include "mpu6500.h"
-#include "as5145.h"
+#include "axis.h"
+#include "encoder.h"
 #include "reflector.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
@@ -20,8 +20,8 @@ Button btn(BUTTON_PIN);
 LED led(LED_PINS);
 Motor mt;
 Fan fan;
-MPU6500 mpu;
-AS5145 as;
+Axis axis;
+Encoder enc;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
 
 /* Software */
@@ -70,16 +70,13 @@ void setup() {
   bz.play(Buzzer::BOOT);
 
   if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
-
-  delay(500);
-  mpu.init();
-  as.init();
+  axis.init();
+  enc.init();
   em.init();
   ec.init();
   ref.begin();
   wd.begin();
 
-  //  lg.start();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
@@ -88,9 +85,9 @@ void task(void* arg) {
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
-    //    printf("0,%f,%f,%f\n", PI, -PI, mpu.gyro.z * 10);
-    //    printf("0,%f,%f,%f\n", PI, -PI, mpu.angle.z * 10);
-    //    printf("0,%f,%f,%f\n", 9800.0f, -9800.0f, mpu.accel.y);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
+    //    printf("0,%f,%f,%f\n", 9800.0f, -9800.0f, axis.accel.y);
   }
 }
 
@@ -119,12 +116,12 @@ void loop() {
     mt.drive(0, 0);
   }
 #else
-  mpu.print();
-  as.print();
+  axisprint();
+  enc.print();
   delay(100);
-  //  printf("%f,%f\n", as.position(0), as.position(1));
-  //  printf("%d,%d\n", as.getPulses(0), as.getPulses(1));
-  //  printf("%d,%d\n", as.getRaw(0), as.getRaw(1));
+  //  printf("%f,%f\n", enc.position(0), enc.position(1));
+  //  printf("%d,%d\n", enc.getPulses(0), enc.getPulses(1));
+  //  printf("%d,%d\n", enc.getRaw(0), enc.getRaw(1));
 #endif
 }
 
@@ -148,7 +145,7 @@ void trapizoid_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    mpu.calibration();
+    axis.calibration();
     bool suction = true;
     if (suction) fan.drive(0.5);
     delay(500);
@@ -227,7 +224,7 @@ void turn_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    mpu.calibration();
+    axis.calibration();
     bz.play(Buzzer::CONFIRM);
     lg.start();
     sc.enable();
@@ -261,7 +258,7 @@ void straight_test() {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     delay(1000);
-    mpu.calibration();
+    axis.calibration();
     sc.enable(true);
     lg.start();
     sc.getPosition().reset();
@@ -285,7 +282,7 @@ int waitForSelect(int range = 4) {
   int prev = 0;
   while (1) {
     delay(1);
-    int value = (((int)as.position(0) + (int)as.position(1)) / 5) % range;
+    int value = (((int)enc.position(0) + (int)enc.position(1)) / 5) % range;
     if (value != prev) {
       prev = value;
       for (int i = 0; i < value / 4; i++) bz.play(Buzzer::SELECT);

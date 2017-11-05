@@ -6,9 +6,9 @@
 #include "TaskBase.h"
 #include "config.h"
 #include "logger.h"
-#include "as5145.h"
+#include "encoder.h"
 #include "motor.h"
-#include "mpu6500.h"
+#include "axis.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -291,7 +291,7 @@ class SearchRun: TaskBase {
       fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
     }
     void uturn(const float velocity, const float v_end) {
-      if (mpu.angle.z > 0) {
+      if (axis.angle.z > 0) {
         wall_attach();
         turn(-M_PI / 2);
         wall_attach();

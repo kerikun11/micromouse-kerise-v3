@@ -7,13 +7,13 @@
 #include "Maze.h"
 #include "Agent.h"
 
-#include "as5145.h"
+#include "encoder.h"
 #include "UserInterface.h"
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
 #include "motor.h"
-#include "mpu6500.h"
+#include "axis.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -223,7 +223,7 @@ class MazeSolver: TaskBase {
 
       // start drive
       bz.play(Buzzer::CONFIRM);
-      mpu.calibration();
+      axis.calibration();
       fr.enable();
       fr.waitForEnd();
       fr.disable();
@@ -265,7 +265,7 @@ class MazeSolver: TaskBase {
     void readyToStartWait() {
       for (int ms = 0; ms < 3000; ms++) {
         delay(1);
-        if (fabs(mpu.accel.z) > 9800 * 0.5) {
+        if (fabs(axis.accel.z) > 9800 * 0.5) {
           bz.play(Buzzer::CANCEL);
           while (1) delay(1000);
         }
@@ -273,9 +273,9 @@ class MazeSolver: TaskBase {
     }
     virtual void task() {
       bz.play(Buzzer::CONFIRM);
-      mpu.calibration(false);
+      axis.calibration(false);
       wd.calibration();
-      mpu.calibrationWait();
+      axis.calibrationWait();
       bz.play(Buzzer::CANCEL);
 
       maze = maze_backup.back();
@@ -299,7 +299,7 @@ class MazeSolver: TaskBase {
         fr.fast_curve_gain *= 1.1;
         readyToStartWait();
         bz.play(Buzzer::CONFIRM);
-        mpu.calibration();
+        axis.calibration();
         bz.play(Buzzer::CANCEL);
       }
     }
