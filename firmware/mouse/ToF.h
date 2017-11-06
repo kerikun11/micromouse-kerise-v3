@@ -35,8 +35,7 @@ class ToF {
     VL53L0X sensor;
     uint16_t distance;
     void task() {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         uint16_t value = sensor.readRangeContinuousMillimeters();

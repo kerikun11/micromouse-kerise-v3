@@ -161,8 +161,7 @@ class SpeedController {
     Position position;
 
     void task() {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         if (enabled == false) continue;

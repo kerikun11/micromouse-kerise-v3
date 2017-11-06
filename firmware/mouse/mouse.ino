@@ -87,8 +87,7 @@ void setup() {
 }
 
 void task(void* arg) {
-  portTickType xLastWakeTime;
-  xLastWakeTime = xTaskGetTickCount();
+  portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    const int i = 0;
@@ -285,8 +284,7 @@ void turn(const float angle) {
   const float decel = 12 * M_PI;
   const float back_gain = 10.0f;
   int ms = 0;
-  portTickType xLastWakeTime;
-  xLastWakeTime = xTaskGetTickCount();
+  portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     if (fabs(sc.actual.rot) > speed) break;
     float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);

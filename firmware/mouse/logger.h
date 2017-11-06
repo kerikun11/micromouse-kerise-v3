@@ -37,8 +37,7 @@ class Logger: TaskBase {
   private:
     String log;
     virtual void task() {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
         char str[64];

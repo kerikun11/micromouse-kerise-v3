@@ -326,8 +326,7 @@ class FastRun: TaskBase {
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - FAST_LOOK_AHEAD) break;
@@ -350,8 +349,7 @@ class FastRun: TaskBase {
     }
     template<class C>
     void trace(C tr, const float velocity) {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         if (tr.getRemain() < FAST_LOOK_AHEAD) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);

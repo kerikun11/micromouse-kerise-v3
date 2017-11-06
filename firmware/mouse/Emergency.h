@@ -23,8 +23,7 @@ class Emergency: TaskBase {
     }
   private:
     virtual void task() {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         if (fabs(axis.accel.y) > 9800 * 9 || fabs(axis.gyro.z) > 9 * PI) {

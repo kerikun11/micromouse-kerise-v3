@@ -182,8 +182,7 @@ class SearchRun: TaskBase {
     void wall_attach() {
 #if SEARCH_WALL_ATTACH_ENABLED
       if (wd.getWall(2)) {
-        portTickType xLastWakeTime;
-        xLastWakeTime = xTaskGetTickCount();
+        portTickType xLastWakeTime = xTaskGetTickCount();
         int cnt = 0;
         while (1) {
           float trans = -(wd.getDiff().front[0] + wd.getDiff().front[1]) * 0.5f; //< 0.5
@@ -212,8 +211,7 @@ class SearchRun: TaskBase {
       const float decel = 12 * M_PI;
       const float back_gain = 5.0f;
       int ms = 0;
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         if (fabs(sc.actual.rot) > speed) break;
         float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
@@ -248,8 +246,7 @@ class SearchRun: TaskBase {
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - SEARCH_LOOK_AHEAD) break;
@@ -273,8 +270,7 @@ class SearchRun: TaskBase {
     }
     template<class C>
     void trace(C tr, const float velocity) {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         if (tr.getRemain() < SEARCH_LOOK_AHEAD) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -321,8 +317,7 @@ class SearchRun: TaskBase {
       const float v_max = 360;
       const float ahead_length = 0.0f;
       sc.enable();
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         while (q.empty()) {
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);

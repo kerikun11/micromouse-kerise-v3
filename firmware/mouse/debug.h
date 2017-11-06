@@ -25,8 +25,7 @@ class ExternalController: TaskBase {
     }
   private:
     virtual void task() {
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
         while (Serial.available()) {

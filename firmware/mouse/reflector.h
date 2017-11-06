@@ -92,8 +92,7 @@ class Reflector {
     void task() {
       calibration();
 
-      portTickType xLastWakeTime;
-      xLastWakeTime = xTaskGetTickCount();
+      portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); //< 同期
         // Buffer shift
