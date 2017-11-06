@@ -13,16 +13,18 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define SEARCH_WALL_ATTACH_ENABLED     false
+#define SEARCH_WALL_ATTACH_ENABLED     true
 #define SEARCH_WALL_AVOID_ENABLED      false
-#define SEARCH_WALL_AVOID_GAIN         0.0001f
+#define SEARCH_WALL_AVOID_GAIN         0.0000005f
 
 #define SEARCH_LOOK_AHEAD   5
-#define SEARCH_PROP_GAIN    10
+#define SEARCH_PROP_GAIN    30
 
 #define SEARCH_RUN_TASK_PRIORITY   3
 #define SEARCH_RUN_STACK_SIZE      8192
 #define SEARCH_RUN_PERIOD          1000
+
+//#define printf  lg.printf
 
 class SearchTrajectory {
   public:
@@ -104,9 +106,7 @@ class S90: public SearchTrajectory {
 
 class SearchRun: TaskBase {
   public:
-    SearchRun() : TaskBase("SearchRun", SEARCH_RUN_TASK_PRIORITY, SEARCH_RUN_STACK_SIZE) {
-      xLastWakeTime = xTaskGetTickCount();
-    }
+    SearchRun() : TaskBase("SearchRun", SEARCH_RUN_TASK_PRIORITY, SEARCH_RUN_STACK_SIZE) {}
     virtual ~SearchRun() {}
     enum ACTION {
       START_STEP, START_INIT, GO_STRAIGHT, GO_HALF, TURN_LEFT_90, TURN_RIGHT_90, TURN_BACK, RETURN, STOP,
@@ -156,7 +156,6 @@ class SearchRun: TaskBase {
     void updateOrigin(Position passed) {
       origin += passed.rotate(origin.theta);
     }
-    //    void setPosition(Position pos = Position(SEGMENT_WIDTH / 2, WALL_THICKNESS / 2 + MACHINE_TAIL_LENGTH, M_PI / 2)) {
     void setPosition(Position pos = Position(0, 0, 0)) {
       origin = pos;
       sc.getPosition() = pos;
@@ -165,32 +164,40 @@ class SearchRun: TaskBase {
       sc.getPosition() -= pos;
     }
   private:
-    portTickType xLastWakeTime;
     Position origin;
     std::queue<struct Operation> q;
 
     void wall_avoid() {
 #if SEARCH_WALL_AVOID_ENABLED
       const float gain = SEARCH_WALL_AVOID_GAIN;
-      const float threashold_ratio = 0.3f;
-      if (wd.wall_ratio().side[0] < threashold_ratio) {
-        fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (wd.getWall(0)) {
+        float x = -wd.getDiff().side[0] * gain * sc.actual.trans;
+        fixPosition(Position(0, x, 0).rotate(origin.theta));
       }
-      if (wd.wall_ratio().side[1] < threashold_ratio) {
-        fixPosition(Position(0, -wd.wall_ratio().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (wd.getWall(1)) {
+        fixPosition(Position(0, wd.getDiff().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
 #endif
     }
     void wall_attach() {
 #if SEARCH_WALL_ATTACH_ENABLED
-      uint8_t wall = wd.wallDetect();
-      if ((wall & 6) == 6) {
+      if (wd.getWall(2)) {
+        portTickType xLastWakeTime;
+        xLastWakeTime = xTaskGetTickCount();
+        int cnt = 0;
         while (1) {
-          float trans = (wd.wall_ratio().front[0] + wd.wall_ratio().front[1]) * 5; //< 5
-          float rot = (wd.wall_ratio().front[1] - wd.wall_ratio().front[0]) * 1; //< 1
-          if (fabs(trans) < 0.05f && fabs(rot) < 0.01f) break;
+          float trans = -(wd.getDiff().front[0] + wd.getDiff().front[1]) * 0.5f; //< 0.5
+          float rot = (wd.getDiff().front[0] - wd.getDiff().front[1]) * 0.1f;
+          const float trans_sat = 100;
+          const float rot_sat = 1 * PI;
+          if (trans > trans_sat) trans = trans_sat;
+          else if (trans < -trans_sat)trans = -trans_sat;
+          if (rot > rot_sat) rot = rot_sat;
+          else if (rot < -rot_sat)rot = -rot_sat;
+          if (fabs(trans) < 0.01f && fabs(rot) < 0.01f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+          if (cnt++ % 100 == 0) printf("trans: %f, rot:%f\n", rot, trans);
         }
         sc.set_target(0, 0);
         printPosition("wall_attach");
@@ -205,6 +212,8 @@ class SearchRun: TaskBase {
       const float decel = 12 * M_PI;
       const float back_gain = 5.0f;
       int ms = 0;
+      portTickType xLastWakeTime;
+      xLastWakeTime = xTaskGetTickCount();
       while (1) {
         if (fabs(sc.actual.rot) > speed) break;
         float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
@@ -239,6 +248,8 @@ class SearchRun: TaskBase {
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
+      portTickType xLastWakeTime;
+      xLastWakeTime = xTaskGetTickCount();
       while (1) {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - SEARCH_LOOK_AHEAD) break;
@@ -262,6 +273,8 @@ class SearchRun: TaskBase {
     }
     template<class C>
     void trace(C tr, const float velocity) {
+      portTickType xLastWakeTime;
+      xLastWakeTime = xTaskGetTickCount();
       while (1) {
         if (tr.getRemain() < SEARCH_LOOK_AHEAD) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -283,14 +296,14 @@ class SearchRun: TaskBase {
         delay(1);
       }
       sc.disable();
-      mt.drive(-300, -300);
-      delay(1000);
+      mt.drive(-100, -100);
+      delay(200);
       sc.enable();
       updateOrigin(Position(-SEGMENT_WIDTH / 2 + MACHINE_TAIL_LENGTH + WALL_THICKNESS / 2, 0, 0));
       setPosition(origin);
       fixPosition(Position(getRelativePosition().x, 0, getRelativePosition().theta).rotate(origin.theta));
     }
-    void uturn(const float velocity, const float v_end) {
+    void uturn() {
       if (axis.angle.z > 0) {
         wall_attach();
         turn(-M_PI / 2);
@@ -308,13 +321,16 @@ class SearchRun: TaskBase {
       const float v_max = 360;
       const float ahead_length = 0.0f;
       sc.enable();
+      portTickType xLastWakeTime;
+      xLastWakeTime = xTaskGetTickCount();
       while (1) {
         while (q.empty()) {
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
           S90 tr;
           Position cur = getRelativePosition();
-          const float decel = 600;
-          float extra = tr.straight - ahead_length - cur.x - SEARCH_LOOK_AHEAD;
+          const float decel = 1200;
+          //          float extra = tr.straight - ahead_length - cur.x - SEARCH_LOOK_AHEAD;
+          float extra = tr.straight - ahead_length - cur.x;
           float v = sqrt(2 * decel * fabs(extra));
           if (v > velocity) v = velocity;
           if (extra < 0) v = -v;
@@ -372,11 +388,11 @@ class SearchRun: TaskBase {
             break;
           case TURN_BACK:
             straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
-            uturn(velocity, velocity);
+            uturn();
             straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, velocity, true);
             break;
           case RETURN:
-            uturn(velocity, 0);
+            uturn();
             break;
           case STOP:
             straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);

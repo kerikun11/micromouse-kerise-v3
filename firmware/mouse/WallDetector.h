@@ -4,11 +4,12 @@
 #include "config.h"
 
 #include "reflector.h"
+#include "tof.h"
 
 #define WALL_DETECTOR_TASK_PRIORITY 4
 #define WALL_DETECTOR_STACK_SIZE    4096
 
-#define WALL_DETECTOR_FLONT_RATIO   2.4f
+#define WALL_DETECTOR_FLONT_RATIO   2.8f
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -33,58 +34,75 @@ class WallDetector {
       xSemaphoreTake(calibrationEndSemaphore, portMAX_DELAY);
     }
     void print() {
-      printf("Wall:\t%05.3f\t%05.3f\t%05.3f\t%05.3f\t|\n", wall_ratio().side[0], wall_ratio().front[0], wall_ratio().front[1], wall_ratio().side[1]);
+      printf("Wall:\t%d\t%d\t%d\t%d\t[ %c %c %c ]\n",
+             wall_diff.side[0],
+             wall_diff.front[0],
+             wall_diff.front[1],
+             wall_diff.side[1],
+             wall[0] ? 'X' : '.',
+             wall[2] ? 'X' : '.',
+             wall[1] ? 'X' : '.');
+    }
+    void csv() {
+      printf("%d,%d,%d,%d\n",
+             wall_diff.side[0],
+             wall_diff.front[0],
+             wall_diff.front[1],
+             wall_diff.side[1]
+            );
     }
     struct WALL_VALUE {
-      float side[2];
-      float front[2];
+      int16_t side[2];
+      int16_t front[2];
     };
-    struct WALL_VALUE wall_distance() {
-      return _wall_distance;
+    const WALL_VALUE& getRef() const {
+      return wall_ref;
     }
-    struct WALL_VALUE wall_ratio() {
-      return _wall_ratio;
+    const WALL_VALUE& getDiff() const {
+      return wall_diff;
     }
-    uint8_t wallDetect() {
-      uint8_t wall = 0;
-      const int threshold[4] = {500, 270, 270, 500};
-      ref.oneshot();
-      for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
-        if (ref.getOneshotValue(i) > threshold[i]) wall |= 1 << i;
-      }
-      printf("Wall: ");
-      for (int i = 0; i < 4; i++) printf("%s ", ((wall >> i) & 1) ? "X" : ".");
-      printf("\n");
-      return wall;
+    bool getWall(const int ch) const {
+      return wall[ch];
     }
   private:
     xTaskHandle task_handle;
     SemaphoreHandle_t calibrationStartSemaphore;
     SemaphoreHandle_t calibrationEndSemaphore;
-    struct WALL_VALUE _wall_distance;
-    struct WALL_VALUE _wall_ratio;
+    struct WALL_VALUE wall_ref;
+    struct WALL_VALUE wall_diff;
+    bool wall[3];
+
+    void calibration_side() {
+      float sum[2] = {0.0f, 0.0f};
+      const int ave_count = 1000;
+      for (int j = 0; j < ave_count; j++) {
+        for (int i = 0; i < 2; i++) sum[i] += ref.side(i);
+        delay(1);
+      }
+      for (int i = 0; i < 2; i++) wall_ref.side[i] = sum[i] / ave_count;
+      for (int i = 0; i < 2; i++) wall_ref.front[i] =  WALL_DETECTOR_FLONT_RATIO * (wall_ref.side[0] + wall_ref.side[1]) / 2;
+      printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.front[0], (int) wall_ref.front[1], (int) wall_ref.side[1]);
+    }
     void task() {
       portTickType xLastWakeTime;
       xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
+        const int threshold_front = 120;
+        if (tof.getDistance() < threshold_front) wall[2] = true;
+        else wall[2] = false;
+        const int threshold_side = 90;
         for (int i = 0; i < 2; i++) {
-          int16_t value = ref.side(i);
-          _wall_ratio.side[i] = (_wall_distance.side[i] - value) / _wall_distance.side[i];
+          if (ref.side(i) > threshold_side) wall[i] = true;
+          else wall[i] = false;
         }
         for (int i = 0; i < 2; i++) {
-          int16_t value = ref.front(i);
-          _wall_ratio.front[i] =  (_wall_distance.front[i] * WALL_DETECTOR_FLONT_RATIO - value) / _wall_distance.front[i];
+          wall_diff.side[i] = ref.side(i) - wall_ref.side[i];
+          wall_diff.front[i] = ref.front(i) - wall_ref.front[i];
         }
-
         if (xSemaphoreTake(calibrationStartSemaphore, 0) == pdTRUE) {
-          float sum[2] = {0.0f, 0.0f};
-          const int ave_count = 1000;
-          for (int i = 0; i < 2; i++) for (int j = 0; j < ave_count; j++) sum[i] += ref.side(i);
-          for (int i = 0; i < 2; i++) _wall_distance.side[i] = sum[i] / ave_count;
-          for (int i = 0; i < 2; i++) _wall_distance.front[i] =  (_wall_distance.side[0] + _wall_distance.side[1]) / 2;
-          printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) _wall_distance.side[0], (int) _wall_distance.front[0], (int) _wall_distance.front[1], (int) _wall_distance.side[1]);
+          calibration_side();
           xSemaphoreGive(calibrationEndSemaphore);
         }
       }

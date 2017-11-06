@@ -107,7 +107,7 @@ class MazeSolver: TaskBase {
 
         sr.waitForEnd();
 
-        delay(100); // センサが安定するのを待つ
+        //        delay(100); // センサが安定するのを待つ
 
         us = micros();
         //        backup();
@@ -116,21 +116,9 @@ class MazeSolver: TaskBase {
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
         printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), agent.stateString(agent.getState()));
-        us = micros();
-        uint8_t wall = 0xff;
-        while (1) {
-          uint8_t now = wd.wallDetect();
-          //          printf("Oneshot: \t%04d\t%04d\t%04d\t%04d\n", ref.getOneshotValue(0), ref.getOneshotValue(1), ref.getOneshotValue(2), ref.getOneshotValue(3));
-          if (wall == now) {
-            wall = now;
-            break;
-          }
-          wall = now;
-        }
-        agent.updateWall(v, d + 1, wall & 1); // left
-        agent.updateWall(v, d + 0, (wall & 6) == 6); // front
-        agent.updateWall(v, d - 1, wall & 8); // right
-        printf("wd.wallDetect(); %ld [us]\n", micros() - us);
+        agent.updateWall(v, d + 1, wd.getWall(0)); // left
+        agent.updateWall(v, d + 0, wd.getWall(2)); // front
+        agent.updateWall(v, d - 1, wd.getWall(1)); // right
 
         us = micros();
         agent.calcNextDir();
@@ -228,7 +216,7 @@ class MazeSolver: TaskBase {
       fr.waitForEnd();
       fr.disable();
       // end drive
-      delay(2000);
+      readyToStartWait(2000);
 
       // back to start
       printf("Back to Start\n");
@@ -239,7 +227,6 @@ class MazeSolver: TaskBase {
       prev_dir = path.back();
       path.pop_back();
       std::reverse(path.begin(), path.end());
-      int calib = 0;
       for (auto nextDir : path) {
         switch (Dir(nextDir - prev_dir)) {
           case Dir::East:
@@ -262,10 +249,10 @@ class MazeSolver: TaskBase {
       sr.disable();
       bz.play(Buzzer::CANCEL);
     }
-    void readyToStartWait() {
-      for (int ms = 0; ms < 3000; ms++) {
+    void readyToStartWait(const int wait_ms = 3000) {
+      for (int ms = 0; ms < wait_ms; ms++) {
         delay(1);
-        if (fabs(axis.accel.z) > 9800 * 0.5) {
+        if (fabs(axis.accel.z) > 9800 * 1) {
           bz.play(Buzzer::CANCEL);
           while (1) delay(1000);
         }

@@ -90,9 +90,11 @@ void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
-    const int i = 0;
-    tof.csv();
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    //    const int i = 0;
+    //    tof.csv();
+    //    ref.print();
+    //    wd.print();
     //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
@@ -101,7 +103,7 @@ void task(void* arg) {
 }
 
 void loop() {
-#define TEST 4
+#define TEST 0
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
@@ -134,11 +136,11 @@ void normal_drive() {
     if (ms.isRunning()) ms.terminate();
     task();
   }
-  if (btn.long_pressed_1) {
+  if (btn.long_pressing_1) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
     ms.print();
-    //    lg.print();
+    lg.print();
   }
 }
 
@@ -202,7 +204,7 @@ void task() {
 bool waitForCover() {
   while (1) {
     delay(1);
-    if (ref.front(0) > 300 && ref.front(1) > 300) {
+    if (ref.front(0) > 200 && ref.front(1) > 200) {
       bz.play(Buzzer::CONFIRM);
       return true;
     }
@@ -335,19 +337,6 @@ void turn_test() {
   }
 }
 
-void fan_test() {
-  if (btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CANCEL);
-    fan.drive(0);
-  }
-  if (btn.long_pressed_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    fan.drive(0.4);
-  }
-}
-
 void straight_test() {
   if (btn.pressed) {
     btn.flags = 0;
@@ -356,11 +345,10 @@ void straight_test() {
     bz.play(Buzzer::SELECT);
     axis.calibration();
     sc.enable();
-    lg.start();
-    sc.getPosition().reset();
-    //    fan.drive(0.5);
+    //    lg.start();
+    fan.drive(0.3);
     delay(500);
-    straight_x(800, 1500, 0);
+    straight_x(180 * 8 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
     sc.set_target(0, 0);
     fan.drive(0);
     delay(100);
@@ -378,12 +366,12 @@ Position getRelativePosition() {
   return sc.getPosition();
 }
 
-#define TEST_LOOK_AHEAD 60
-#define TEST_PROP_GAIN  120
+#define TEST_LOOK_AHEAD 12
+#define TEST_PROP_GAIN  20
 
 void straight_x(const float distance, const float v_max, const float v_end) {
-  const float accel = 600;
-  const float decel = 600;
+  const float accel = 1500;
+  const float decel = 1200;
   portTickType xLastWakeTime = xTaskGetTickCount();
   int ms = 0;
   const float v_start = sc.actual.trans;

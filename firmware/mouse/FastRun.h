@@ -13,7 +13,7 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define FAST_WALL_AVOID         true
+#define FAST_WALL_AVOID         false
 #define FAST_WALL_AVOID_GAIN    0.00002f
 
 #define FAST_RUN_TASK_PRIORITY  3
@@ -22,7 +22,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          15
+#define FAST_PROP_GAIN          20
 
 //#define printf  lg.printf
 
@@ -228,7 +228,6 @@ class C180: public FastTrajectory {
 class FastRun: TaskBase {
   public:
     FastRun() : TaskBase("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE) {
-      xLastWakeTime = xTaskGetTickCount();
       set_speed();
     }
     virtual ~FastRun() {}
@@ -306,7 +305,6 @@ class FastRun: TaskBase {
       sc.getPosition() -= pos;
     }
   private:
-    portTickType xLastWakeTime;
     Position origin;
     String path, last_path;
 
@@ -328,6 +326,8 @@ class FastRun: TaskBase {
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
+      portTickType xLastWakeTime;
+      xLastWakeTime = xTaskGetTickCount();
       while (1) {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - FAST_LOOK_AHEAD) break;
@@ -350,6 +350,8 @@ class FastRun: TaskBase {
     }
     template<class C>
     void trace(C tr, const float velocity) {
+      portTickType xLastWakeTime;
+      xLastWakeTime = xTaskGetTickCount();
       while (1) {
         if (tr.getRemain() < FAST_LOOK_AHEAD) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
