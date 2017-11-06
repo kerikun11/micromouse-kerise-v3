@@ -9,7 +9,7 @@
 #define WALL_DETECTOR_TASK_PRIORITY 4
 #define WALL_DETECTOR_STACK_SIZE    4096
 
-#define WALL_DETECTOR_FLONT_RATIO   2.8f
+#define WALL_DETECTOR_FLONT_RATIO   2.4f
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -91,7 +91,7 @@ class WallDetector {
         const int threshold_front = 120;
         if (tof.getDistance() < threshold_front) wall[2] = true;
         else wall[2] = false;
-        const int threshold_side = 90;
+        const int threshold_side = 75;
         for (int i = 0; i < 2; i++) {
           if (ref.side(i) > threshold_side) wall[i] = true;
           else wall[i] = false;

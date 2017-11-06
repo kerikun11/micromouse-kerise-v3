@@ -105,13 +105,14 @@ class MazeSolver: TaskBase {
       while (1) {
         uint32_t us;
 
+        //        us = micros();
+        //        backup();
+        //        printf("backup(); %ld [us]\n", micros() - us);
+
         sr.waitForEnd();
 
         //        delay(100); // センサが安定するのを待つ
 
-        us = micros();
-        //        backup();
-        printf("backup(); %ld [us]\n", micros() - us);
 
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
@@ -144,6 +145,7 @@ class MazeSolver: TaskBase {
           sr.set_action(SearchRun::STOP);
           sr.waitForEnd();
           sr.disable();
+          backup();
           return false;
         }
         int straight_count = 0;
@@ -273,12 +275,14 @@ class MazeSolver: TaskBase {
         if (!search_run()) {
           while (1) delay(1000);
         }
+        backup();
         readyToStartWait();
       }
 
       if (!agent.calcShortestDirs()) {
         printf("Couldn't solve the maze!\n");
         bz.play(Buzzer::ERROR);
+        while (1) delay(1000);
       }
       while (1) {
         fast_run();

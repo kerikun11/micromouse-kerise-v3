@@ -321,8 +321,8 @@ class FastRun: TaskBase {
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 1500;
-      const float decel = 1000;
+      const float accel = 3000;
+      const float decel = 1500;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
@@ -399,7 +399,7 @@ class FastRun: TaskBase {
       const float v_max = fast_speed;
       const float curve_gain = fast_curve_gain;
       // 壁に背中を確実につける
-      mt.drive(-100, -100);
+      mt.drive(-200, -200);
       delay(200);
       mt.free();
       // 走行開始

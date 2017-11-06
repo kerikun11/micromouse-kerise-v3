@@ -73,7 +73,7 @@ void setup() {
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  //  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
+  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
   axis.begin(true);
   enc.begin(false);
   em.init();
@@ -90,6 +90,7 @@ void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    //    ref.csv();
     //    const int i = 0;
     //    tof.csv();
     //    ref.print();
@@ -173,7 +174,7 @@ void task() {
   switch (mode) {
     case 0:
       if (!waitForCover()) return;
-      led = 3;
+      led = 0;
       ms.start();
       break;
     case 1: {
@@ -343,15 +344,13 @@ void straight_test() {
     bz.play(Buzzer::SELECT);
     axis.calibration();
     sc.enable();
-    //    lg.start();
     fan.drive(0.3);
     delay(500);
-    straight_x(180 * 8 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
+    straight_x(3 * 90 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
     sc.set_target(0, 0);
     fan.drive(0);
     delay(100);
     sc.disable();
-    lg.end();
   }
   if (btn.long_pressing_1) {
     btn.flags = 0;
@@ -389,6 +388,7 @@ void straight_x(const float distance, const float v_max, const float v_end) {
     //    if (avoid) wall_avoid();
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     ms++;
+    lg.printf("%f,%d\n", cur.x + 6 + MACHINE_TAIL_LENGTH, tof.getDistance(), wd.getDiff().side[1]);
   }
   sc.set_target(v_end, 0);
 }

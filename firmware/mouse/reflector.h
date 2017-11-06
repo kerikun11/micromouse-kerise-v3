@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <algorithm>
 
 #define REFLECTOR_TASK_PRIORITY   6
 #define REFLECTOR_TASK_STACK_SIZE 4096
@@ -106,9 +107,15 @@ class Reflector {
           digitalWrite(tx_pins[i], LOW);
           delayMicroseconds(30); // 充電時間
           digitalWrite(tx_pins[i], HIGH);
-          const int sample_wait_us = 10;
-          delayMicroseconds(sample_wait_us);
-          int temp = offset[i] - analogRead(rx_pins[i]);
+          const int sample_num = 4;
+          std::array<uint16_t, sample_num> raw;
+          for (int j = 0; j < sample_num; j++) {
+            raw[j] = analogRead(rx_pins[i]);
+          }
+          //          const int sample_wait_us = 10;
+          //          delayMicroseconds(sample_wait_us);
+          //          int temp = offset[i] - ( + analogRead(rx_pins[i]));
+          int temp = offset[i] - *std::min_element(raw.begin(), raw.end());
           value_buffer[0][i] = (temp < 0) ? 1 : temp;
           delayMicroseconds(100); // 放電時間
         }

@@ -37,7 +37,7 @@ class SearchTrajectory {
     }
     Position getNextDir(const Position &cur, float velocity) {
       int index_cur = getNextIndex(cur);
-      int look_ahead = SEARCH_LOOK_AHEAD;
+      int look_ahead = SEARCH_LOOK_AHEAD + velocity / 100;
       Position dir = (getPosition(index_cur + look_ahead) - cur).rotate(-cur.theta);
       dir.theta = atan2f(dir.y, dir.x);
       return dir;
@@ -167,7 +167,7 @@ class SearchRun: TaskBase {
     Position origin;
     std::queue<struct Operation> q;
 
-    void wall_avoid() {
+    void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
       const float gain = SEARCH_WALL_AVOID_GAIN;
       if (wd.getWall(0)) {
@@ -178,6 +178,20 @@ class SearchRun: TaskBase {
         fixPosition(Position(0, wd.getDiff().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
       }
 #endif
+#if 0
+      if (tof.passedTimeMs() == 0) {
+        if (tof.getDistance() > 90 && tof.getDistance() < 150) {
+          float value = tof.getDistance() - 10.0f / 1000.0f * sc.actual.trans;
+          if (abs(distance - SEGMENT_WIDTH / 2) < 1.0f) {
+            fixPosition(Position(getRelativePosition().x - (135 - value), 0, 0).rotate(origin.theta));
+            bz.play(Buzzer::SHORT);
+          } else if (abs(distance - SEGMENT_WIDTH) < 1.0f) {
+            fixPosition(Position(getRelativePosition().x - (180 - value), 0, 0).rotate(origin.theta));
+            bz.play(Buzzer::SHORT);
+          }
+        }
+      }
+#endif
     }
     void wall_attach() {
 #if SEARCH_WALL_ATTACH_ENABLED
@@ -185,8 +199,8 @@ class SearchRun: TaskBase {
         portTickType xLastWakeTime = xTaskGetTickCount();
         int cnt = 0;
         while (1) {
-          float trans = -(wd.getDiff().front[0] + wd.getDiff().front[1]) * 0.5f; //< 0.5
-          float rot = (wd.getDiff().front[0] - wd.getDiff().front[1]) * 0.1f;
+          float trans = -(wd.getDiff().front[0] + wd.getDiff().front[1]) * 0.4f; //< 0.5
+          float rot = (wd.getDiff().front[0] - wd.getDiff().front[1]) * 0.05f;
           const float trans_sat = 100;
           const float rot_sat = 1 * PI;
           if (trans > trans_sat) trans = trans_sat;
@@ -241,8 +255,8 @@ class SearchRun: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 1500;
-      const float decel = 600;
+      const float accel = 3000;
+      const float decel = 1500;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -250,7 +264,6 @@ class SearchRun: TaskBase {
       while (1) {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - SEARCH_LOOK_AHEAD) break;
-        //        if (v_end >= 1.0f && cur.x > distance - 1.0f) break;
         if (v_end < 1.0f && cur.x > distance - 1.0f) break;
         float extra = distance - cur.x;
         float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
@@ -260,7 +273,7 @@ class SearchRun: TaskBase {
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
         float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD) - cur.theta;
         sc.set_target(velocity, SEARCH_PROP_GAIN * theta);
-        if (avoid) wall_avoid();
+        if (avoid) wall_avoid(distance);
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         ms++;
       }
@@ -312,8 +325,15 @@ class SearchRun: TaskBase {
         turn(M_PI / 2);
       }
     }
+    void wall_calib(const float velocity) {
+      if (wd.getWall(2)) {
+        float value = tof.getDistance() - (10.0f + tof.passedTimeMs()) / 1000.0f * velocity;
+        fixPosition(Position(getRelativePosition().x - (90 - value), 0, 0).rotate(origin.theta));
+        bz.play(Buzzer::SHORT);
+      }
+    }
     virtual void task() {
-      const float velocity = 240;
+      const float velocity = 200;
       const float v_max = 360;
       const float ahead_length = 0.0f;
       sc.enable();
@@ -331,7 +351,7 @@ class SearchRun: TaskBase {
           if (extra < 0) v = -v;
           float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD) - cur.theta;
           sc.set_target(v, SEARCH_PROP_GAIN * theta);
-          wall_avoid();
+          //          wall_avoid(0);
         }
         struct Operation operation = q.front();
         enum ACTION action = operation.action;
@@ -368,6 +388,7 @@ class SearchRun: TaskBase {
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(false);
+              wall_calib(velocity);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
               straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
@@ -376,6 +397,7 @@ class SearchRun: TaskBase {
           case TURN_RIGHT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(true);
+              wall_calib(velocity);
               straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
               trace(tr, tr.velocity);
               straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
