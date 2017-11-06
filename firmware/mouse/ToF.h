@@ -14,6 +14,7 @@ class ToF {
       Wire.begin(pin_sda, pin_scl);
       sensor.setTimeout(500);
       sensor.init();
+      //      sensor.setAddress(0x55);
       sensor.setMeasurementTimingBudget(20000);
       sensor.startContinuous();
       xTaskCreate([](void* obj) {
@@ -27,7 +28,7 @@ class ToF {
       log_d("ToF: %d\n", getDistance());
     }
     void csv() {
-      log_d("0,90,180,270,360,%d\n", getDistance());
+      printf("0,90,180,270,360,%d\n", getDistance());
     }
   private:
     const int pin_sda, pin_scl;
@@ -39,7 +40,7 @@ class ToF {
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         uint16_t value = sensor.readRangeContinuousMillimeters();
-        if (value != 8190) {
+        if (value < 2000) {
           distance = value;
         }
       }

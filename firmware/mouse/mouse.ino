@@ -14,7 +14,7 @@
 #include "axis.h"
 #include "encoder.h"
 #include "reflector.h"
-//#include "tof.h"
+#include "tof.h"
 
 Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
 Button btn(BUTTON_PIN);
@@ -24,7 +24,7 @@ Fan fan;
 Axis axis;
 Encoder enc;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
-//ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
+ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
 #include "Emergency.h"
@@ -79,7 +79,7 @@ void setup() {
   em.init();
   ec.init();
   ref.begin();
-  //  tof.begin();
+  tof.begin();
   wd.begin();
   //  ble.begin();
 
@@ -90,8 +90,9 @@ void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
     const int i = 0;
+    tof.csv();
     //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
@@ -100,7 +101,7 @@ void task(void* arg) {
 }
 
 void loop() {
-#define TEST 1
+#define TEST 4
 #if TEST == 0
   normal_drive();
 #elif TEST == 1
@@ -217,14 +218,14 @@ void position_test() {
   if (btn.pressed) {
     btn.flags = 0;
     bz.play(Buzzer::CONFIRM);
-    delay(1000);
-    bz.play(Buzzer::SELECT);
-    axis.calibration();
-    bz.play(Buzzer::CANCEL);
-    //    sc.enable();
-    //    sc.set_target(0, 0);
+    //    delay(1000);
+    //    bz.play(Buzzer::SELECT);
+    //    axis.calibration();
+    //    bz.play(Buzzer::CANCEL);
+    //        sc.enable();
+    //        sc.set_target(0, 0);
     mt.drive(200, 200);
-    delay(5000);
+    delay(2000);
     mt.drive(0, 0);
   }
   if (btn.long_pressing_1) {

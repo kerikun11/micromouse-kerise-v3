@@ -24,7 +24,7 @@ typedef uint32_t wall_size_t;
 /** @def
 *   @brief 迷路のカラー表示切替
 */
-#if 1
+#if 0
 #define C_RED     "\x1b[31m"
 #define C_GREEN   "\x1b[32m"
 #define C_YELLOW  "\x1b[33m"

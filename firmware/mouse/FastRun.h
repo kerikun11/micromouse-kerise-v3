@@ -361,6 +361,7 @@ class FastRun: TaskBase {
       printPosition("Trace End");
     }
     virtual void task() {
+      // スタートとゴールの半区画分を追加
       if (path[0] != 'x' && path[0] != 'c' && path[0] != 'z') {
         path = "x" + path + "x";
       }
@@ -397,13 +398,16 @@ class FastRun: TaskBase {
 
       const float v_max = fast_speed;
       const float curve_gain = fast_curve_gain;
-      sc.enable();
-      setPosition();
-      printPosition("S");
-      int path_index = 0;
-      float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
+      // 壁に背中を確実につける
+      mt.drive(-100, -100);
+      delay(200);
+      mt.free();
+      // 走行開始
       fan.drive(0.3);
-      delay(500);
+      delay(500); //< ファンの回転数が一定なるのを待つ
+      setPosition();
+      sc.enable(); //< 速度コントローラ始動
+      float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
       for (int path_index = 0; path_index < path.length(); path_index++) {
         printPosition(String(path[path_index]).c_str());
         switch (path[path_index]) {
@@ -569,17 +573,14 @@ class FastRun: TaskBase {
             break;
         }
       }
-      //      printPosition("E1");
       if (straight > 1.0f) {
         straight_x(straight, v_max, 0, true);
         straight = 0;
       }
-      //      printPosition("E2");
       sc.set_target(0, 0);
       fan.drive(0);
       delay(100);
       sc.disable();
-      //      printPosition("E3");
       bz.play(Buzzer::COMPLETE);
       last_path = path;
       path = "";

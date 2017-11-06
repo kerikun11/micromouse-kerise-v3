@@ -126,7 +126,7 @@ class Axis {
       writeReg(0x6b, 0x01); //< power management 1
       writeReg(0x1b, 0x18); //< gyro range
       writeReg(0x1c, 0x18); //< accel range
-      writeReg(0x1A, 0x06); //< DLPF_CFG
+      //      writeReg(0x1A, 0x06); //< DLPF_CFG
       delay(100);
       if (readReg(117) != 0x12) {
         log_e("whoami failed:(");
