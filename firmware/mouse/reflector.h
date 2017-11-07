@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <algorithm>
 
-#define REFLECTOR_TASK_PRIORITY   6
+#define REFLECTOR_TASK_PRIORITY   10
 #define REFLECTOR_TASK_STACK_SIZE 4096
 
 #define REFLECTOR_CH_SIZE         4
@@ -17,6 +17,7 @@ class Reflector {
         offset[i] = 0;
         pinMode(tx_pins[i], OUTPUT);
       }
+      analogSetCycles(4);
       //      oneshotStartSemaphore = xSemaphoreCreateBinary();
       //      oneshotEndSemaphore = xSemaphoreCreateBinary();
       if (task_handle == NULL) {
@@ -52,7 +53,7 @@ class Reflector {
     //      return value_oneshot[ch];
     //    }
     void csv() const {
-      printf("0,1800");
+      printf("0,900");
       for (int i = 0; i < REFLECTOR_CH_SIZE; i++) printf(",%d", value[i]);
       //      for (int i = 0; i < REFLECTOR_CH_SIZE; i++) printf(",%d", value_oneshot[i]);
       printf("\n");
@@ -66,7 +67,7 @@ class Reflector {
     }
   private:
     xTaskHandle task_handle;
-    static const int ave_num = 8;
+    static const int ave_num = 2;
     int16_t value_buffer[ave_num][REFLECTOR_CH_SIZE];
     const std::array<int, REFLECTOR_CH_SIZE> tx_pins;
     const std::array<int, REFLECTOR_CH_SIZE> rx_pins;
@@ -104,20 +105,14 @@ class Reflector {
         }
         // Sampling
         for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
-          digitalWrite(tx_pins[i], LOW);
-          delayMicroseconds(30); // 充電時間
-          digitalWrite(tx_pins[i], HIGH);
-          const int sample_num = 4;
-          std::array<uint16_t, sample_num> raw;
-          for (int j = 0; j < sample_num; j++) {
-            raw[j] = analogRead(rx_pins[i]);
-          }
-          //          const int sample_wait_us = 10;
-          //          delayMicroseconds(sample_wait_us);
-          //          int temp = offset[i] - ( + analogRead(rx_pins[i]));
-          int temp = offset[i] - *std::min_element(raw.begin(), raw.end());
-          value_buffer[0][i] = (temp < 0) ? 1 : temp;
-          delayMicroseconds(100); // 放電時間
+          digitalWrite(tx_pins[i], LOW);    //< 充電開始
+          delayMicroseconds(50);            //< 充電時間
+          digitalWrite(tx_pins[i], HIGH);   //< 放電開始
+          delayMicroseconds(5);             //< 最大振幅になるまでの待ち時間
+          int raw = analogRead(rx_pins[i]); //< サンプリング
+          int temp = offset[i] - raw;       //< オフセットとの差をとる
+          value_buffer[0][i] = (temp < 0) ? 1 : temp; //< 0以下にならないように飽和
+          delayMicroseconds(100);           // 放電時間
         }
         // LPF
         for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {

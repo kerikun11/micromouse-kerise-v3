@@ -116,12 +116,12 @@ void setup() {
 void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
-    //    ref.csv();
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
+    //    tof.csv();vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
+    //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    const int i = 0;
-    //    tof.csv();
-    //    ref.print();
-    //    wd.print();
     //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
     //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
@@ -197,11 +197,11 @@ int waitForSelect(int range = 16) {
 }
 
 void task() {
-  int mode = waitForSelect(4);
+  int mode = waitForSelect(6);
   switch (mode) {
     case 0:
       if (!waitForCover()) return;
-      led = 0;
+      led = 9;
       ms.start();
       break;
     case 1: {
@@ -332,7 +332,7 @@ void turn(const float angle) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     if (fabs(sc.actual.rot) > speed) break;
-    float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
+    float delta = sc.position.x * cos(-sc.position.theta) - sc.position.y * sin(-sc.position.theta);
     if (angle > 0) {
       sc.set_target(-delta * back_gain, ms / 1000.0f * accel);
     } else {
@@ -343,10 +343,10 @@ void turn(const float angle) {
   }
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    float extra = angle - getRelativePosition().theta;
+    float extra = angle - sc.position.theta;
     if (fabs(sc.actual.rot) < 0.1 && abs(extra) < 0.1) break;
     float target_speed = sqrt(2 * decel * fabs(extra));
-    float delta = getRelativePosition().x * cos(-getRelativePosition().theta) - getRelativePosition().y * sin(-getRelativePosition().theta);
+    float delta = sc.position.x * cos(-sc.position.theta) - sc.position.y * sin(-sc.position.theta);
     target_speed = (target_speed > speed) ? speed : target_speed;
     if (extra > 0) {
       sc.set_target(-delta * back_gain, target_speed);
@@ -403,12 +403,10 @@ void straight_test() {
   }
 }
 
-Position getRelativePosition() {
-  return sc.getPosition();
-}
-
 #define TEST_LOOK_AHEAD 12
 #define TEST_PROP_GAIN  20
+
+#define printf lg.printf
 
 void straight_x(const float distance, const float v_max, const float v_end) {
   const float accel = 1500;
@@ -418,7 +416,7 @@ void straight_x(const float distance, const float v_max, const float v_end) {
   const float v_start = sc.actual.trans;
   const float T = 1.5f * (v_max - v_start) / accel;
   while (1) {
-    Position cur = getRelativePosition();
+    Position cur = sc.position;
     if (v_end >= 1.0f && cur.x > distance - TEST_LOOK_AHEAD) break;
     if (v_end < 1.0f && cur.x > distance - 1.0f) break;
     float extra = distance - cur.x;
@@ -432,7 +430,8 @@ void straight_x(const float distance, const float v_max, const float v_end) {
     //    if (avoid) wall_avoid();
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     ms++;
-    lg.printf("%f,%d\n", cur.x + 6 + MACHINE_TAIL_LENGTH, tof.getDistance(), wd.getDiff().side[1]);
+    //    printf("%f\t%d\t%d\t%c\n", cur.x + 6 + MACHINE_TAIL_LENGTH, tof.getDistance(), wd.wall_diff.side[1], wd.wall[0] ? 'X' : '_');
+    printf("%f\t[%c %c]\n", cur.x + 6 + MACHINE_TAIL_LENGTH, wd.wall[0] ? 'X' : '_', wd.wall[1] ? 'X' : '_');
   }
   sc.set_target(v_end, 0);
 }

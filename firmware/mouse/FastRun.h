@@ -288,10 +288,10 @@ class FastRun: TaskBase {
     }
     void printPosition(const char* name) const {
       printf("%s\tRel:(%06.1f, %06.1f, %06.3f)\t", name, getRelativePosition().x, getRelativePosition().y, getRelativePosition().theta);
-      printf("Abs:(%06.1f, %06.1f, %06.3f)\n", sc.getPosition().x, sc.getPosition().y, sc.getPosition().theta);
+      printf("Abs:(%06.1f, %06.1f, %06.3f)\n", sc.position.x, sc.position.y, sc.position.theta);
     }
     Position getRelativePosition() const {
-      return (sc.getPosition() - origin).rotate(-origin.theta);
+      return (sc.position - origin).rotate(-origin.theta);
     }
     void updateOrigin(Position passed) {
       origin += passed.rotate(origin.theta);
@@ -299,10 +299,10 @@ class FastRun: TaskBase {
     //    void setPosition(Position pos = Position(SEGMENT_WIDTH / 2, WALL_THICKNESS / 2 + MACHINE_TAIL_LENGTH, M_PI / 2)) {
     void setPosition(Position pos = Position(0, 0, 0)) {
       origin = pos;
-      sc.getPosition() = pos;
+      sc.position = pos;
     }
     void fixPosition(Position pos) {
-      sc.getPosition() -= pos;
+      sc.position -= pos;
     }
   private:
     Position origin;

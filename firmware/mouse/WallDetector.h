@@ -9,7 +9,7 @@
 #define WALL_DETECTOR_TASK_PRIORITY 4
 #define WALL_DETECTOR_STACK_SIZE    4096
 
-#define WALL_DETECTOR_FLONT_RATIO   2.4f
+#define WALL_DETECTOR_FLONT_RATIO   2.6f
 
 #define WALL_UPDATE_PERIOD_US       1000
 
@@ -51,26 +51,19 @@ class WallDetector {
              wall_diff.side[1]
             );
     }
-    struct WALL_VALUE {
+    struct WallValue {
       int16_t side[2];
       int16_t front[2];
     };
-    const WALL_VALUE& getRef() const {
-      return wall_ref;
-    }
-    const WALL_VALUE& getDiff() const {
-      return wall_diff;
-    }
-    bool getWall(const int ch) const {
-      return wall[ch];
-    }
+    WallValue wall_ref;
+    WallValue wall_diff;
+    bool wall[3];
   private:
     xTaskHandle task_handle;
     SemaphoreHandle_t calibrationStartSemaphore;
     SemaphoreHandle_t calibrationEndSemaphore;
-    struct WALL_VALUE wall_ref;
-    struct WALL_VALUE wall_diff;
-    bool wall[3];
+    static const int ave_num = 16;
+    int16_t side_buf[ave_num][2];
 
     void calibration_side() {
       float sum[2] = {0.0f, 0.0f};
@@ -81,6 +74,8 @@ class WallDetector {
       }
       for (int i = 0; i < 2; i++) wall_ref.side[i] = sum[i] / ave_count;
       for (int i = 0; i < 2; i++) wall_ref.front[i] =  WALL_DETECTOR_FLONT_RATIO * (wall_ref.side[0] + wall_ref.side[1]) / 2;
+      wall_ref.front[0] += 4;
+      wall_ref.front[1] -= 4;
       printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.front[0], (int) wall_ref.front[1], (int) wall_ref.side[1]);
     }
     void task() {
@@ -89,13 +84,20 @@ class WallDetector {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
         const int threshold_front = 120;
-        if (tof.getDistance() < threshold_front) wall[2] = true;
-        else wall[2] = false;
-        const int threshold_side = 75;
+        if (tof.getDistance() < threshold_front * 0.95f) wall[2] = true;
+        else if (tof.getDistance() > threshold_front * 1.05f) wall[2] = false;
+
+        const int threshold_side = 60;
         for (int i = 0; i < 2; i++) {
-          if (ref.side(i) > threshold_side) wall[i] = true;
-          else wall[i] = false;
+          for (int j = ave_num - 1; j > 0; j--) side_buf[j][i] = side_buf[j - 1][i];
+          side_buf[0][i] = ref.side(i);
+          int sum = 0;
+          for (int j = 0; j < ave_num; j++) sum += side_buf[j][i];
+          sum /= ave_num;
+          if (sum > threshold_side * 1.1f) wall[i] = true;
+          else if (sum < threshold_side * 0.9f) wall[i] = false;
         }
+
         for (int i = 0; i < 2; i++) {
           wall_diff.side[i] = ref.side(i) - wall_ref.side[i];
           wall_diff.front[i] = ref.front(i) - wall_ref.front[i];

@@ -38,6 +38,7 @@ class ExternalController: TaskBase {
               wd.calibration();
               break;
             case 'p':
+              tof.print();
               axis.print();
               ref.print();
               wd.print();

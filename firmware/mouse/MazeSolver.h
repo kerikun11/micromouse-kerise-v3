@@ -117,9 +117,9 @@ class MazeSolver: TaskBase {
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
         printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), agent.stateString(agent.getState()));
-        agent.updateWall(v, d + 1, wd.getWall(0)); // left
-        agent.updateWall(v, d + 0, wd.getWall(2)); // front
-        agent.updateWall(v, d - 1, wd.getWall(1)); // right
+        agent.updateWall(v, d + 1, wd.wall[0]); // left
+        agent.updateWall(v, d + 0, wd.wall[2]); // front
+        agent.updateWall(v, d - 1, wd.wall[1]); // right
 
         us = micros();
         agent.calcNextDir();
@@ -222,7 +222,7 @@ class MazeSolver: TaskBase {
 
       // back to start
       printf("Back to Start\n");
-      sr.setPosition();
+      sc.position.reset();
       sr.set_action(SearchRun::RETURN);
       sr.set_action(SearchRun::GO_HALF);
       path = agent.getShortestDirs();

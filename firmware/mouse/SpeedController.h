@@ -106,6 +106,7 @@ class SpeedController {
     float Kp = SPEED_CONTROLLER_KP;
     float Ki = SPEED_CONTROLLER_KI;
     float Kd = SPEED_CONTROLLER_KD;
+    Position position;
 
   public:
     SpeedController() {
@@ -115,24 +116,9 @@ class SpeedController {
         static_cast<SpeedController*>(obj)->task();
       }, "SpeedController", SPEED_CONTROLLER_STACK_SIZE, this, SPEED_CONTROLLER_TASK_PRIORITY, NULL);
     }
-    void reset() {
-      target.clear();
-      actual.clear();
-      integral.clear();
-      differential.clear();
-      actual_prev.clear();
-      target_prev.clear();
-      for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < ave_num; j++) {
-          wheel_position[j][i] = enc.position(i);
-          accel[j] = 0;
-          gyro[j] = 0;
-        }
-      }
-      position.reset();
-    }
-    void enable() {
+    void enable(bool reset_position = true) {
       reset();
+      if (reset_position) position.reset();
       enabled = true;
       printf("Speed Controller Enabled\n");
     }
@@ -147,9 +133,6 @@ class SpeedController {
       target.rot = rot;
       target.pole2wheel();
     }
-    Position& getPosition() {
-      return position;
-    }
   private:
     bool enabled = false;
     static const int ave_num = 5;
@@ -158,8 +141,22 @@ class SpeedController {
     float gyro[ave_num];
     WheelParameter actual_prev;
     WheelParameter target_prev;
-    Position position;
 
+    void reset() {
+      target.clear();
+      actual.clear();
+      integral.clear();
+      differential.clear();
+      actual_prev.clear();
+      target_prev.clear();
+      for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < ave_num; j++) {
+          wheel_position[j][i] = enc.position(i);
+          accel[j] = 0;
+          gyro[j] = 0;
+        }
+      }
+    }
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
