@@ -6,6 +6,9 @@
 
 #include <WiFi.h>
 #include <SPIFFS.h>
+#include <Preferences.h>
+Preferences pref;
+
 #include "config.h"
 
 /* Hardware */
@@ -64,6 +67,27 @@ void batteryCheck() {
   }
 }
 
+bool restore() {
+  size_t n = pref.getBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
+  if (n == 0) {
+    log_e("Restore Failed:(");
+    return false;
+  }
+  log_i("Restore Successful");
+  log_d("wd.wall_ref: %d, %d, %d, %d", wd.wall_ref.side[0], wd.wall_ref.front[0], wd.wall_ref.front[1], wd.wall_ref.side[1]);
+  return true;
+}
+
+bool backup() {
+  size_t n = pref.putBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
+  if (n == 0) {
+    log_e("Backup Failed:(");
+    return false;
+  }
+  log_i("Backup Successful");
+  return true;
+}
+
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(115200);
@@ -72,6 +96,9 @@ void setup() {
   led = 0xf;
   batteryCheck();
   bz.play(Buzzer::BOOT);
+
+  pref.begin("mouse", false);
+  restore();
 
   if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
   axis.begin(true);
@@ -191,12 +218,29 @@ void task() {
       break;
     case 3:
       if (!waitForCover()) return;
-      //      ms.set_goal({Vector(1, 0)});
       if (ms.restore()) {
         bz.play(Buzzer::COMPLETE);
       } else {
         bz.play(Buzzer::ERROR);
       }
+      break;
+    case 4:
+      if (!waitForCover()) return;
+      if (backup()) {
+        bz.play(Buzzer::COMPLETE);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    case 5:
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(1, 0)});
+      bz.play(Buzzer::COMPLETE);
+      break;
+    case 6:
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(1, 0)});
+      bz.play(Buzzer::COMPLETE);
       break;
   }
 }
