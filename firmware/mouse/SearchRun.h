@@ -18,7 +18,7 @@
 #define SEARCH_WALL_FRONT_ENABLED   false
 #define SEARCH_WALL_AVOID_ENABLED   true
 
-#define SEARCH_LOOK_AHEAD   10
+#define SEARCH_LOOK_AHEAD   12
 #define SEARCH_PROP_GAIN    30
 
 #define SEARCH_RUN_TASK_PRIORITY   3
@@ -337,8 +337,8 @@ class SearchRun: TaskBase {
     }
     virtual void task() {
       const float velocity = 240;
-      const float v_max = 240;
-      const float ahead_length = 0.0f;
+      const float v_max = 300;
+      const float ahead_length = 7.0f;
       sc.enable();
       while (1) {
         {
