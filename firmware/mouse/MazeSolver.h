@@ -102,7 +102,7 @@ class MazeSolver: TaskBase {
       sr.enable();
       Agent::State prevState = agent.getState();
       while (1) {
-        uint32_t us;
+        uint32_t ms;
 
         //        us = micros();
         //        backup();
@@ -120,9 +120,9 @@ class MazeSolver: TaskBase {
         agent.updateWall(v, d + 0, wd.wall[2]); // front
         agent.updateWall(v, d - 1, wd.wall[1]); // right
 
-        us = micros();
+        ms = millis();
         agent.calcNextDir();
-        printf("agent.calcNextDir(); %ld [us]\n", micros() - us);
+        printf("agent.calcNextDir(); %lu [us]\n", millis() - ms);
         Agent::State newState = agent.getState();
         if (newState != prevState && newState == Agent::REACHED_START) break;
         if (newState != prevState && newState == Agent::REACHED_GOAL) {
@@ -228,22 +228,29 @@ class MazeSolver: TaskBase {
       prev_dir = path.back();
       path.pop_back();
       std::reverse(path.begin(), path.end());
+      int straight_count = 0;
       for (auto nextDir : path) {
         switch (Dir(nextDir - prev_dir)) {
           case Dir::East:
-            sr.set_action(SearchRun::GO_STRAIGHT);
+            straight_count++;
             break;
           case Dir::North:
+            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+            straight_count = 0;
             sr.set_action(SearchRun::TURN_LEFT_90);
             break;
           case Dir::West:
             break;
           case Dir::South:
+            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+            straight_count = 0;
             sr.set_action(SearchRun::TURN_RIGHT_90);
             break;
         }
         prev_dir = nextDir;
       }
+      if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+      straight_count = 0;
       sr.set_action(SearchRun::START_INIT);
       sr.enable();
       sr.waitForEnd();

@@ -32,7 +32,8 @@ class Logger: TaskBase {
       vsnprintf(s, buf_size, format, args);
       va_end(args);
       Serial.print(s);
-      log += String(millis(), DEC) + ": " + s;
+      //      log += String(millis(), DEC) + ": " + s;
+      log += s;
     }
   private:
     String log;
@@ -43,15 +44,15 @@ class Logger: TaskBase {
         char str[64];
         //        const int i = 0;
         //        sprintf(str, "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.wheel[i], sc.actual.wheel[i], sc.enconly.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * (0 - sc.integral.wheel[i]), sc.Kd * (0 - sc.differential.wheel[i]));
-        snprintf(str, 64, "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",
-                 sc.target.trans,
-                 sc.actual.trans,
-                 sc.enconly.trans,
-                 sc.Kp * sc.proportional.trans,
-                 sc.Ki * sc.integral.trans,
-                 sc.Kd * sc.differential.trans,
-                 sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans
-                );
+        //        snprintf(str, 64, "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",
+        //                 sc.target.trans,
+        //                 sc.actual.trans,
+        //                 sc.enconly.trans,
+        //                 sc.Kp * sc.proportional.trans,
+        //                 sc.Ki * sc.integral.trans,
+        //                 sc.Kd * sc.differential.trans,
+        //                 sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans
+        //                );
         //        snprintf(str, 64, "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n",
         //                 sc.target.rot,
         //                 sc.actual.rot,
@@ -61,6 +62,7 @@ class Logger: TaskBase {
         //                 sc.Kd * sc.differential.rot,
         //                 sc.Kp * sc.proportional.rot + sc.Ki * sc.integral.rot + sc.Kd * sc.differential.rot
         //                );
+        sprintf(str, "%f,%f,%f,%f\n", sc.position.x, sc.position.y, sc.target.trans, sc.target.rot);
         log += str;
       }
     }

@@ -13,8 +13,7 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define FAST_WALL_AVOID         false
-#define FAST_WALL_AVOID_GAIN    0.00002f
+#define FAST_WALL_AVOID         true
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -296,8 +295,7 @@ class FastRun: TaskBase {
     void updateOrigin(Position passed) {
       origin += passed.rotate(origin.theta);
     }
-    //    void setPosition(Position pos = Position(SEGMENT_WIDTH / 2, WALL_THICKNESS / 2 + MACHINE_TAIL_LENGTH, M_PI / 2)) {
-    void setPosition(Position pos = Position(0, 0, 0)) {
+    void setPosition(Position pos = Position(SEGMENT_WIDTH / 2, WALL_THICKNESS / 2 + MACHINE_TAIL_LENGTH, M_PI / 2)) {
       origin = pos;
       sc.position = pos;
     }
@@ -310,19 +308,21 @@ class FastRun: TaskBase {
 
     void wall_avoid() {
 #if FAST_WALL_AVOID
-      const float gain = FAST_WALL_AVOID_GAIN;
-      const float threashold_ratio = 0.3f;
-      if (wd.wall_ratio().side[0] < threashold_ratio) {
-        fixPosition(Position(0, wd.wall_ratio().side[0] * gain * sc.actual.trans, 0).rotate(origin.theta));
-      }
-      if (wd.wall_ratio().side[1] < threashold_ratio) {
-        fixPosition(Position(0, -wd.wall_ratio().side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (fabs(sc.position.theta) < 0.1f * PI) {
+        led = 0x6;
+        const float gain = 0.000001f;
+        if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain * sc.actual.trans, 0).rotate(origin.theta);
+        if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain * sc.actual.trans, 0).rotate(origin.theta);
+        //        if (ref.side(0) > 60) sc.position.y += wd.wall_diff.side[0] * gain * sc.actual.trans;
+        //        if (ref.side(1) > 60) sc.position.y -= wd.wall_diff.side[1] * gain * sc.actual.trans;
+      } else {
+        led = 0x0;
       }
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
       const float accel = 3000;
-      const float decel = 1500;
+      const float decel = 2000;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
@@ -406,7 +406,7 @@ class FastRun: TaskBase {
       fan.drive(0.3);
       delay(500); //< ファンの回転数が一定なるのを待つ
       setPosition();
-      sc.enable(); //< 速度コントローラ始動
+      sc.enable(false); //< 速度コントローラ始動
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
       for (int path_index = 0; path_index < path.length(); path_index++) {
         printPosition(String(path[path_index]).c_str());

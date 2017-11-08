@@ -31,7 +31,7 @@ class Buzzer {
       MAZE_RESTORE,
     };
     void play(const enum Music music) {
-      //      xQueueSendToBack(playList, &music, 0);
+      xQueueSendToBack(playList, &music, 0);
     }
   private:
     int pin;
@@ -119,14 +119,16 @@ class Buzzer {
             mute(50);
             break;
           case MAZE_BACKUP:
-            sound(NOTE_C, 6, 100);
-            sound(NOTE_E, 6, 100);
             sound(NOTE_G, 6, 100);
+            sound(NOTE_E, 6, 100);
+            sound(NOTE_C, 6, 100);
+            mute(100);
             break;
           case MAZE_RESTORE:
-            sound(NOTE_G, 6, 100);
-            sound(NOTE_E, 6, 100);
             sound(NOTE_C, 6, 100);
+            sound(NOTE_E, 6, 100);
+            sound(NOTE_G, 6, 100);
+            mute(100);
             break;
           default:
             sound(NOTE_C, 4, 1000);

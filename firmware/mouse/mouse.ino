@@ -50,7 +50,7 @@ FastRun fr;
 SearchRun sr;
 MazeSolver ms;
 
-//#define printf lg.printf
+#define printf lg.printf
 
 void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
@@ -114,6 +114,7 @@ void normal_drive() {
     ms.print();
     lg.print();
   }
+  delay(1);
 }
 
 void position_test() {
@@ -275,7 +276,7 @@ void turn(const float angle) {
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     float extra = angle - sc.position.theta;
-    if (fabs(sc.actual.rot) < 0.1 && abs(extra) < 0.1) break;
+    if (fabs(sc.actual.rot) < 0.1 && fabs(extra) < 0.1) break;
     float target_speed = sqrt(2 * decel * fabs(extra));
     float delta = sc.position.x * cos(-sc.position.theta) - sc.position.y * sin(-sc.position.theta);
     target_speed = (target_speed > speed) ? speed : target_speed;
@@ -360,7 +361,7 @@ bool waitForFix() {
   int fix_count = 0;
   while (1) {
     delay(1);
-    if (abs(axis.gyro.x) < 0.01f * PI && abs(axis.gyro.y) < 0.01f * PI && abs(axis.gyro.z) < 0.01f * PI) {
+    if (fabs(axis.gyro.x) < 0.01f * PI && fabs(axis.gyro.y) < 0.01f * PI && fabs(axis.gyro.z) < 0.01f * PI) {
       if (fix_count++ > 1000) {
         bz.play(Buzzer::CONFIRM);
         log_i("waitForFix() => true");
