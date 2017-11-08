@@ -15,8 +15,8 @@
 
 #define SEARCH_WALL_ATTACH_ENABLED  true
 #define SEARCH_WALL_CUT_ENABLED     true
-#define SEARCH_WALL_AVOID_ENABLED   false
-#define SEARCH_WALL_AVOID_GAIN      0.0000005f
+#define SEARCH_WALL_FRONT_ENABLED   false
+#define SEARCH_WALL_AVOID_ENABLED   true
 
 #define SEARCH_LOOK_AHEAD   5
 #define SEARCH_PROP_GAIN    30
@@ -188,13 +188,10 @@ class SearchRun: TaskBase {
     }
     void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
-      const float gain = SEARCH_WALL_AVOID_GAIN;
-      if (wd.getWall(0)) {
-        float x = -wd.wall_diff.side[0] * gain * sc.actual.trans;
-        fixPosition(Position(0, x, 0).rotate(origin.theta));
-      }
-      if (wd.getWall(1)) {
-        fixPosition(Position(0, wd.wall_diff.side[1] * gain * sc.actual.trans, 0).rotate(origin.theta));
+      if (abs(sc.position.theta) < 0.1f * PI) {
+        const float gain = 0.00001f;
+        if (wd.wall[0]) sc.position.y += wd.wall_diff.side[0] * gain * sc.actual.trans;
+        if (wd.wall[1]) sc.position.y -= wd.wall_diff.side[0] * gain * sc.actual.trans;
       }
 #endif
 #if SEARCH_WALL_CUT_ENABLED
@@ -222,18 +219,15 @@ class SearchRun: TaskBase {
         prev_wall[i] = wd.wall[i];
       }
 #endif
-#if 0
-      if (tof.passedTimeMs() == 0) {
-        if (tof.getDistance() > 90 && tof.getDistance() < 150) {
-          float value = tof.getDistance() - 10.0f / 1000.0f * sc.actual.trans;
-          if (abs(distance - 45) < 1.0f) {
-            sc.position.x = 135 - value;
-            bz.play(Buzzer::SHORT);
-          } else if (abs(distance - 90) < 1.0f) {
-            sc.position.x = 180 - value;
-            bz.play(Buzzer::SHORT);
-          }
-        }
+    }
+    void wall_calib(const float velocity) {
+#if SEARCH_WALL_FRONT_ENABLED
+      if (wd.wall[2]) {
+        float value = tof.getDistance() - (10.0f + tof.passedTimeMs()) / 1000.0f * velocity;
+        float x = sc.position.x;
+        sc.position.x = 90 - value;
+        bz.play(Buzzer::SHORT);
+        printf("FrontWallCalib: %.2f => %.2f", x, 90 - value);
       }
 #endif
     }
@@ -342,16 +336,6 @@ class SearchRun: TaskBase {
         wall_attach();
         turn(M_PI / 2);
       }
-    }
-    void wall_calib(const float velocity) {
-#if 0
-      if (wd.wall[2]) {
-        float value = tof.getDistance() - (10.0f + tof.passedTimeMs()) / 1000.0f * velocity;
-        fixPosition(Position(sc.position.x - (90 - value), 0, 0).rotate(origin.theta));
-        bz.play(Buzzer::SHORT);
-        printf("FrontWallCalib: %f", value);
-      }
-#endif
     }
     virtual void task() {
       const float velocity = 300;

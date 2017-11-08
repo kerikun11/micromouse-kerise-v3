@@ -50,42 +50,22 @@ FastRun fr;
 SearchRun sr;
 MazeSolver ms;
 
-void batteryCheck() {
-  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
-  printf("Battery Voltage: %.3f\n", voltage);
-  led = (uint8_t)((voltage - 3.6f) / (4.4f - 3.6f) * 16);
-  if (voltage < 3.8f) {
-    printf("Battery Low!\n");
-    bz.play(Buzzer::LOW_BATTERY);
-    delay(3000);
-    led = 0;
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
-    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
-    esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
-    esp_deep_sleep_start();
-  }
-}
+//#define printf lg.printf
 
-bool restore() {
-  size_t n = pref.getBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
-  if (n == 0) {
-    log_e("Restore Failed:(");
-    return false;
+void task(void* arg) {
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    //    tof.csv();vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
+    //    const int i = 0;
+    //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
+    //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
+    //    printf("0,%f,%f,%f,%f,%f\n", PI, -PI, axis.angle.x * 10, axis.angle.y * 10, axis.angle.z * 10);
   }
-  log_i("Restore Successful");
-  log_d("wd.wall_ref: %d, %d, %d, %d", wd.wall_ref.side[0], wd.wall_ref.front[0], wd.wall_ref.front[1], wd.wall_ref.side[1]);
-  return true;
-}
-
-bool backup() {
-  size_t n = pref.putBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
-  if (n == 0) {
-    log_e("Backup Failed:(");
-    return false;
-  }
-  log_i("Backup Successful");
-  return true;
 }
 
 void setup() {
@@ -103,57 +83,22 @@ void setup() {
   if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
   axis.begin(true);
   enc.begin(false);
+  ref.begin();
+  if (!tof.begin()) bz.play(Buzzer::ERROR);
+  wd.begin();
   em.init();
   ec.init();
-  ref.begin();
-  tof.begin();
-  wd.begin();
   //  ble.begin();
 
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
-void task(void* arg) {
-  portTickType xLastWakeTime = xTaskGetTickCount();
-  while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
-    //    tof.csv();vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
-    //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
-    //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
-    //    const int i = 0;
-    //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
-    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
-    //    printf("0,%f,%f,%f\n", PI, -PI, axis.angle.z * 10);
-    //    printf("0,%f,%f,%f,%f,%f\n", PI, -PI, axis.angle.x * 10, axis.angle.y * 10, axis.angle.z * 10);
-  }
-}
-
 void loop() {
-#define TEST 0
-#if TEST == 0
   normal_drive();
-#elif TEST == 1
-  trapizoid_test();
-#elif TEST == 2
-  turn_test();
-#elif TEST == 3
-  straight_test();
-#elif TEST == 4
-  position_test();
-#elif TEST == 5
-  //  ref.csv();
-  enc.csv();
-  //  printf("%f,%f\n", enc.position(0), enc.position(1));
-  //  printf("%d,%d\n", enc.getPulses(0), enc.getPulses(1));
-  //  printf("%d,%d\n", enc.getRaw(0), enc.getRaw(1));
-  delay(10);
-#elif TEST == 6
-  //  wd.print();
-  axis.print();
-  delay(100);
-#else
-#endif
+  //  position_test();
+  //  trapizoid_test();
+  //  straight_test();
+  //  turn_test();
 }
 
 void normal_drive() {
@@ -168,95 +113,6 @@ void normal_drive() {
     bz.play(Buzzer::CONFIRM);
     ms.print();
     lg.print();
-  }
-}
-
-int waitForSelect(int range = 16) {
-  uint8_t prev = 0;
-  while (1) {
-    delay(10);
-    uint8_t value = (enc.position(0) + enc.position(1)) / 5;
-    value %= range;
-    if (value != prev) {
-      prev = value;
-      for (int i = 0; i < value / 16; i++) bz.play(Buzzer::SELECT);
-      led = value;
-    }
-    if (btn.pressed) {
-      btn.flags = 0;
-      bz.play(Buzzer::CONFIRM);
-      return value;
-    }
-    if (btn.long_pressed_1) {
-      btn.flags = 0;
-      bz.play(Buzzer::CANCEL);
-      return -1;
-    }
-  }
-  return -1;
-}
-
-void task() {
-  int mode = waitForSelect(6);
-  switch (mode) {
-    case 0:
-      if (!waitForCover()) return;
-      led = 9;
-      ms.start();
-      break;
-    case 1: {
-        int speed = waitForSelect(8);
-        fr.fast_speed = 200 + 200 * speed;
-      }
-      if (!waitForCover()) return;
-      break;
-    case 2: {
-        int gain = waitForSelect(8);
-        fr.fast_curve_gain = 0.1f + 0.1f * gain;
-      }
-      if (!waitForCover()) return;
-      break;
-    case 3:
-      if (!waitForCover()) return;
-      if (ms.restore()) {
-        bz.play(Buzzer::COMPLETE);
-      } else {
-        bz.play(Buzzer::ERROR);
-      }
-      break;
-    case 4:
-      if (!waitForCover()) return;
-      if (backup()) {
-        bz.play(Buzzer::COMPLETE);
-      } else {
-        bz.play(Buzzer::ERROR);
-      }
-      break;
-    case 5:
-      if (!waitForCover()) return;
-      ms.set_goal({Vector(1, 0)});
-      bz.play(Buzzer::COMPLETE);
-      break;
-    case 6:
-      if (!waitForCover()) return;
-      ms.set_goal({Vector(1, 0)});
-      bz.play(Buzzer::COMPLETE);
-      break;
-  }
-}
-
-bool waitForCover() {
-  while (1) {
-    delay(1);
-    if (ref.front(0) > 200 && ref.front(1) > 200) {
-      bz.play(Buzzer::CONFIRM);
-      return true;
-    }
-    if (btn.pressed) {
-      btn.flags = 0;
-      bz.play(Buzzer::CANCEL);
-      return false;
-    }
   }
 }
 
@@ -323,6 +179,81 @@ void trapizoid_test() {
   }
 }
 
+void straight_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    delay(2000);
+    bz.play(Buzzer::SELECT);
+    axis.calibration();
+    sc.enable();
+    fan.drive(0.3);
+    delay(500);
+    straight_x(3 * 90 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
+    sc.set_target(0, 0);
+    fan.drive(0);
+    delay(100);
+    sc.disable();
+  }
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
+}
+
+void turn_test() {
+  if (btn.pressed) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    delay(1000);
+    axis.calibration();
+    bz.play(Buzzer::CONFIRM);
+    lg.start();
+    sc.enable();
+    turn(PI / 2);
+    sc.disable();
+    bz.play(Buzzer::CANCEL);
+    lg.end();
+  }
+  if (btn.long_pressing_1) {
+    btn.flags = 0;
+    bz.play(Buzzer::CONFIRM);
+    lg.print();
+  }
+}
+
+#define TEST_LOOK_AHEAD 12
+#define TEST_PROP_GAIN  20
+
+void straight_x(const float distance, const float v_max, const float v_end) {
+  const float accel = 1500;
+  const float decel = 1200;
+  int ms = 0;
+  const float v_start = sc.actual.trans;
+  const float T = 1.5f * (v_max - v_start) / accel;
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    Position cur = sc.position;
+    if (v_end >= 1.0f && cur.x > distance - TEST_LOOK_AHEAD) break;
+    if (v_end < 1.0f && cur.x > distance - 1.0f) break;
+    float extra = distance - cur.x;
+    float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+    float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
+    float velocity = v_max;
+    if (velocity > velocity_d) velocity = velocity_d;
+    if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
+    float theta = atan2f(-cur.y, TEST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
+    sc.set_target(velocity, TEST_PROP_GAIN * theta);
+    //    if (avoid) wall_avoid();
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    ms++;
+    //    printf("%f\t%d\t%d\t%c\n", cur.x + 6 + MACHINE_TAIL_LENGTH, tof.getDistance(), wd.wall_diff.side[1], wd.wall[0] ? 'X' : '_');
+    printf("%f\t[%c %c]\n", cur.x + 6 + MACHINE_TAIL_LENGTH, wd.wall[0] ? 'X' : '_', wd.wall[1] ? 'X' : '_');
+  }
+  sc.set_target(v_end, 0);
+}
+
 void turn(const float angle) {
   const float speed = 3 * M_PI;
   const float accel = 36 * M_PI;
@@ -359,80 +290,185 @@ void turn(const float angle) {
   //  printPosition("Turn End");
 }
 
-void turn_test() {
-  if (btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    delay(1000);
-    axis.calibration();
-    bz.play(Buzzer::CONFIRM);
-    lg.start();
-    sc.enable();
-    turn(PI / 2);
-    sc.disable();
-    bz.play(Buzzer::CANCEL);
-    lg.end();
-  }
-  if (btn.long_pressing_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    lg.print();
+void batteryCheck() {
+  float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
+  printf("Battery Voltage: %.3f\n", voltage);
+  led = (uint8_t)((voltage - 3.6f) / (4.4f - 3.6f) * 16);
+  if (voltage < 3.8f) {
+    printf("Battery Low!\n");
+    bz.play(Buzzer::LOW_BATTERY);
+    delay(3000);
+    led = 0;
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
+    esp_sleep_pd_config(ESP_PD_DOMAIN_MAX, ESP_PD_OPTION_OFF);
+    esp_deep_sleep_start();
   }
 }
 
-void straight_test() {
-  if (btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    delay(2000);
-    bz.play(Buzzer::SELECT);
-    axis.calibration();
-    sc.enable();
-    fan.drive(0.3);
-    delay(500);
-    straight_x(3 * 90 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
-    sc.set_target(0, 0);
-    fan.drive(0);
-    delay(100);
-    sc.disable();
-  }
-  if (btn.long_pressing_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    lg.print();
-  }
-}
-
-#define TEST_LOOK_AHEAD 12
-#define TEST_PROP_GAIN  20
-
-#define printf lg.printf
-
-void straight_x(const float distance, const float v_max, const float v_end) {
-  const float accel = 1500;
-  const float decel = 1200;
-  portTickType xLastWakeTime = xTaskGetTickCount();
-  int ms = 0;
-  const float v_start = sc.actual.trans;
-  const float T = 1.5f * (v_max - v_start) / accel;
+int waitForSelect(int range = 16) {
+  uint8_t prev = 0;
   while (1) {
-    Position cur = sc.position;
-    if (v_end >= 1.0f && cur.x > distance - TEST_LOOK_AHEAD) break;
-    if (v_end < 1.0f && cur.x > distance - 1.0f) break;
-    float extra = distance - cur.x;
-    float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
-    float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
-    float velocity = v_max;
-    if (velocity > velocity_d) velocity = velocity_d;
-    if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-    float theta = atan2f(-cur.y, TEST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
-    sc.set_target(velocity, TEST_PROP_GAIN * theta);
-    //    if (avoid) wall_avoid();
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    ms++;
-    //    printf("%f\t%d\t%d\t%c\n", cur.x + 6 + MACHINE_TAIL_LENGTH, tof.getDistance(), wd.wall_diff.side[1], wd.wall[0] ? 'X' : '_');
-    printf("%f\t[%c %c]\n", cur.x + 6 + MACHINE_TAIL_LENGTH, wd.wall[0] ? 'X' : '_', wd.wall[1] ? 'X' : '_');
+    delay(10);
+    uint8_t value = (enc.position(0) + enc.position(1)) / 10;
+    value %= range;
+    if (value != prev) {
+      prev = value;
+      for (int i = 0; i < value / 16; i++) bz.play(Buzzer::SELECT);
+      led = value;
+    }
+    if (btn.pressed) {
+      btn.flags = 0;
+      bz.play(Buzzer::CONFIRM);
+      log_i("waitForSelect() => %d", value);
+      return value;
+    }
+    if (btn.long_pressed_1) {
+      btn.flags = 0;
+      bz.play(Buzzer::CANCEL);
+      log_i("waitForSelect() => -1");
+      return -1;
+    }
   }
-  sc.set_target(v_end, 0);
+  return -1;
+}
+
+bool waitForCover(bool side = false) {
+  while (1) {
+    delay(1);
+    if (!side && ref.front(0) > 200 && ref.front(1) > 200) {
+      bz.play(Buzzer::CONFIRM);
+      log_i("waitForCover(front) => true");
+      return true;
+    }
+    if (side && ref.side(0) > 500 && ref.side(1) > 500) {
+      bz.play(Buzzer::CONFIRM);
+      log_i("waitForCover(side) => true");
+      return true;
+    }
+    if (btn.pressed) {
+      btn.flags = 0;
+      bz.play(Buzzer::CANCEL);
+      log_i("waitForCover() => true");
+      return false;
+    }
+  }
+}
+
+bool waitForFix() {
+  int fix_count = 0;
+  while (1) {
+    delay(1);
+    if (abs(axis.gyro.x) < 0.01f * PI && abs(axis.gyro.y) < 0.01f * PI && abs(axis.gyro.z) < 0.01f * PI) {
+      if (fix_count++ > 1000) {
+        bz.play(Buzzer::CONFIRM);
+        log_i("waitForFix() => true");
+        return true;
+      }
+    } else {
+      fix_count = 0;
+    }
+    if (btn.pressed) {
+      btn.flags = 0;
+      bz.play(Buzzer::CANCEL);
+      log_i("waitForFix() => false");
+      return false;
+    }
+  }
+}
+
+bool restore() {
+  size_t n = pref.getBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
+  if (n == 0) {
+    log_e("Restore Failed:(");
+    return false;
+  }
+  log_i("Restore Successful");
+  log_d("wd.wall_ref: %d, %d, %d, %d", wd.wall_ref.side[0], wd.wall_ref.front[0], wd.wall_ref.front[1], wd.wall_ref.side[1]);
+  return true;
+}
+
+bool backup() {
+  size_t n = pref.putBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
+  if (n == 0) {
+    log_e("Backup Failed:(");
+    return false;
+  }
+  log_i("Backup Successful");
+  return true;
+}
+
+void task() {
+  int mode = waitForSelect(16);
+  switch (mode) {
+    case 0:
+      if (!waitForCover()) return;
+      led = 9;
+      ms.start();
+      break;
+    case 1: {
+        int speed = waitForSelect(8);
+        fr.fast_speed = 200 + 200 * speed;
+      }
+      if (!waitForCover()) return;
+      break;
+    case 2: {
+        int gain = waitForSelect(8);
+        fr.fast_curve_gain = 0.1f + 0.1f * gain;
+      }
+      if (!waitForCover()) return;
+      break;
+    case 3:
+      bz.play(Buzzer::MAZE_RESTORE);
+      if (!waitForCover()) return;
+      if (ms.restore()) {
+        bz.play(Buzzer::COMPLETE);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    case 4:
+      bz.play(Buzzer::MAZE_BACKUP);
+      if (!waitForCover()) return;
+      if (backup()) {
+        bz.play(Buzzer::COMPLETE);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    case 5:
+      bz.play(Buzzer::SHORT);
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(1, 0)});
+      bz.play(Buzzer::COMPLETE);
+      break;
+    case 6:
+      for (int i = 0; i < 4; i++) bz.play(Buzzer::SHORT);
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)});
+      bz.play(Buzzer::COMPLETE);
+      break;
+    case 7:
+      for (int i = 0; i < 9; i++) bz.play(Buzzer::SHORT);
+      if (!waitForCover()) return;
+      ms.set_goal({Vector(3, 3), Vector(3, 4), Vector(3, 5), Vector(4, 3), Vector(4, 4), Vector(4, 5), Vector(5, 3), Vector(5, 4), Vector(5, 5)});
+      bz.play(Buzzer::COMPLETE);
+      break;
+    case 8:
+      if (!waitForCover(true)) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibrationFront();
+      bz.play(Buzzer::CANCEL);
+      break;
+    case 9:
+      if (!waitForCover()) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibration();
+      bz.play(Buzzer::CANCEL);
+      break;
+  }
 }
 

@@ -24,7 +24,6 @@
 #define MAZE_SOLVER_STACK_SIZE    8192
 
 //#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
-//#define MAZE_GOAL {{Vector(5, 6), Vector(5, 7), Vector(6, 6), Vector(6, 7)}}
 #define MAZE_GOAL {Vector(1,0)}
 #define MAZE_BACKUP_SIZE 5
 

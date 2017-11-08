@@ -10,16 +10,17 @@
 class ToF {
   public:
     ToF(const int pin_sda, const int pin_scl): pin_sda(pin_sda), pin_scl(pin_scl) {}
-    void begin() {
+    bool begin() {
       Wire.begin(pin_sda, pin_scl);
       sensor.setTimeout(100);
-      sensor.init();
+      if (!sensor.init()) return false;
       //      sensor.setAddress(0x55);
       sensor.setMeasurementTimingBudget(20000);
       //      sensor.startContinuous();
       xTaskCreate([](void* obj) {
         static_cast<ToF*>(obj)->task();
       }, "ToF", TOF_TASK_STACK_SIZE, this, TOF_TASK_PRIORITY, NULL);
+      return true;
     }
     uint16_t getDistance() {
       return distance;

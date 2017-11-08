@@ -19,6 +19,8 @@ class WallDetector {
     void begin() {
       calibrationStartSemaphore = xSemaphoreCreateBinary();
       calibrationEndSemaphore = xSemaphoreCreateBinary();
+      calibrationFrontStartSemaphore = xSemaphoreCreateBinary();
+      calibrationFrontEndSemaphore = xSemaphoreCreateBinary();
       if (task_handle == NULL) {
         xTaskCreate([](void* obj) {
           static_cast<WallDetector*>(obj)->task();
@@ -32,6 +34,11 @@ class WallDetector {
     }
     void calibrationWait() {
       xSemaphoreTake(calibrationEndSemaphore, portMAX_DELAY);
+    }
+    void calibrationFront() {
+      xSemaphoreTake(calibrationFrontEndSemaphore, 0); //< 前のキャリブレーションの終了を待つ
+      xSemaphoreGive(calibrationFrontStartSemaphore);
+      xSemaphoreTake(calibrationFrontEndSemaphore, portMAX_DELAY);
     }
     void print() {
       printf("Wall:\t%d\t%d\t%d\t%d\t[ %c %c %c ]\n",
@@ -62,21 +69,34 @@ class WallDetector {
     xTaskHandle task_handle;
     SemaphoreHandle_t calibrationStartSemaphore;
     SemaphoreHandle_t calibrationEndSemaphore;
+    SemaphoreHandle_t calibrationFrontStartSemaphore;
+    SemaphoreHandle_t calibrationFrontEndSemaphore;
     static const int ave_num = 16;
     int16_t side_buf[ave_num][2];
 
     void calibration_side() {
       float sum[2] = {0.0f, 0.0f};
-      const int ave_count = 1000;
+      const int ave_count = 500;
       for (int j = 0; j < ave_count; j++) {
         for (int i = 0; i < 2; i++) sum[i] += ref.side(i);
         delay(1);
       }
       for (int i = 0; i < 2; i++) wall_ref.side[i] = sum[i] / ave_count;
-      for (int i = 0; i < 2; i++) wall_ref.front[i] =  WALL_DETECTOR_FLONT_RATIO * (wall_ref.side[0] + wall_ref.side[1]) / 2;
-      wall_ref.front[0] += 4;
-      wall_ref.front[1] -= 4;
-      printf("Wall Calibration:\t%04d\t%04d\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.front[0], (int) wall_ref.front[1], (int) wall_ref.side[1]);
+      //      for (int i = 0; i < 2; i++) wall_ref.front[i] =  WALL_DETECTOR_FLONT_RATIO * (wall_ref.side[0] + wall_ref.side[1]) / 2;
+      //      wall_ref.front[0] += 4;
+      //      wall_ref.front[1] -= 4;
+      //      printf("Wall Calibration Side:\t%04d\t%04d\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.front[0], (int) wall_ref.front[1], (int) wall_ref.side[1]);
+      printf("Wall Calibration Side:\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.side[1]);
+    }
+    void calibration_front() {
+      float sum[2] = {0.0f, 0.0f};
+      const int ave_count = 500;
+      for (int j = 0; j < ave_count; j++) {
+        for (int i = 0; i < 2; i++) sum[i] += ref.front(i);
+        delay(1);
+      }
+      for (int i = 0; i < 2; i++) wall_ref.front[i] = sum[i] / ave_count;
+      printf("Wall Calibration Front:\t%04d\t%04d\n", (int) wall_ref.front[0], (int) wall_ref.front[1]);
     }
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
@@ -105,6 +125,12 @@ class WallDetector {
         if (xSemaphoreTake(calibrationStartSemaphore, 0) == pdTRUE) {
           calibration_side();
           xSemaphoreGive(calibrationEndSemaphore);
+          xLastWakeTime = xTaskGetTickCount();
+        }
+        if (xSemaphoreTake(calibrationFrontStartSemaphore, 0) == pdTRUE) {
+          calibration_front();
+          xSemaphoreGive(calibrationFrontEndSemaphore);
+          xLastWakeTime = xTaskGetTickCount();
         }
       }
     }

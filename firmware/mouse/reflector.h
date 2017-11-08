@@ -17,7 +17,7 @@ class Reflector {
         offset[i] = 0;
         pinMode(tx_pins[i], OUTPUT);
       }
-      analogSetCycles(4);
+      analogSetCycles(2);
       //      oneshotStartSemaphore = xSemaphoreCreateBinary();
       //      oneshotEndSemaphore = xSemaphoreCreateBinary();
       if (task_handle == NULL) {
@@ -105,14 +105,17 @@ class Reflector {
         }
         // Sampling
         for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
+          portMUX_TYPE myMutex = portMUX_INITIALIZER_UNLOCKED;
           digitalWrite(tx_pins[i], LOW);    //< 充電開始
           delayMicroseconds(50);            //< 充電時間
+          taskENTER_CRITICAL(&myMutex);
           digitalWrite(tx_pins[i], HIGH);   //< 放電開始
-          delayMicroseconds(5);             //< 最大振幅になるまでの待ち時間
+          delayMicroseconds(15);             //< 最大振幅になるまでの待ち時間
           int raw = analogRead(rx_pins[i]); //< サンプリング
+          taskEXIT_CRITICAL(&myMutex);
           int temp = offset[i] - raw;       //< オフセットとの差をとる
           value_buffer[0][i] = (temp < 0) ? 1 : temp; //< 0以下にならないように飽和
-          delayMicroseconds(100);           // 放電時間
+          delayMicroseconds(50);           // 放電時間
         }
         // LPF
         for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
