@@ -14,6 +14,7 @@
 #include "SpeedController.h"
 
 #define FAST_WALL_AVOID         true
+#define FAST_WALL_AVOID_GAIN    0.0001f
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -226,9 +227,7 @@ class C180: public FastTrajectory {
 
 class FastRun: TaskBase {
   public:
-    FastRun() : TaskBase("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE) {
-      set_speed();
-    }
+    FastRun() : TaskBase("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE) {}
     virtual ~FastRun() {}
     enum FAST_ACTION : char {
       FAST_GO_STRAIGHT = 's',
@@ -250,9 +249,9 @@ class FastRun: TaskBase {
       FAST_TURN_LEFT_180 = 'Q',
       FAST_TURN_RIGHT_180 = 'E',
     };
-    float fast_speed;
-    float fast_curve_gain;
-    void set_speed(const float speed = 600, const float gain = 0.5) {
+    float fast_speed = 600;
+    float fast_curve_gain = 0.5f;
+    void set_speed(const float speed, const float gain) {
       fast_speed = speed;
       fast_curve_gain = gain;
     }
@@ -268,8 +267,7 @@ class FastRun: TaskBase {
       printf("FastRun Disabled\n");
     }
     void set_action(FAST_ACTION action, const int num = 1) {
-      for (int i = 0; i < num; i++)
-        path += (char)action;
+      for (int i = 0; i < num; i++) path += (char)action;
     }
     void set_path(String path) {
       this->path = path;
@@ -308,21 +306,32 @@ class FastRun: TaskBase {
 
     void wall_avoid() {
 #if FAST_WALL_AVOID
-      if (fabs(sc.position.theta) < 0.1f * PI) {
-        led = 0x6;
-        const float gain = 0.000001f;
-        if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain * sc.actual.trans, 0).rotate(origin.theta);
-        if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain * sc.actual.trans, 0).rotate(origin.theta);
-        //        if (ref.side(0) > 60) sc.position.y += wd.wall_diff.side[0] * gain * sc.actual.trans;
-        //        if (ref.side(1) > 60) sc.position.y -= wd.wall_diff.side[1] * gain * sc.actual.trans;
+      if (fabs(getRelativePosition().theta) < 0.1f * PI) {
+        // 90 [deg] の倍数
+        if ((int)(origin.theta * 90 / PI + 10) % 90 < 5) {
+          const float gain = FAST_WALL_AVOID_GAIN;
+          if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain, 0).rotate(origin.theta);
+          if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain, 0).rotate(origin.theta);
+          led = 9;
+        }
+        // 45 [deg] の倍数
+        if ((int)(origin.theta * 90 / PI + 45 + 10) % 90 < 5 || (int)(origin.theta * 90 / PI - 45 + 10) % 90 < 5) {
+          const float gain = 0.0001f;
+          const int16_t threashold = 270;
+          if (ref.side(0) > threashold) sc.position += Position(0, (ref.side(0) - threashold) * gain, 0).rotate(origin.theta);
+          if (ref.side(1) > threashold) sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0).rotate(origin.theta);
+          //          if (ref.front(0) > threashold) sc.position += Position(0, (ref.front(0) - threashold) * gain, 0).rotate(origin.theta);
+          //          if (ref.front(1) > threashold) sc.position -= Position(0, (ref.front(1) - threashold) * gain, 0).rotate(origin.theta);
+          led = 6;
+        }
       } else {
-        led = 0x0;
+        led = 0;
       }
 #endif
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 3000;
-      const float decel = 2000;
+      const float accel = 4500;
+      const float decel = 3000;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
@@ -339,7 +348,8 @@ class FastRun: TaskBase {
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
         float theta = atan2f(-cur.y, FAST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
         sc.set_target(velocity, FAST_PROP_GAIN * theta);
-        if (avoid) wall_avoid();
+        //        if (avoid) wall_avoid();
+        wall_avoid();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         ms++;
       }

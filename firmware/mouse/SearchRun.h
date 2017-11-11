@@ -14,12 +14,12 @@
 #include "SpeedController.h"
 
 #define SEARCH_WALL_ATTACH_ENABLED  true
-#define SEARCH_WALL_CUT_ENABLED     false
+#define SEARCH_WALL_CUT_ENABLED     true
 #define SEARCH_WALL_FRONT_ENABLED   false
 #define SEARCH_WALL_AVOID_ENABLED   true
 
 #define SEARCH_LOOK_AHEAD   12
-#define SEARCH_PROP_GAIN    30
+#define SEARCH_PROP_GAIN    27
 
 #define SEARCH_RUN_TASK_PRIORITY   3
 #define SEARCH_RUN_STACK_SIZE      8192
@@ -80,7 +80,7 @@ class SearchTrajectory {
 class S90: public SearchTrajectory {
   public:
     S90(bool mirror = false) : mirror(mirror) {}
-    const float velocity = 240.0f;
+    const float velocity = 270.0f;
     const float straight = 5.0f;
   private:
     bool mirror;
@@ -180,19 +180,17 @@ class SearchRun: TaskBase {
         printPosition("wall_attach");
         sc.position.x = 0;  //< 直進方向の補正
         sc.position.theta = 0;  //< 直進方向の補正
-        bz.play(Buzzer::CONFIRM);
+        bz.play(Buzzer::SHORT);
       }
 #endif
     }
     void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
       if (fabs(sc.position.theta) < 0.1f * PI) {
-        led = 0x6;
-        const float gain = 0.000001f;
-        if (ref.side(0) > 60) sc.position.y += wd.wall_diff.side[0] * gain * sc.actual.trans;
-        if (ref.side(1) > 60) sc.position.y -= wd.wall_diff.side[1] * gain * sc.actual.trans;
-        //        if (ref.side(0) > wd.wall_ref.side[0]) sc.position.y += wd.wall_diff.side[0] * gain * sc.actual.trans;
-        //        if (ref.side(1) > wd.wall_ref.side[1]) sc.position.y -= wd.wall_diff.side[1] * gain * sc.actual.trans;
+        led = 0x9;
+        const float gain = 0.0002f;
+        if (ref.side(0) > 60) sc.position.y += wd.wall_diff.side[0] * gain;
+        if (ref.side(1) > 60) sc.position.y -= wd.wall_diff.side[1] * gain;
       } else {
         led = 0x0;
       }
@@ -201,18 +199,19 @@ class SearchRun: TaskBase {
       for (int i = 0; i < 2; i++) {
         if (prev_wall[i] && !wd.wall[i]) {
           printf("WallCut[%d]X_: dist => %.0f, x => %.2f\n", i, distance, sc.position.x);
-          if (fabs(distance - 45) < 1.0f || fabs(distance - 90) < 1.0f)
-            sc.position.x = distance - 20;
-          if (distance > 90 + 1)
-            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 70;
+          //          if (fabs(distance - 45) < 1.0f || fabs(distance - 90) < 1.0f)
+          //            sc.position.x = distance - 27;
+          //          if (distance > 90 + 1)
+          //            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 70;
+          //          bz.play(Buzzer::CANCEL);
         }
         if (!prev_wall[i] && wd.wall[i]) {
           printf("WallCut[%d]_X: dist => %.0f, x => %.2f\n", i, distance, sc.position.x);
-          //          bz.play(Buzzer::CONFIRM);
-          if (fabs(distance - 45) < 1.0f || fabs(distance - 90) < 1.0f)
-            sc.position.x = distance - 30;
-          if (distance > 90 + 1)
-            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 60;
+          //          if (fabs(distance - 45) < 1.0f || fabs(distance - 90) < 1.0f)
+          //            sc.position.x = distance - 30;
+          //          if (distance > 90 + 1)
+          //            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 60;
+          //          bz.play(Buzzer::SELECT);
         }
         prev_wall[i] = wd.wall[i];
       }
@@ -221,11 +220,11 @@ class SearchRun: TaskBase {
     void wall_calib(const float velocity) {
 #if SEARCH_WALL_FRONT_ENABLED
       if (wd.wall[2]) {
-        float value = tof.getDistance() - (10.0f + tof.passedTimeMs()) / 1000.0f * velocity;
+        float value = tof.getDistance() - (20.0f + tof.passedTimeMs()) / 1000.0f * velocity;
         float x = sc.position.x;
         sc.position.x = 90 - value;
         bz.play(Buzzer::SHORT);
-        printf("FrontWallCalib: %.2f => %.2f", x, 90 - value);
+        printf("FrontWallCalib: %.2f => %.2f\n", x, 90 - value);
       }
 #endif
     }
@@ -266,8 +265,8 @@ class SearchRun: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 3000;
-      const float decel = 2000;
+      const float accel = 1500;
+      const float decel = 1500;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -336,24 +335,20 @@ class SearchRun: TaskBase {
       }
     }
     virtual void task() {
-      const float velocity = 240;
-      const float v_max = 300;
+      const float velocity = 300;
+      const float v_max = 600;
       const float ahead_length = 7.0f;
       sc.enable();
       while (1) {
+        //** SearchActionがキューされるまで直進で待つ
         {
           S90 tr;
           portTickType xLastWakeTime = xTaskGetTickCount();
           while (q.empty()) {
             vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-            //                        Position cur = sc.position;
-            //                        const float decel = 3000;
-            //            float extra = tr.straight - cur.x - SEARCH_LOOK_AHEAD;
-            //                        float v = sqrt(2 * decel * fabs(extra));
-            //            if (v > velocity) v = velocity;
-            //            if (extra < 0) v = -v;
-            //            float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD) - cur.theta;
-            //            sc.set_target(v, SEARCH_PROP_GAIN * theta);
+            Position cur = sc.position;
+            float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD) - cur.theta;
+            sc.set_target(velocity, SEARCH_PROP_GAIN * theta);
             wall_avoid(0);
           }
         }
@@ -411,6 +406,9 @@ class SearchRun: TaskBase {
           case STOP:
             straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
             wall_attach();
+            sc.disable();
+            while (!q.empty()) q.pop();
+            while (1) delay(1000);
             break;
         }
         q.pop();

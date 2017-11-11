@@ -37,7 +37,8 @@ class MazeSolver: TaskBase {
       maze_backup.push_back(maze);
     }
     virtual ~MazeSolver() {}
-    void start() {
+    void start(bool isForceShortestPath = false) {
+      this->isForceShortestPath = isForceShortestPath;
       terminate();
       create_task();
     }
@@ -46,12 +47,15 @@ class MazeSolver: TaskBase {
       sr.disable();
       fr.disable();
     }
+    void forceBackToStart() {
+      agent.forceBackToStart();
+    }
     void print() {
-      int i = 0;
-      for (auto& maze : maze_backup) {
-        printf("Backup Maze %d:\n", i++);
-        maze.print();
-      }
+      //      int i = 0;
+      //      for (auto& maze : maze_backup) {
+      //        printf("Backup Maze %d:\n", i++);
+      //        maze.print();
+      //      }
       agent.printInfo();
     }
     bool isRunning() {
@@ -95,6 +99,7 @@ class MazeSolver: TaskBase {
     Maze maze;
     std::deque<Maze> maze_backup;
     Agent agent;
+    bool isForceShortestPath = false;
 
     bool search_run() {
       sr.set_action(SearchRun::START_STEP);
@@ -112,7 +117,6 @@ class MazeSolver: TaskBase {
 
         //        delay(100); // センサが安定するのを待つ
 
-
         const Vector& v = agent.getCurVec();
         const Dir& d = agent.getCurDir();
         printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), agent.stateString(agent.getState()));
@@ -122,7 +126,7 @@ class MazeSolver: TaskBase {
 
         ms = millis();
         agent.calcNextDir();
-        printf("agent.calcNextDir(); %lu [us]\n", millis() - ms);
+        printf("agent.calcNextDir(); %lu [ms]\n", millis() - ms);
         Agent::State newState = agent.getState();
         if (newState != prevState && newState == Agent::REACHED_START) break;
         if (newState != prevState && newState == Agent::REACHED_GOAL) {
@@ -274,17 +278,18 @@ class MazeSolver: TaskBase {
       bz.play(Buzzer::CANCEL);
 
       maze = maze_backup.back();
-      agent.reset();
-      if (agent.getState() != Agent::REACHED_START) {
-        maze = maze_backup.front();
+      if (!isForceShortestPath) {
         agent.reset();
-        if (!search_run()) {
-          while (1) delay(1000);
+        if (agent.getState() != Agent::REACHED_START) {
+          maze = maze_backup.front();
+          agent.reset();
+          if (!search_run()) {
+            while (1) delay(1000);
+          }
+          backup();
+          readyToStartWait();
         }
-        backup();
-        readyToStartWait();
       }
-
       if (!agent.calcShortestDirs()) {
         printf("Couldn't solve the maze!\n");
         bz.play(Buzzer::ERROR);

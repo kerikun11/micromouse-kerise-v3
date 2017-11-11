@@ -56,7 +56,7 @@ void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    //        ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     //    tof.csv();vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
@@ -76,6 +76,7 @@ void setup() {
   led = 0xf;
   batteryCheck();
   bz.play(Buzzer::BOOT);
+  log_i("tskNO_AFFINITY => %d", tskNO_AFFINITY);
 
   pref.begin("mouse", false);
   restore();
@@ -101,6 +102,10 @@ void loop() {
   //  turn_test();
 }
 
+const int searchig_time_ms = 3 * 60 * 1000;
+//const int searchig_time_ms = 1 * 60 * 1000;
+bool timeup = false;
+
 void normal_drive() {
   if (btn.pressed) {
     btn.flags = 0;
@@ -114,7 +119,13 @@ void normal_drive() {
     ms.print();
     lg.print();
   }
-  delay(1);
+  if (!timeup && millis() > searchig_time_ms) {
+    timeup = true;
+    bz.play(Buzzer::LOW_BATTERY);
+    ms.forceBackToStart();
+    //    ms.terminate();
+  }
+  delay(10);
 }
 
 void position_test() {
@@ -406,7 +417,7 @@ void task() {
     case 0:
       if (!waitForCover()) return;
       led = 9;
-      ms.start();
+      ms.start(timeup);
       break;
     case 1: {
         int speed = waitForSelect(8);
