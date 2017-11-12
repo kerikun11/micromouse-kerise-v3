@@ -80,7 +80,7 @@ class SearchTrajectory {
 class S90: public SearchTrajectory {
   public:
     S90(bool mirror = false) : mirror(mirror) {}
-    const float velocity = 270.0f;
+    const float velocity = 240.0f;
     const float straight = 5.0f;
   private:
     bool mirror;
@@ -159,19 +159,19 @@ class SearchRun: TaskBase {
 
     void wall_attach() {
 #if SEARCH_WALL_ATTACH_ENABLED
-      if (wd.wall[2]) {
+      if (tof.getDistance() < 90) {
         portTickType xLastWakeTime = xTaskGetTickCount();
         int cnt = 0;
         while (1) {
-          float trans = -(wd.wall_diff.front[0] + wd.wall_diff.front[1]) * 0.2f; //< 0.5
-          float rot = (wd.wall_diff.front[0] - wd.wall_diff.front[1]) * 0.01f; //< 0.01
+          float trans = -(wd.wall_diff.front[0] + wd.wall_diff.front[1]) * 0.3f; //< 0.5
+          float rot = (wd.wall_diff.front[0] - wd.wall_diff.front[1]) * 0.02f; //< 0.01
           const float trans_sat = 80;
           const float rot_sat = 0.5 * PI;
           if (trans > trans_sat) trans = trans_sat;
           else if (trans < -trans_sat)trans = -trans_sat;
           if (rot > rot_sat) rot = rot_sat;
           else if (rot < -rot_sat)rot = -rot_sat;
-          if (fabs(trans) < 0.001f && fabs(rot) < 0.005f) break;
+          if (fabs(trans) < 0.05f && fabs(rot) < 0.05f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
           if (cnt++ % 100 == 0) printf("trans: %f, rot:%f\n", rot, trans);
@@ -186,9 +186,9 @@ class SearchRun: TaskBase {
     }
     void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
-      if (fabs(sc.position.theta) < 0.1f * PI) {
+      if (fabs(sc.position.theta) < 0.01f * PI) {
         led = 0x9;
-        const float gain = 0.0002f;
+        const float gain = 0.0001f;
         if (ref.side(0) > 60) sc.position.y += wd.wall_diff.side[0] * gain;
         if (ref.side(1) > 60) sc.position.y -= wd.wall_diff.side[1] * gain;
       } else {
@@ -197,21 +197,17 @@ class SearchRun: TaskBase {
 #endif
 #if SEARCH_WALL_CUT_ENABLED
       for (int i = 0; i < 2; i++) {
-        if (prev_wall[i] && !wd.wall[i]) {
-          printf("WallCut[%d]X_: dist => %.0f, x => %.2f\n", i, distance, sc.position.x);
-          //          if (fabs(distance - 45) < 1.0f || fabs(distance - 90) < 1.0f)
-          //            sc.position.x = distance - 27;
-          //          if (distance > 90 + 1)
-          //            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 70;
-          //          bz.play(Buzzer::CANCEL);
+        if (prev_wall[i] && !wd.wall[i] && sc.position.x > 30.0f) {
+          const float prev_x = sc.position.x;
+          if (distance > 90 - 1)
+            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 70 - 10;
+          printf("WallCut[%d] X_ distance: %.0f, x: %.1f => %.1f\n", i, distance, prev_x, sc.position.x);
         }
-        if (!prev_wall[i] && wd.wall[i]) {
-          printf("WallCut[%d]_X: dist => %.0f, x => %.2f\n", i, distance, sc.position.x);
-          //          if (fabs(distance - 45) < 1.0f || fabs(distance - 90) < 1.0f)
-          //            sc.position.x = distance - 30;
-          //          if (distance > 90 + 1)
-          //            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 60;
-          //          bz.play(Buzzer::SELECT);
+        if (!prev_wall[i] && wd.wall[i] && sc.position.x > 30.0f) {
+          const float prev_x = sc.position.x;
+          if (distance > 90 - 1)
+            sc.position.x = sc.position.x - ((int)sc.position.x) % 90 + 60 - 10;
+          printf("WallCut[%d] _X distance: %.0f, x: %.1f => %.1f\n", i, distance, prev_x, sc.position.x);
         }
         prev_wall[i] = wd.wall[i];
       }
@@ -264,8 +260,8 @@ class SearchRun: TaskBase {
       sc.position = sc.position.rotate(-angle); //< 移動した量だけ位置を更新
       printPosition("Turn End");
     }
-    void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 1500;
+    void straight_x(const float distance, const float v_max, const float v_end) {
+      const float accel = 2000;
       const float decel = 1500;
       int ms = 0;
       float v_start = sc.actual.trans;
@@ -284,7 +280,7 @@ class SearchRun: TaskBase {
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
         float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD) - cur.theta;
         sc.set_target(velocity, SEARCH_PROP_GAIN * theta);
-        if (avoid) wall_avoid(distance);
+        wall_avoid(distance);
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         ms++;
       }
@@ -335,9 +331,9 @@ class SearchRun: TaskBase {
       }
     }
     virtual void task() {
-      const float velocity = 300;
+      const float velocity = 240;
       const float v_max = 600;
-      const float ahead_length = 7.0f;
+      const float ahead_length = 10.0f;
       sc.enable();
       while (1) {
         //** SearchActionがキューされるまで直進で待つ
@@ -359,10 +355,10 @@ class SearchRun: TaskBase {
         switch (action) {
           case START_STEP:
             sc.position.reset();
-            straight_x(SEGMENT_WIDTH - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2 + ahead_length, velocity, velocity, true);
+            straight_x(SEGMENT_WIDTH - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2 + ahead_length, velocity, velocity);
             break;
           case START_INIT:
-            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
             wall_attach();
             turn(M_PI / 2);
             wall_attach();
@@ -372,39 +368,39 @@ class SearchRun: TaskBase {
             while (!q.empty()) q.pop();
             while (1) delay(1000);
           case GO_STRAIGHT:
-            straight_x(SEGMENT_WIDTH * num, v_max, velocity, true);
+            straight_x(SEGMENT_WIDTH * num, v_max, velocity);
             break;
           case GO_HALF:
-            straight_x(SEGMENT_WIDTH / 2 * num, v_max, velocity, true);
+            straight_x(SEGMENT_WIDTH / 2 * num, v_max, velocity);
             break;
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(false);
               wall_calib(velocity);
-              straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
+              straight_x(tr.straight - ahead_length, velocity, tr.velocity);
               trace(tr, tr.velocity);
-              straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
+              straight_x(tr.straight + ahead_length, tr.velocity, velocity);
             }
             break;
           case TURN_RIGHT_90:
             for (int i = 0; i < num; i++) {
               S90 tr(true);
               wall_calib(velocity);
-              straight_x(tr.straight - ahead_length, velocity, tr.velocity, true);
+              straight_x(tr.straight - ahead_length, velocity, tr.velocity);
               trace(tr, tr.velocity);
-              straight_x(tr.straight + ahead_length, tr.velocity, velocity, true);
+              straight_x(tr.straight + ahead_length, tr.velocity, velocity);
             }
             break;
           case TURN_BACK:
-            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
             uturn();
-            straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, velocity, true);
+            straight_x(SEGMENT_WIDTH / 2 + ahead_length, velocity, velocity);
             break;
           case RETURN:
             uturn();
             break;
           case STOP:
-            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0, true);
+            straight_x(SEGMENT_WIDTH / 2 - ahead_length, velocity, 0);
             wall_attach();
             sc.disable();
             while (!q.empty()) q.pop();

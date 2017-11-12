@@ -14,7 +14,7 @@
 #include "SpeedController.h"
 
 #define FAST_WALL_AVOID         true
-#define FAST_WALL_AVOID_GAIN    0.0001f
+#define FAST_WALL_CUT           true
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -249,12 +249,17 @@ class FastRun: TaskBase {
       FAST_TURN_LEFT_180 = 'Q',
       FAST_TURN_RIGHT_180 = 'E',
     };
-    float fast_speed = 600;
-    float fast_curve_gain = 0.5f;
-    void set_speed(const float speed, const float gain) {
-      fast_speed = speed;
-      fast_curve_gain = gain;
-    }
+    struct RunParameter {
+      RunParameter(const float curve_gain = 0.5, const float max_speed = 600, const float accel = 3000, const float decel = 1500): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
+      float curve_gain;
+      float max_speed;
+      float accel, decel;
+      const RunParameter& operator=(const RunParameter& obj) {
+        curve_gain = obj.curve_gain; max_speed = obj.max_speed; accel = obj.accel; decel = obj.decel;
+        return *this;
+      }
+    };
+    RunParameter runParameter;
     void enable() {
       printf("FastRun Enabled\n");
       delete_task();
@@ -297,45 +302,64 @@ class FastRun: TaskBase {
       origin = pos;
       sc.position = pos;
     }
-    void fixPosition(Position pos) {
-      sc.position -= pos;
-    }
   private:
     Position origin;
     String path, last_path;
+    bool prev_wall[2];
 
     void wall_avoid() {
 #if FAST_WALL_AVOID
-      if (fabs(getRelativePosition().theta) < 0.1f * PI) {
+      if (fabs(getRelativePosition().theta) < 0.01f * PI) {
         // 90 [deg] の倍数
-        if ((int)(origin.theta * 90 / PI + 10) % 90 < 5) {
-          const float gain = FAST_WALL_AVOID_GAIN;
+        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 5) {
+          const float gain = 0.0003;
           if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain, 0).rotate(origin.theta);
           if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain, 0).rotate(origin.theta);
           led = 9;
         }
         // 45 [deg] の倍数
-        if ((int)(origin.theta * 90 / PI + 45 + 10) % 90 < 5 || (int)(origin.theta * 90 / PI - 45 + 10) % 90 < 5) {
-          const float gain = 0.0001f;
-          const int16_t threashold = 270;
+        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 5) {
+          const float gain = 0.0005f;
+          const int16_t threashold = 480;
           if (ref.side(0) > threashold) sc.position += Position(0, (ref.side(0) - threashold) * gain, 0).rotate(origin.theta);
           if (ref.side(1) > threashold) sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0).rotate(origin.theta);
-          //          if (ref.front(0) > threashold) sc.position += Position(0, (ref.front(0) - threashold) * gain, 0).rotate(origin.theta);
-          //          if (ref.front(1) > threashold) sc.position -= Position(0, (ref.front(1) - threashold) * gain, 0).rotate(origin.theta);
           led = 6;
         }
       } else {
         led = 0;
       }
 #endif
+#if FAST_WALL_CUT
+      // 90 [deg] の倍数
+      if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 5) {
+        for (int i = 0; i < 2; i++) {
+          if (prev_wall[i] && !wd.wall[i]) {
+            Position prev = sc.position;
+            Position fix = sc.position.rotate(-origin.theta);
+            fix.x = floor((fix.x + 45) / 90) * 90 - 20;
+            sc.position = fix.rotate(origin.theta);
+            printf("WallCut[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+          }
+          if (!prev_wall[i] && wd.wall[i]) {
+            Position prev = sc.position;
+            Position fix = sc.position.rotate(-origin.theta);
+            fix.x = floor((fix.x + 45) / 90) * 90 - 30;
+            sc.position = fix.rotate(origin.theta);
+            printf("WallCut[%d] _X (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+          }
+          prev_wall[i] = wd.wall[i];
+        }
+      }
+#endif
     }
-    void straight_x(const float distance, const float v_max, const float v_end, bool avoid) {
-      const float accel = 4500;
-      const float decel = 3000;
+    void straight_x(const float distance, const float v_max, const float v_end) {
+      const float accel = runParameter.accel;
+      const float decel = runParameter.decel;
       int ms = 0;
       const float v_start = sc.actual.trans;
       const float T = 1.5f * (v_max - v_start) / accel;
       portTickType xLastWakeTime = xTaskGetTickCount();
+      for (int i = 0; i < 2; i++) prev_wall[i] = wd.wall[i];
       while (1) {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - FAST_LOOK_AHEAD) break;
@@ -348,7 +372,6 @@ class FastRun: TaskBase {
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
         float theta = atan2f(-cur.y, FAST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
         sc.set_target(velocity, FAST_PROP_GAIN * theta);
-        //        if (avoid) wall_avoid();
         wall_avoid();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         ms++;
@@ -406,8 +429,8 @@ class FastRun: TaskBase {
       path.replace("xLLx", "l");
       printf("Running Path: %s\n", path.c_str());
 
-      const float v_max = fast_speed;
-      const float curve_gain = fast_curve_gain;
+      const float v_max = runParameter.max_speed;
+      const float curve_gain = runParameter.curve_gain;
       // 壁に背中を確実につける
       mt.drive(-200, -200);
       delay(200);
@@ -419,12 +442,13 @@ class FastRun: TaskBase {
       sc.enable(false); //< 速度コントローラ始動
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
       for (int path_index = 0; path_index < path.length(); path_index++) {
-        printPosition(String(path[path_index]).c_str());
+        //        printPosition(String(path[path_index]).c_str());
+        printf("FastRun: %c, st => %.1f\n", path[path_index], straight);
         switch (path[path_index]) {
           case FAST_TURN_LEFT_45: {
               F45 tr(false);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -434,7 +458,7 @@ class FastRun: TaskBase {
           case FAST_TURN_RIGHT_45: {
               F45 tr(true);
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -445,7 +469,7 @@ class FastRun: TaskBase {
               F45 tr(false);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -455,7 +479,7 @@ class FastRun: TaskBase {
               F45 tr(true);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -465,7 +489,7 @@ class FastRun: TaskBase {
               FV90 tr(false);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -476,7 +500,7 @@ class FastRun: TaskBase {
               FV90 tr(true);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -487,7 +511,7 @@ class FastRun: TaskBase {
               F90 tr(false);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -498,7 +522,7 @@ class FastRun: TaskBase {
               F90 tr(true);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -509,7 +533,7 @@ class FastRun: TaskBase {
               F135 tr(false);
               straight += tr.straight1;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -520,7 +544,7 @@ class FastRun: TaskBase {
               F135 tr(true);
               straight += tr.straight1;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -531,7 +555,7 @@ class FastRun: TaskBase {
               F135 tr(false);
               straight += tr.straight2;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -542,7 +566,7 @@ class FastRun: TaskBase {
               F135 tr(true);
               straight += tr.straight2;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, false);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -553,7 +577,7 @@ class FastRun: TaskBase {
               C180 tr(false);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -564,7 +588,7 @@ class FastRun: TaskBase {
               C180 tr(true);
               straight += tr.straight;
               if (straight > 1.0f) {
-                straight_x(straight, v_max, tr.velocity * curve_gain, true);
+                straight_x(straight, v_max, tr.velocity * curve_gain);
                 straight = 0;
               }
               trace(tr, sc.actual.trans);
@@ -583,8 +607,9 @@ class FastRun: TaskBase {
             break;
         }
       }
+      printf("FastRun: end, st => %.1f\n", straight);
       if (straight > 1.0f) {
-        straight_x(straight, v_max, 0, true);
+        straight_x(straight, v_max, 0);
         straight = 0;
       }
       sc.set_target(0, 0);

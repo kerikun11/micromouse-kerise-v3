@@ -36,8 +36,8 @@ ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 //#include "BLETransmitter.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
-#include "FastRun.h"
 #include "SearchRun.h"
+#include "FastRun.h"
 #include "MazeSolver.h"
 
 Emergency em;
@@ -46,11 +46,11 @@ Logger lg;
 //BLETransmitter ble;
 WallDetector wd;
 SpeedController sc;
-FastRun fr;
 SearchRun sr;
+FastRun fr;
 MazeSolver ms;
 
-#define printf lg.printf
+//#define printf lg.printf
 
 void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
@@ -70,7 +70,8 @@ void task(void* arg) {
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  Serial.begin(115200);
+  //  Serial.begin(115200);
+  Serial.begin(2000000);
   pinMode(RX, INPUT_PULLUP);
   printf("\n************ KERISE v3-2 ************\n");
   led = 0xf;
@@ -201,7 +202,7 @@ void straight_test() {
     sc.enable();
     fan.drive(0.3);
     delay(500);
-    straight_x(3 * 90 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
+    straight_x(8 * 90 - 6 - MACHINE_TAIL_LENGTH, 1200, 0);
     sc.set_target(0, 0);
     fan.drive(0);
     delay(100);
@@ -260,7 +261,6 @@ void straight_x(const float distance, const float v_max, const float v_end) {
     //    if (avoid) wall_avoid();
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     ms++;
-    //    printf("%f\t%d\t%d\t%c\n", cur.x + 6 + MACHINE_TAIL_LENGTH, tof.getDistance(), wd.wall_diff.side[1], wd.wall[0] ? 'X' : '_');
     printf("%f\t[%c %c]\n", cur.x + 6 + MACHINE_TAIL_LENGTH, wd.wall[0] ? 'X' : '_', wd.wall[1] ? 'X' : '_');
   }
   sc.set_target(v_end, 0);
@@ -420,16 +420,20 @@ void task() {
       ms.start(timeup);
       break;
     case 1: {
-        int speed = waitForSelect(8);
-        fr.fast_speed = 200 + 200 * speed;
+        int preset = waitForSelect(8);
+        if (preset < 0) break;
+        if (!waitForCover()) return;
+        switch (preset) {
+          case 0: fr.runParameter = FastRun::RunParameter(0.1, 100, 1200, 900); break;
+          case 1: fr.runParameter = FastRun::RunParameter(0.3, 400, 1500, 1200); break;
+          case 2: fr.runParameter = FastRun::RunParameter(0.5, 900, 2000, 1500); break;
+          case 3: fr.runParameter = FastRun::RunParameter(0.5, 1200, 3000, 2000); break;
+          case 4: fr.runParameter = FastRun::RunParameter(0.6, 1200, 3000, 2000); break;
+          case 5: fr.runParameter = FastRun::RunParameter(0.6, 1500, 6000, 3000); break;
+          case 6: fr.runParameter = FastRun::RunParameter(0.7, 1800, 9000, 6000); break;
+        }
       }
-      if (!waitForCover()) return;
-      break;
-    case 2: {
-        int gain = waitForSelect(8);
-        fr.fast_curve_gain = 0.1f + 0.1f * gain;
-      }
-      if (!waitForCover()) return;
+      bz.play(Buzzer::COMPLETE);
       break;
     case 3:
       bz.play(Buzzer::MAZE_RESTORE);
@@ -456,13 +460,13 @@ void task() {
       bz.play(Buzzer::COMPLETE);
       break;
     case 6:
-      for (int i = 0; i < 4; i++) bz.play(Buzzer::SHORT);
+      for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
       if (!waitForCover()) return;
       ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)});
       bz.play(Buzzer::COMPLETE);
       break;
     case 7:
-      for (int i = 0; i < 9; i++) bz.play(Buzzer::SHORT);
+      for (int i = 0; i < 3; i++) bz.play(Buzzer::SHORT);
       if (!waitForCover()) return;
       ms.set_goal({Vector(3, 3), Vector(3, 4), Vector(3, 5), Vector(4, 3), Vector(4, 4), Vector(4, 5), Vector(5, 3), Vector(5, 4), Vector(5, 5)});
       bz.play(Buzzer::COMPLETE);

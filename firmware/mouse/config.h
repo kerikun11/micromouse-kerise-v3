@@ -60,7 +60,7 @@
 /* Machine Size Parameter */
 #define MACHINE_ROTATION_RADIUS 16.75f
 #define MACHINE_GEAR_RATIO      (13.0f/41.0f)
-#define MACHINE_WHEEL_DIAMETER  13.63044444f
+#define MACHINE_WHEEL_DIAMETER  13.46169919f
 #define MACHINE_TAIL_LENGTH     18.4f
 
 /* Field Size Parameter */

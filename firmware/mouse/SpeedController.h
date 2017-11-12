@@ -20,12 +20,13 @@ class Position {
     void set(const float x = 0, const float y = 0, const float theta = 0) {
       this->x = x; this->y = y; this->theta = theta;
     }
-    Position rotate(const float angle) {
-      float _x = x;
-      float _y = y;
-      x = _x * cos(angle) - _y * sin(angle);
-      y = _x * sin(angle) + _y * cos(angle);
-      return *this;
+    const Position rotate(const float angle) const {
+      //      float _x = x;
+      //      float _y = y;
+      //      x = _x * cos(angle) - _y * sin(angle);
+      //      y = _x * sin(angle) + _y * cos(angle);
+      //      return *this;
+      return Position(x * cos(angle) - y * sin(angle), x * sin(angle) + y * cos(angle), theta);
     }
     float getNorm() const {
       return sqrt(x * x + y * y);
