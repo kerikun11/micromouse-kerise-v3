@@ -412,29 +412,46 @@ bool backup() {
 }
 
 void task() {
-  int mode = waitForSelect(16);
+  int mode = waitForSelect(8);
   switch (mode) {
+    //* 通常走行
     case 0:
       if (!waitForCover()) return;
       led = 9;
       ms.start(timeup);
       break;
+    //* 走行パラメータの選択
     case 1: {
-        int preset = waitForSelect(8);
+        int preset = waitForSelect(10);
         if (preset < 0) break;
         if (!waitForCover()) return;
         switch (preset) {
-          case 0: fr.runParameter = FastRun::RunParameter(0.1, 100, 1200, 900); break;
-          case 1: fr.runParameter = FastRun::RunParameter(0.3, 400, 1500, 1200); break;
-          case 2: fr.runParameter = FastRun::RunParameter(0.5, 900, 2000, 1500); break;
-          case 3: fr.runParameter = FastRun::RunParameter(0.5, 1200, 3000, 2000); break;
-          case 4: fr.runParameter = FastRun::RunParameter(0.6, 1200, 3000, 2000); break;
-          case 5: fr.runParameter = FastRun::RunParameter(0.6, 1500, 6000, 3000); break;
-          case 6: fr.runParameter = FastRun::RunParameter(0.7, 1800, 9000, 6000); break;
+          case 0: fr.runParameter = FastRun::RunParameter(0.2,  240, 1200,  900); break;
+          case 1: fr.runParameter = FastRun::RunParameter(0.3,  300, 1500, 1200); break;
+          case 2: fr.runParameter = FastRun::RunParameter(0.4,  900, 2000, 1500); break;
+          case 3: fr.runParameter = FastRun::RunParameter(0.5,  900, 3000, 2000); break;
+          case 4: fr.runParameter = FastRun::RunParameter(0.5, 1200, 4500, 3000); break;
+          case 5: fr.runParameter = FastRun::RunParameter(0.6, 1200, 6000, 3000); break;
+          case 6: fr.runParameter = FastRun::RunParameter(0.6, 1500, 9000, 6000); break;
+          case 7: fr.runParameter = FastRun::RunParameter(0.7, 1800, 9000, 6000); break;
+          case 8: fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 6000); break;
+          case 9: fr.runParameter = FastRun::RunParameter(1.0, 2400, 12000, 9000); break;
         }
       }
       bz.play(Buzzer::COMPLETE);
       break;
+    //* 壁制御の設定
+    case 2: {
+        int value = waitForSelect(7);
+        if (value < 0) return;
+        if (!waitForCover()) return;
+        fr.wallAvoidFlag = value & 0x01;
+        fr.wallAvoid45Flag = value & 0x02;
+        fr.wallCutFlag = value & 0x04;
+        bz.play(Buzzer::COMPLETE);
+      }
+      break;
+    //* 迷路データの復元
     case 3:
       bz.play(Buzzer::MAZE_RESTORE);
       if (!waitForCover()) return;
@@ -444,8 +461,23 @@ void task() {
         bz.play(Buzzer::ERROR);
       }
       break;
-    case 4:
-      bz.play(Buzzer::MAZE_BACKUP);
+    //* ゴール区画の設定
+    case 4: {
+        for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
+        int value = waitForSelect(4);
+        if (value < 0) return;
+        if (!waitForCover()) return;
+        switch (value) {
+          case 0: ms.set_goal({Vector(14, 14)}); break;
+          case 1: ms.set_goal({Vector(1, 0)}); break;
+          case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
+          case 3: ms.set_goal({Vector(3, 3), Vector(3, 4), Vector(3, 5), Vector(4, 3), Vector(4, 4), Vector(4, 5), Vector(5, 3), Vector(5, 4), Vector(5, 5)}); break;
+        }
+        bz.play(Buzzer::COMPLETE);
+      }
+      break;
+    //* 前壁補正データの保存
+    case 5:
       if (!waitForCover()) return;
       if (backup()) {
         bz.play(Buzzer::COMPLETE);
@@ -453,36 +485,12 @@ void task() {
         bz.play(Buzzer::ERROR);
       }
       break;
-    case 5:
-      bz.play(Buzzer::SHORT);
-      if (!waitForCover()) return;
-      ms.set_goal({Vector(1, 0)});
-      bz.play(Buzzer::COMPLETE);
-      break;
+    //* 前壁キャリブレーション
     case 6:
-      for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
-      if (!waitForCover()) return;
-      ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)});
-      bz.play(Buzzer::COMPLETE);
-      break;
-    case 7:
-      for (int i = 0; i < 3; i++) bz.play(Buzzer::SHORT);
-      if (!waitForCover()) return;
-      ms.set_goal({Vector(3, 3), Vector(3, 4), Vector(3, 5), Vector(4, 3), Vector(4, 4), Vector(4, 5), Vector(5, 3), Vector(5, 4), Vector(5, 5)});
-      bz.play(Buzzer::COMPLETE);
-      break;
-    case 8:
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
       wd.calibrationFront();
-      bz.play(Buzzer::CANCEL);
-      break;
-    case 9:
-      if (!waitForCover()) return;
-      delay(1000);
-      bz.play(Buzzer::CONFIRM);
-      wd.calibration();
       bz.play(Buzzer::CANCEL);
       break;
   }

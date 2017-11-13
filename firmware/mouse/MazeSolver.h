@@ -26,7 +26,7 @@
 #define MAZE_GOAL           {Vector(1,0)}
 //#define MAZE_GOAL           {Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}
 //#define MAZE_GOAL           {Vector(3, 3), Vector(3, 4), Vector(3, 5), Vector(4, 3), Vector(4, 4), Vector(4, 5), Vector(5, 3), Vector(5, 4), Vector(5, 5)}
-//#define MAZE_GOAL {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
+//#define MAZE_GOAL           {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
 #define MAZE_BACKUP_SIZE    5
 
 //#define printf  lg.printf

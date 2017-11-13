@@ -13,9 +13,6 @@
 #include "WallDetector.h"
 #include "SpeedController.h"
 
-#define FAST_WALL_AVOID         true
-#define FAST_WALL_CUT           true
-
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
 
@@ -259,7 +256,11 @@ class FastRun: TaskBase {
         return *this;
       }
     };
+  public:
     RunParameter runParameter;
+    bool wallAvoidFlag = true;
+    bool wallAvoid45Flag = true;
+    bool wallCutFlag = true;
     void enable() {
       printf("FastRun Enabled\n");
       delete_task();
@@ -307,50 +308,54 @@ class FastRun: TaskBase {
     String path, last_path;
     bool prev_wall[2];
 
-    void wall_avoid() {
-#if FAST_WALL_AVOID
-      if (fabs(getRelativePosition().theta) < 0.01f * PI) {
+    void wallAvoid() {
+      if (wallAvoidFlag) {
+        if (fabs(getRelativePosition().theta) < 0.01f * PI) {
+          // 90 [deg] の倍数
+          if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
+            const float gain = 0.0003;
+            if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain, 0).rotate(origin.theta);
+            if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain, 0).rotate(origin.theta);
+            led = 9;
+          }
+          if (wallAvoid45Flag) {
+            // 45 [deg] の倍数
+            if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2) {
+              const float gain = 0.0005f;
+              const int16_t threashold = 480;
+              if (ref.side(0) > threashold) sc.position += Position(0, (ref.side(0) - threashold) * gain, 0).rotate(origin.theta);
+              if (ref.side(1) > threashold) sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0).rotate(origin.theta);
+              led = 6;
+            }
+          }
+        } else {
+          led = 0;
+        }
+      }
+    }
+    void wallCut() {
+      if (wallCutFlag) {
         // 90 [deg] の倍数
-        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 5) {
-          const float gain = 0.0003;
-          if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain, 0).rotate(origin.theta);
-          if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain, 0).rotate(origin.theta);
-          led = 9;
-        }
-        // 45 [deg] の倍数
-        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 5) {
-          const float gain = 0.0005f;
-          const int16_t threashold = 480;
-          if (ref.side(0) > threashold) sc.position += Position(0, (ref.side(0) - threashold) * gain, 0).rotate(origin.theta);
-          if (ref.side(1) > threashold) sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0).rotate(origin.theta);
-          led = 6;
-        }
-      } else {
-        led = 0;
-      }
-#endif
-#if FAST_WALL_CUT
-      // 90 [deg] の倍数
-      if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 5) {
-        for (int i = 0; i < 2; i++) {
-          if (prev_wall[i] && !wd.wall[i]) {
-            Position prev = sc.position;
-            Position fix = sc.position.rotate(-origin.theta);
-            fix.x = floor((fix.x + 45) / 90) * 90 - 20;
-            sc.position = fix.rotate(origin.theta);
-            printf("WallCut[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 1) {
+          for (int i = 0; i < 2; i++) {
+            if (prev_wall[i] && !wd.wall[i]) {
+              Position prev = sc.position;
+              Position fix = sc.position.rotate(-origin.theta);
+              fix.x = floor((fix.x + 45) / 90) * 90 - 20;
+              sc.position = fix.rotate(origin.theta);
+              printf("WallCut[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+            }
+            if (!prev_wall[i] && wd.wall[i]) {
+              Position prev = sc.position;
+              Position fix = sc.position.rotate(-origin.theta);
+              fix.x = floor((fix.x + 45) / 90) * 90 - 30;
+              sc.position = fix.rotate(origin.theta);
+              printf("WallCut[%d] _X (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+            }
+            prev_wall[i] = wd.wall[i];
           }
-          if (!prev_wall[i] && wd.wall[i]) {
-            Position prev = sc.position;
-            Position fix = sc.position.rotate(-origin.theta);
-            fix.x = floor((fix.x + 45) / 90) * 90 - 30;
-            sc.position = fix.rotate(origin.theta);
-            printf("WallCut[%d] _X (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
-          }
-          prev_wall[i] = wd.wall[i];
         }
       }
-#endif
     }
     void straight_x(const float distance, const float v_max, const float v_end) {
       const float accel = runParameter.accel;
@@ -372,7 +377,8 @@ class FastRun: TaskBase {
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
         float theta = atan2f(-cur.y, FAST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
         sc.set_target(velocity, FAST_PROP_GAIN * theta);
-        wall_avoid();
+        wallAvoid();
+        wallCut();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         ms++;
       }
