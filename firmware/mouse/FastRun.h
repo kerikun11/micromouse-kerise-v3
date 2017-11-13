@@ -309,34 +309,27 @@ class FastRun: TaskBase {
     bool prev_wall[2];
 
     void wallAvoid() {
-      if (wallAvoidFlag) {
-        if (fabs(getRelativePosition().theta) < 0.01f * PI) {
-          // 90 [deg] の倍数
-          if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
-            const float gain = 0.0003;
-            if (ref.side(0) > 60) sc.position += Position(0, wd.wall_diff.side[0] * gain, 0).rotate(origin.theta);
-            if (ref.side(1) > 60) sc.position -= Position(0, wd.wall_diff.side[1] * gain, 0).rotate(origin.theta);
-            led = 9;
-          }
-          if (wallAvoid45Flag) {
-            // 45 [deg] の倍数
-            if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2) {
-              const float gain = 0.0005f;
-              const int16_t threashold = 480;
-              if (ref.side(0) > threashold) sc.position += Position(0, (ref.side(0) - threashold) * gain, 0).rotate(origin.theta);
-              if (ref.side(1) > threashold) sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0).rotate(origin.theta);
-              led = 6;
-            }
-          }
-        } else {
-          led = 0;
-        }
+      // 90 [deg] の倍数
+      if (wallAvoidFlag && (int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
+        const float gain = 0.0003f;
+        const float satu = 0.25f;
+        if (ref.side(0) > 60) sc.position += Position(0, std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu), 0).rotate(origin.theta);
+        if (ref.side(1) > 60) sc.position -= Position(0, std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu), 0).rotate(origin.theta);
+        led = 9;
+      }
+      // 45 [deg] の倍数
+      if (wallAvoid45Flag && (int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2) {
+        const float gain = 0.0005f;
+        const int16_t threashold = 480;
+        if (ref.side(0) > threashold) sc.position += Position(0, (ref.side(0) - threashold) * gain, 0).rotate(origin.theta);
+        if (ref.side(1) > threashold) sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0).rotate(origin.theta);
+        led = 6;
       }
     }
     void wallCut() {
       if (wallCutFlag) {
         // 90 [deg] の倍数
-        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 1) {
+        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
           for (int i = 0; i < 2; i++) {
             if (prev_wall[i] && !wd.wall[i]) {
               Position prev = sc.position;
@@ -394,6 +387,8 @@ class FastRun: TaskBase {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         Position dir = tr.getNextDir(getRelativePosition());
         sc.set_target(velocity, FAST_PROP_GAIN * dir.theta);
+        //        wallAvoid();
+        //        wallCut();
       }
       sc.set_target(velocity, 0);
       updateOrigin(tr.getEndPosition());

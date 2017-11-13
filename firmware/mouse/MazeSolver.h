@@ -50,12 +50,14 @@ class MazeSolver: TaskBase {
       fr.disable();
     }
     void forceBackToStart() {
-      agent.forceBackToStart();
+      if (agent.getState() != Agent::SEARCHING_FOR_GOAL) {
+        agent.forceBackToStart();
+      }
     }
     void print() {
       //      int i = 0;
       //      for (auto& maze : maze_backup) {
-      //        printf("Backup Maze %d:\n", i++);
+      //        printf("Backup Maze %d: \n", i++);
       //        maze.print();
       //      }
       agent.printInfo();
@@ -286,6 +288,7 @@ class MazeSolver: TaskBase {
       if (!isForceShortestPath) {
         agent.reset();
         if (agent.getState() != Agent::REACHED_START) {
+          maze = maze_backup.front();
           maze = maze_backup.front();
           agent.reset();
           if (!search_run()) {

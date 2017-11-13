@@ -365,6 +365,13 @@ private:
 		if(state == BACKING_TO_START){
 			if(pv == start) {
 				state = REACHED_START;
+//        {
+//          maze.reset();
+//          state = SEARCHING_ADDITIONALLY;
+//          findShortestCandidates();
+//          stepMap.update(candidates, StepMap::General);
+//          if(!calcNextDirByStepMap(StepMap::General)) return GOT_LOST;
+//        }
 			}else{
 				stepMap.update({start}, StepMap::Start);
 				if(!calcNextDirByStepMap(StepMap::Start)) return GOT_LOST;

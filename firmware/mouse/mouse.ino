@@ -103,8 +103,7 @@ void loop() {
   //  turn_test();
 }
 
-const int searchig_time_ms = 3 * 60 * 1000;
-//const int searchig_time_ms = 1 * 60 * 1000;
+const int searchig_time_ms = 5 * 60 * 1000;
 bool timeup = false;
 
 void normal_drive() {
@@ -224,7 +223,8 @@ void turn_test() {
     bz.play(Buzzer::CONFIRM);
     lg.start();
     sc.enable();
-    turn(PI / 2);
+    turn(-10 * 2 * PI);
+    turn(10 * 2 * PI);
     sc.disable();
     bz.play(Buzzer::CANCEL);
     lg.end();
@@ -270,7 +270,7 @@ void turn(const float angle) {
   const float speed = 3 * M_PI;
   const float accel = 36 * M_PI;
   const float decel = 12 * M_PI;
-  const float back_gain = 10.0f;
+  const float back_gain = 5.0f;
   int ms = 0;
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {

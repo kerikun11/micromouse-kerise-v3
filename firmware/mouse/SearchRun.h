@@ -14,16 +14,20 @@
 #include "SpeedController.h"
 
 #define SEARCH_WALL_ATTACH_ENABLED  true
-#define SEARCH_WALL_CUT_ENABLED     true
+#define SEARCH_WALL_CUT_ENABLED     false
 #define SEARCH_WALL_FRONT_ENABLED   false
 #define SEARCH_WALL_AVOID_ENABLED   true
 
 #define SEARCH_LOOK_AHEAD   12
 #define SEARCH_PROP_GAIN    27
 
-#define SEARCH_RUN_TASK_PRIORITY   3
-#define SEARCH_RUN_STACK_SIZE      8192
-#define SEARCH_RUN_PERIOD          1000
+#define SEARCH_RUN_TASK_PRIORITY    3
+#define SEARCH_RUN_STACK_SIZE       8192
+#define SEARCH_RUN_PERIOD           1000
+
+#define SEARCH_RUN_VELOCITY         240.0f
+#define SEARCH_RUN_V_CURVE          240.0f
+#define SEARCH_RUN_V_MAX            600.0f
 
 //#define printf  lg.printf
 
@@ -80,7 +84,7 @@ class SearchTrajectory {
 class S90: public SearchTrajectory {
   public:
     S90(bool mirror = false) : mirror(mirror) {}
-    const float velocity = 240.0f;
+    const float velocity = SEARCH_RUN_V_CURVE;
     const float straight = 5.0f;
   private:
     bool mirror;
@@ -163,18 +167,15 @@ class SearchRun: TaskBase {
         portTickType xLastWakeTime = xTaskGetTickCount();
         int cnt = 0;
         while (1) {
-          float trans = -(wd.wall_diff.front[0] + wd.wall_diff.front[1]) * 0.1f; //< 0.1
-          float rot = (wd.wall_diff.front[0] - wd.wall_diff.front[1]) * 0.5f; //< 0.5
-          const float trans_sat = 40.0f;
-          const float rot_sat = 0.2f * PI;
-          if (trans > trans_sat) trans = trans_sat;
-          else if (trans < -trans_sat)trans = -trans_sat;
-          if (rot > rot_sat) rot = rot_sat;
-          else if (rot < -rot_sat)rot = -rot_sat;
-          if (fabs(trans) < 0.01f && fabs(rot) < 0.01f) break;
-          sc.set_target(trans, rot);
+          SpeedController::WheelParameter wp;
+          const float gain = 0.5f;
+          const float satu = 100.0f;
+          wp.wheel[0] = -std::max(std::min(wd.wall_diff.front[0] * gain, satu), -satu);
+          wp.wheel[1] = -std::max(std::min(wd.wall_diff.front[1] * gain, satu), -satu);
+          wp.wheel2pole();
+          if (fabs(wp.wheel[0]) + fabs(wp.wheel[1]) < 0.1f) break;
+          sc.set_target(wp.trans, wp.rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-          if (cnt++ % 100 == 0) printf("trans: %f, rot:%f\n", rot, trans);
         }
         sc.set_target(0, 0);
         printPosition("wall_attach");
@@ -186,15 +187,10 @@ class SearchRun: TaskBase {
     }
     void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
-      if (fabs(sc.position.theta) < 0.001f * PI) {
-        led = 0x9;
-        const float gain = 0.001f;
-        const float satu = 0.5f;
-        if (ref.side(0) > 60) sc.position.y += std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu);
-        if (ref.side(1) > 60) sc.position.y -= std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu);
-      } else {
-        led = 0x0;
-      }
+      const float gain = 0.0001f;
+      const float satu = 0.25f;
+      if (ref.side(0) > 60) sc.position.y += std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu);
+      if (ref.side(1) > 60) sc.position.y -= std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu);
 #endif
 #if SEARCH_WALL_CUT_ENABLED
       for (int i = 0; i < 2; i++) {
@@ -332,8 +328,8 @@ class SearchRun: TaskBase {
       }
     }
     virtual void task() {
-      const float velocity = 270;
-      const float v_max = 900;
+      const float velocity = SEARCH_RUN_VELOCITY;
+      const float v_max = SEARCH_RUN_V_MAX;
       const float ahead_length = 9.0f;
       sc.enable();
       while (1) {
