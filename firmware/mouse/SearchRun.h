@@ -163,15 +163,15 @@ class SearchRun: TaskBase {
         portTickType xLastWakeTime = xTaskGetTickCount();
         int cnt = 0;
         while (1) {
-          float trans = -(wd.wall_diff.front[0] + wd.wall_diff.front[1]) * 0.3f; //< 0.5
-          float rot = (wd.wall_diff.front[0] - wd.wall_diff.front[1]) * 0.02f; //< 0.01
-          const float trans_sat = 80;
-          const float rot_sat = 0.5 * PI;
+          float trans = -(wd.wall_diff.front[0] + wd.wall_diff.front[1]) * 0.1f; //< 0.1
+          float rot = (wd.wall_diff.front[0] - wd.wall_diff.front[1]) * 0.5f; //< 0.5
+          const float trans_sat = 40.0f;
+          const float rot_sat = 0.2f * PI;
           if (trans > trans_sat) trans = trans_sat;
           else if (trans < -trans_sat)trans = -trans_sat;
           if (rot > rot_sat) rot = rot_sat;
           else if (rot < -rot_sat)rot = -rot_sat;
-          if (fabs(trans) < 0.05f && fabs(rot) < 0.05f) break;
+          if (fabs(trans) < 0.01f && fabs(rot) < 0.01f) break;
           sc.set_target(trans, rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
           if (cnt++ % 100 == 0) printf("trans: %f, rot:%f\n", rot, trans);
@@ -186,11 +186,12 @@ class SearchRun: TaskBase {
     }
     void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
-      if (fabs(sc.position.theta) < 0.01f * PI) {
+      if (fabs(sc.position.theta) < 0.001f * PI) {
         led = 0x9;
-        const float gain = 0.0001f;
-        if (ref.side(0) > 60) sc.position.y += wd.wall_diff.side[0] * gain;
-        if (ref.side(1) > 60) sc.position.y -= wd.wall_diff.side[1] * gain;
+        const float gain = 0.001f;
+        const float satu = 0.5f;
+        if (ref.side(0) > 60) sc.position.y += std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu);
+        if (ref.side(1) > 60) sc.position.y -= std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu);
       } else {
         led = 0x0;
       }
@@ -216,7 +217,7 @@ class SearchRun: TaskBase {
     void wall_calib(const float velocity) {
 #if SEARCH_WALL_FRONT_ENABLED
       if (wd.wall[2]) {
-        float value = tof.getDistance() - (20.0f + tof.passedTimeMs()) / 1000.0f * velocity;
+        float value = tof.getDistance() - (10.0f + tof.passedTimeMs()) / 1000.0f * velocity;
         float x = sc.position.x;
         sc.position.x = 90 - value;
         bz.play(Buzzer::SHORT);
@@ -331,9 +332,9 @@ class SearchRun: TaskBase {
       }
     }
     virtual void task() {
-      const float velocity = 240;
-      const float v_max = 600;
-      const float ahead_length = 10.0f;
+      const float velocity = 270;
+      const float v_max = 900;
+      const float ahead_length = 9.0f;
       sc.enable();
       while (1) {
         //** SearchActionがキューされるまで直進で待つ

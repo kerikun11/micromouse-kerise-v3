@@ -476,8 +476,18 @@ void task() {
         bz.play(Buzzer::COMPLETE);
       }
       break;
-    //* 前壁補正データの保存
+    //* 前壁キャリブレーション
     case 5:
+      bz.play(Buzzer::CONFIRM);
+      if (!waitForCover(true)) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibrationFront();
+      bz.play(Buzzer::CANCEL);
+      break;
+    //* 前壁補正データの保存
+    case 6:
+      bz.play(Buzzer::MAZE_BACKUP);
       if (!waitForCover()) return;
       if (backup()) {
         bz.play(Buzzer::COMPLETE);
@@ -485,13 +495,16 @@ void task() {
         bz.play(Buzzer::ERROR);
       }
       break;
-    //* 前壁キャリブレーション
-    case 6:
+    //* 8マス直線
+    case 7:
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
-      wd.calibrationFront();
+      axis.calibration();
       bz.play(Buzzer::CANCEL);
+      sc.enable();
+      straight_x(8 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
+      sc.disable();
       break;
   }
 }

@@ -153,6 +153,7 @@ class MazeSolver: TaskBase {
           sr.waitForEnd();
           sr.disable();
           backup();
+          bz.play(Buzzer::MAZE_BACKUP);
           return false;
         }
         int straight_count = 0;
@@ -291,6 +292,7 @@ class MazeSolver: TaskBase {
             while (1) delay(1000);
           }
           backup();
+          bz.play(Buzzer::MAZE_BACKUP);
           readyToStartWait();
         }
       }
