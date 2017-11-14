@@ -101,5 +101,5 @@ class Encoder {
     }
 };
 
-extern Encoder as;
+extern Encoder enc;
 
