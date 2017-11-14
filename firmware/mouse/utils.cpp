@@ -108,8 +108,6 @@ void batteryCheck() {
     bz.play(Buzzer::LOW_BATTERY);
     while (!btn.pressed)delay(100);
     btn.flags = 0;
-    bz.play(Buzzer::BOOT);
-    delay(1000);
     //    led = 0;
     //    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
     //    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);

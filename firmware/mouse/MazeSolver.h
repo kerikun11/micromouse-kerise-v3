@@ -122,8 +122,8 @@ class MazeSolver: TaskBase {
 
         //        delay(100); // センサが安定するのを待つ
 
-        const Vector& v = agent.getCurVec();
-        const Dir& d = agent.getCurDir();
+        const Vector v = agent.getCurVec();
+        const Dir d = agent.getCurDir();
         printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), agent.stateString(agent.getState()));
         agent.updateWall(v, d + 1, wd.wall[0]); // left
         agent.updateWall(v, d + 0, wd.wall[2]); // front
@@ -158,17 +158,18 @@ class MazeSolver: TaskBase {
           readyToStartWait(6000);
           // 迷子になったので，迷路をリセットして探索を再開する
           maze.reset();
-          agent.reset();
           // 現在の区画の壁を更新する
-          agent.updateWall(v, d + 1, wd.wall[0]); // left
-          agent.updateWall(v, d + 0, wd.wall[2]); // front
-          agent.updateWall(v, d - 1, wd.wall[1]); // right
-          agent.updateWall(v, d + 2, false);      // back
-          agent.updateCurVecDir(v, d + 2);        // u-turn
+          //          agent.updateWall(v, d + 1, wd.wall[0]); // left
+          //          agent.updateWall(v, d + 0, wd.wall[2]); // front
+          //          agent.updateWall(v, d - 1, wd.wall[1]); // right
+          agent.updateWall(v, 2 + d, false); // back
+          agent.reset();
+          agent.updateCurVecDir(v.next(d + 2), d + 2);      // u-turn
+          agent.calcNextDir();
+          nextDirs = agent.getNextDirs();
           sr.set_action(SearchRun::RETURN);
           sr.set_action(SearchRun::GO_HALF);
           sr.enable();
-          return false;
         }
         int straight_count = 0;
         for (auto nextDir : nextDirs) {

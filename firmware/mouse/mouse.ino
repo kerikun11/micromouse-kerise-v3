@@ -206,17 +206,17 @@ void normal_drive() {
         if (preset < 0) break;
         switch (preset) {
           case 0:  break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.2,  240, 1800, 1500); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.3,  300, 1800, 1500); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.3,  450, 3000, 2000); break;
-          case 4:  fr.runParameter = FastRun::RunParameter(0.4,  600, 3000, 2000); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.4,  900, 3000, 2000); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.4,  900, 4500, 3000); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.5,  900, 4500, 3000); break;
-          case 8:  fr.runParameter = FastRun::RunParameter(0.5, 1200, 4500, 3000); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(0.5, 1200, 6000, 4500); break;
-          case 10: fr.runParameter = FastRun::RunParameter(0.6, 1200, 6000, 4500); break;
-          case 11: fr.runParameter = FastRun::RunParameter(0.6, 1500, 6000, 4500); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.5,  240, 1800, 1500); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.6,  300, 1800, 1500); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.6,  450, 3000, 2000); break;
+          case 4:  fr.runParameter = FastRun::RunParameter(0.7,  600, 3000, 2000); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.7,  900, 3000, 2000); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.7,  900, 4500, 3000); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.8,  900, 4500, 3000); break;
+          case 8:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 4500, 3000); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 6000, 4500); break;
+          case 10: fr.runParameter = FastRun::RunParameter(0.9, 1200, 6000, 4500); break;
+          case 11: fr.runParameter = FastRun::RunParameter(0.9, 1500, 6000, 4500); break;
         }
       }
       if (!waitForCover()) return;
