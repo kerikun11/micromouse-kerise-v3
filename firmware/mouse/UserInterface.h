@@ -18,15 +18,12 @@ class Buzzer {
       }, "Buzzer", BUZZER_TASK_STACK_SIZE, this, BUZZER_TASK_PRIORITY, NULL);
     }
     enum Music {
+      SELECT, CANCEL, CONFIRM, SUCCESSFUL, ERROR,
+      SHORT,
       BOOT,
       LOW_BATTERY,
       EMERGENCY,
-      ERROR,
-      SELECT,
-      CONFIRM,
-      CANCEL,
       COMPLETE,
-      SHORT,
       MAZE_BACKUP,
       MAZE_RESTORE,
     };
@@ -48,12 +45,40 @@ class Buzzer {
     void task() {
       while (1) {
         Music music;
-        if (xQueueReceive(playList, &music, (1000 - 100) / portTICK_RATE_MS) == pdFALSE) {
-          //          sound(NOTE_C, 7, 50);
-          //          mute(50);
-          continue;
-        }
+        xQueueReceive(playList, &music, portMAX_DELAY);
+        //        if (xQueueReceive(playList, &music, (1000 - 100) / portTICK_RATE_MS) == pdFALSE) {
+        //          sound(NOTE_C, 7, 50);
+        //          mute(50);
+        //          continue;
+        //        }
         switch (music) {
+          case SELECT:
+            sound(NOTE_C, 6, 100);
+            mute(100);
+            break;
+          case CANCEL:
+            sound(NOTE_E, 6, 100);
+            sound(NOTE_C, 6, 100);
+            mute(100);
+            break;
+          case CONFIRM:
+            sound(NOTE_C, 6, 100);
+            sound(NOTE_E, 6, 100);
+            mute(100);
+            break;
+          case SUCCESSFUL:
+            sound(NOTE_C, 6, 100);
+            sound(NOTE_E, 6, 100);
+            sound(NOTE_G, 6, 100);
+            mute(100);
+            break;
+          case ERROR:
+            for (int i = 0; i < 6; i++) {
+              sound(NOTE_C, 7, 100);
+              sound(NOTE_E, 7, 100);
+            }
+            mute();
+            break;
           case BOOT:
             sound(NOTE_B, 5, 200);
             sound(NOTE_E, 6, 400);
@@ -82,27 +107,6 @@ class Buzzer {
             sound(NOTE_C, 6, 200);
             mute(100);
             break;
-          case SELECT:
-            sound(NOTE_C, 6, 100);
-            mute(100);
-            break;
-          case ERROR:
-            for (int i = 0; i < 6; i++) {
-              sound(NOTE_C, 7, 100);
-              sound(NOTE_E, 7, 100);
-            }
-            mute();
-            break;
-          case CONFIRM:
-            sound(NOTE_C, 6, 100);
-            sound(NOTE_E, 6, 100);
-            mute(100);
-            break;
-          case CANCEL:
-            sound(NOTE_E, 6, 100);
-            sound(NOTE_C, 6, 100);
-            mute(100);
-            break;
           case COMPLETE:
             sound(NOTE_C, 6, 100);
             sound(NOTE_D, 6, 100);
@@ -119,15 +123,15 @@ class Buzzer {
             mute(50);
             break;
           case MAZE_BACKUP:
-            sound(NOTE_G, 6, 100);
-            sound(NOTE_E, 6, 100);
-            sound(NOTE_C, 6, 100);
+            sound(NOTE_G, 7, 100);
+            sound(NOTE_E, 7, 100);
+            sound(NOTE_C, 7, 100);
             mute(100);
             break;
           case MAZE_RESTORE:
-            sound(NOTE_C, 6, 100);
-            sound(NOTE_E, 6, 100);
-            sound(NOTE_G, 6, 100);
+            sound(NOTE_C, 7, 100);
+            sound(NOTE_E, 7, 100);
+            sound(NOTE_G, 7, 100);
             mute(100);
             break;
           default:

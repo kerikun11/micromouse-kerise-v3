@@ -154,8 +154,20 @@ class MazeSolver: TaskBase {
           sr.set_action(SearchRun::STOP);
           sr.waitForEnd();
           sr.disable();
-          backup();
-          bz.play(Buzzer::MAZE_BACKUP);
+          while (!maze_backup.empty())maze_backup.pop_back();
+          readyToStartWait(6000);
+          // 迷子になったので，迷路をリセットして探索を再開する
+          maze.reset();
+          agent.reset();
+          // 現在の区画の壁を更新する
+          agent.updateWall(v, d + 1, wd.wall[0]); // left
+          agent.updateWall(v, d + 0, wd.wall[2]); // front
+          agent.updateWall(v, d - 1, wd.wall[1]); // right
+          agent.updateWall(v, d + 2, false);      // back
+          agent.updateCurVecDir(v, d + 2);        // u-turn
+          sr.set_action(SearchRun::RETURN);
+          sr.set_action(SearchRun::GO_HALF);
+          sr.enable();
           return false;
         }
         int straight_count = 0;
