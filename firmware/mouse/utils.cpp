@@ -93,9 +93,9 @@ void turn(const float angle) {
 }
 
 void batteryLedIndicate(const float voltage) {
-  if (voltage < 3.8f) led = 0x01;
-  else if (voltage < 4.0f) led = 0x03;
-  else if (voltage < 4.2f) led = 0x07;
+  if (voltage < 3.9f) led = 0x01;
+  else if (voltage < 4.1f) led = 0x03;
+  else if (voltage < 4.3f) led = 0x07;
   else led = 0x0F;
 }
 

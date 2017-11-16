@@ -198,7 +198,7 @@ void turn_test() {
 
 void normal_drive() {
   if (ms.isRunning()) ms.terminate();
-  int mode = waitForSelect(8);
+  int mode = waitForSelect(9);
   switch (mode) {
     //* 走行
     case 0:
@@ -217,33 +217,53 @@ void normal_drive() {
         int preset = waitForSelect(16);
         if (preset < 0) break;
         switch (preset) {
-          case 0:  fr.runParameter = FastRun::RunParameter(0.5,  300, 2400, 1200); break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.5,  450, 3200, 1600); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.5,  600, 4800, 2400); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.5,  900, 6000, 3000); break;
+          case 0:  fr.runParameter = FastRun::RunParameter(0.7,  300, 2400, 1200); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.7,  600, 4800, 2400); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.7,  900, 6000, 3000); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.7, 1200, 9000, 4500); break;
 
-          case 4:  fr.runParameter = FastRun::RunParameter(0.6,  450, 2400, 1200); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.6,  600, 3000, 1500); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.6,  900, 4800, 2400); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.6, 1200, 6000, 3000); break;
+          case 4:  fr.runParameter = FastRun::RunParameter(0.8,  600, 2400, 1200); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.8,  900, 3000, 1500); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 6000, 3000); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.8, 1500, 9000, 4500); break;
 
-          case 8:  fr.runParameter = FastRun::RunParameter(0.7,  600, 3000, 1500); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(0.7,  900, 4800, 2400); break;
-          case 10: fr.runParameter = FastRun::RunParameter(0.7, 1200, 6000, 3000); break;
-          case 11: fr.runParameter = FastRun::RunParameter(0.7, 1500, 7200, 3600); break;
+          case 8:  fr.runParameter = FastRun::RunParameter(0.9,  600, 2400, 1200); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(0.9,  900, 3000, 1500); break;
+          case 10: fr.runParameter = FastRun::RunParameter(0.9, 1200, 6000, 3000); break;
+          case 11: fr.runParameter = FastRun::RunParameter(0.9, 1500, 9000, 4500); break;
 
-          case 12: fr.runParameter = FastRun::RunParameter(0.8,  900, 4800, 2400); break;
-          case 13: fr.runParameter = FastRun::RunParameter(0.8, 1200, 6000, 3000); break;
-          case 14: fr.runParameter = FastRun::RunParameter(0.8, 1500, 9000, 4500); break;
-          case 15: fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 4500); break;
+          case 12: fr.runParameter = FastRun::RunParameter(1.0,  900, 4800, 2400); break;
+          case 13: fr.runParameter = FastRun::RunParameter(1.0, 1200, 6000, 3000); break;
+          case 14: fr.runParameter = FastRun::RunParameter(1.0, 1500, 9000, 4500); break;
+          case 15: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 4500); break;
         }
       }
       if (!waitForCover()) return;
       led = 9;
       ms.start();
       break;
-    //* 壁制御の設定
+    //* 速度の設定
     case 2: {
+        bz.play(Buzzer::SELECT);
+        int value;
+        value = waitForSelect(16);
+        if (value < 0) return;
+        const float curve_gain = 0.1f * value;
+        value = waitForSelect(16);
+        if (value < 0) return;
+        const float v_max = 200.0f * value;
+        value = waitForSelect(16);
+        if (value < 0) return;
+        const float accel = 1000.0f * value;
+        fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel / 2);
+        bz.play(Buzzer::SUCCESSFUL);
+        if (!waitForCover()) return;
+        led = 9;
+        ms.start();
+      }
+      break;
+    //* 壁制御の設定
+    case 3: {
         int value = waitForSelect(16);
         if (value < 0) return;
         if (!waitForCover()) return;
@@ -252,16 +272,6 @@ void normal_drive() {
         fr.wallCutFlag = value & 0x04;
         fr.V90Enabled = value & 0x08;
         bz.play(Buzzer::SUCCESSFUL);
-      }
-      break;
-    //* 迷路データの復元
-    case 3:
-      bz.play(Buzzer::MAZE_RESTORE);
-      if (!waitForCover()) return;
-      if (ms.restore()) {
-        bz.play(Buzzer::SUCCESSFUL);
-      } else {
-        bz.play(Buzzer::ERROR);
       }
       break;
     //* ゴール区画の設定
@@ -297,8 +307,18 @@ void normal_drive() {
         bz.play(Buzzer::ERROR);
       }
       break;
-    //* マス直線
+    //* 迷路データの復元
     case 7:
+      bz.play(Buzzer::MAZE_RESTORE);
+      if (!waitForCover()) return;
+      if (ms.restore()) {
+        bz.play(Buzzer::SUCCESSFUL);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    //* マス直線
+    case 8:
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);

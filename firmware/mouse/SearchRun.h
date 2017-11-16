@@ -18,17 +18,17 @@
 #define SEARCH_WALL_FRONT_ENABLED   true
 #define SEARCH_WALL_AVOID_ENABLED   true
 
-#define SEARCH_LOOK_AHEAD   12
-#define SEARCH_PROP_GAIN    30
-#define ahead_length        12
+#define SEARCH_LOOK_AHEAD   9
+#define SEARCH_PROP_GAIN    20
+#define ahead_length        7
 
 #define SEARCH_RUN_TASK_PRIORITY    3
 #define SEARCH_RUN_STACK_SIZE       8192
 #define SEARCH_RUN_PERIOD           1000
 
-#define SEARCH_RUN_VELOCITY         200.0f
-#define SEARCH_RUN_V_CURVE          200.0f
-#define SEARCH_RUN_V_MAX            300.0f
+#define SEARCH_RUN_VELOCITY         240.0f
+#define SEARCH_RUN_V_CURVE          240.0f
+#define SEARCH_RUN_V_MAX            900.0f
 
 //#define printf  lg.printf
 
@@ -171,12 +171,12 @@ class SearchRun: TaskBase {
         int cnt = 0;
         while (1) {
           SpeedController::WheelParameter wp;
-          const float gain = 0.5f;
+          const float gain = 0.2f;
           const float satu = 100.0f;
           wp.wheel[0] = -std::max(std::min(wd.wall_diff.front[0] * gain, satu), -satu);
           wp.wheel[1] = -std::max(std::min(wd.wall_diff.front[1] * gain, satu), -satu);
           wp.wheel2pole();
-          if (fabs(wp.wheel[0]) + fabs(wp.wheel[1]) < 0.1f) break;
+          if (fabs(wp.wheel[0]) + fabs(wp.wheel[1]) < 0.2f) break;
           sc.set_target(wp.trans, wp.rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         }
@@ -190,9 +190,9 @@ class SearchRun: TaskBase {
     }
     void wall_avoid(const float distance) {
 #if SEARCH_WALL_AVOID_ENABLED
-      if (fabs(sc.position.theta) < 0.1 * PI) {
+      if (fabs(sc.position.theta) < 0.05 * PI) {
         const float gain = 0.0002f;
-        const float satu = 0.2f;
+        const float satu = 0.1f;
         if (ref.side(0) > 60) sc.position.y += std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu);
         if (ref.side(1) > 60) sc.position.y -= std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu);
       }
@@ -223,7 +223,7 @@ class SearchRun: TaskBase {
         if (value > 60 && value < 120) sc.position.x = 90 - value - ahead_length;
         //        bz.play(Buzzer::SHORT);
         if (sc.position.x > -2.0f) sc.position.x = -2.0f;
-        lg.printf("FrontWallCalib: %.2f => %.2f\n", x, sc.position.x);
+        printf("FrontWallCalib: %.2f => %.2f\n", x, sc.position.x);
       }
 #endif
     }
@@ -265,7 +265,7 @@ class SearchRun: TaskBase {
     }
     void straight_x(const float distance, const float v_max, const float v_end) {
       const float accel = 2000;
-      const float decel = 1500;
+      const float decel = 1000;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -275,13 +275,13 @@ class SearchRun: TaskBase {
         Position cur = sc.position;
         if (v_end >= 1.0f && cur.x > distance - SEARCH_LOOK_AHEAD) break;
         if (v_end < 1.0f && cur.x > distance - 1.0f) break;
-        float extra = distance - cur.x;
+        float extra = distance - cur.x - SEARCH_LOOK_AHEAD;
         float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
         float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD) - cur.theta;
+        float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD + velocity / 100) - cur.theta;
         sc.set_target(velocity, SEARCH_PROP_GAIN * theta);
         wall_avoid(distance);
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);

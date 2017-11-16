@@ -21,7 +21,7 @@
 #define FAST_LOOK_AHEAD         12
 #define FAST_PROP_GAIN          30
 
-#define printf  lg.printf
+//#define printf  lg.printf
 
 class FastTrajectory {
   public:
@@ -278,7 +278,7 @@ class FastRun: TaskBase {
       FAST_TURN_RIGHT_180 = 'U',
     };
     struct RunParameter {
-      RunParameter(const float curve_gain = 0.5, const float max_speed = 600, const float accel = 4800, const float decel = 2400): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
+      RunParameter(const float curve_gain = 0.7, const float max_speed = 600, const float accel = 4800, const float decel = 2400): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
       float curve_gain;
       float max_speed;
       float accel, decel;
@@ -396,7 +396,7 @@ class FastRun: TaskBase {
         Position cur = getRelativePosition();
         if (v_end >= 1.0f && cur.x > distance - FAST_LOOK_AHEAD) break;
         if (v_end < 1.0f && cur.x > distance - 1.0f) break;
-        float extra = distance - cur.x;
+        float extra = distance - cur.x - FAST_LOOK_AHEAD;
         float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
         float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
         float velocity = v_max;
@@ -482,7 +482,7 @@ class FastRun: TaskBase {
       delay(200);
       mt.free();
       // 走行開始
-      fan.drive(0.2);
+      fan.drive(0.3);
       delay(500); //< ファンの回転数が一定なるのを待つ
       setPosition();
       sc.enable(false); //< 速度コントローラ始動
