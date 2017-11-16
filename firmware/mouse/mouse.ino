@@ -57,7 +57,7 @@ void task(void* arg) {
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    //    tof.csv();vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    //    tof.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
@@ -200,43 +200,51 @@ void normal_drive() {
   if (ms.isRunning()) ms.terminate();
   int mode = waitForSelect(8);
   switch (mode) {
+    //* 走行
+    case 0:
+      if (!waitForCover()) {
+        bz.play(Buzzer::SUCCESSFUL);
+        if (!waitForCover()) return;
+        led = 9;
+        ms.start(false);
+      } else {
+        led = 9;
+        ms.start(true);
+      }
+      break;
     //* 走行パラメータの選択 & 走行
-    case 0: {
-        int preset = waitForSelect(12);
+    case 1: {
+        int preset = waitForSelect(16);
         if (preset < 0) break;
         switch (preset) {
-          case 0:  break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.5,  240, 1800, 1500); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.6,  300, 1800, 1500); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.6,  450, 3000, 2000); break;
-          case 4:  fr.runParameter = FastRun::RunParameter(0.7,  600, 3000, 2000); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.7,  900, 3000, 2000); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.7,  900, 4500, 3000); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.8,  900, 4500, 3000); break;
-          case 8:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 4500, 3000); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 6000, 4500); break;
-          case 10: fr.runParameter = FastRun::RunParameter(0.9, 1200, 6000, 4500); break;
-          case 11: fr.runParameter = FastRun::RunParameter(0.9, 1500, 6000, 4500); break;
+          case 0:  fr.runParameter = FastRun::RunParameter(0.5,  300, 2400, 1200); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.5,  450, 3200, 1600); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.5,  600, 4800, 2400); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.5,  900, 6000, 3000); break;
+
+          case 4:  fr.runParameter = FastRun::RunParameter(0.6,  450, 2400, 1200); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.6,  600, 3000, 1500); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.6,  900, 4800, 2400); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.6, 1200, 6000, 3000); break;
+
+          case 8:  fr.runParameter = FastRun::RunParameter(0.7,  600, 3000, 1500); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(0.7,  900, 4800, 2400); break;
+          case 10: fr.runParameter = FastRun::RunParameter(0.7, 1200, 6000, 3000); break;
+          case 11: fr.runParameter = FastRun::RunParameter(0.7, 1500, 7200, 3600); break;
+
+          case 12: fr.runParameter = FastRun::RunParameter(0.8,  900, 4800, 2400); break;
+          case 13: fr.runParameter = FastRun::RunParameter(0.8, 1200, 6000, 3000); break;
+          case 14: fr.runParameter = FastRun::RunParameter(0.8, 1500, 9000, 4500); break;
+          case 15: fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 4500); break;
         }
       }
       if (!waitForCover()) return;
       led = 9;
-      ms.start(timeup);
-      break;
-    //* 走行パラメータの設定
-    case 1: {
-        int kind = waitForSelect(4);
-        if (kind < 0) break;
-        switch (kind) {
-          case 0: break;
-        }
-      }
-      if (!waitForCover()) return;
-      bz.play(Buzzer::SUCCESSFUL);
+      ms.start(true);
       break;
     //* 壁制御の設定
     case 2: {
-        int value = waitForSelect(7);
+        int value = waitForSelect(8);
         if (value < 0) return;
         if (!waitForCover()) return;
         fr.wallAvoidFlag = value & 0x01;
@@ -265,7 +273,7 @@ void normal_drive() {
           case 0: ms.set_goal({Vector(14, 14)}); break;
           case 1: ms.set_goal({Vector(1, 0)}); break;
           case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
-          case 3: ms.set_goal({Vector(3, 3), Vector(3, 4), Vector(3, 5), Vector(4, 3), Vector(4, 4), Vector(4, 5), Vector(5, 3), Vector(5, 4), Vector(5, 5)}); break;
+          case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
         }
         bz.play(Buzzer::SUCCESSFUL);
       }
@@ -288,7 +296,7 @@ void normal_drive() {
       }
       break;
     //* 8マス直線
-    case 7:
+    case 9:
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);

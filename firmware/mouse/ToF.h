@@ -59,7 +59,7 @@ class ToF {
         }
         uint16_t value = sensor.readRangeContinuousMillimeters();
         if (value < 2000)
-          distance = value - 10;
+          distance = value - 3;
         passed_ms = 0;
       }
     }

@@ -1,3 +1,9 @@
+/**
+* @file Agent.h
+* @brief マイクロマウスの迷路の探索アルゴリズムを扱うクラス
+* @author KERI (Github: kerikun11)
+* @date 2017.11.05
+*/
 #pragma once
 
 #include "Maze.h"
@@ -334,23 +340,24 @@ private:
 
 		if(state == SEARCHING_FOR_GOAL){
 			if(std::find(goal.begin(), goal.end(), pv)!=goal.end()){
-				state = REACHED_GOAL;
-				candidates = goal;
+//				state = REACHED_GOAL;
+//				candidates = goal;
+				state = SEARCHING_ADDITIONALLY;
 			}else{
 				stepMap.update(goal, StepMap::Goal);
 				if(!calcNextDirByStepMap(StepMap::Goal)) return GOT_LOST;
 			}
 		}
 
-		if(state == REACHED_GOAL){
-			candidates.erase(std::find(candidates.begin(),candidates.end(), pv));
-			if(candidates.empty()){
-				state = SEARCHING_ADDITIONALLY;
-			}else{
-				stepMap.update(candidates, StepMap::General);
-				if(!calcNextDirByStepMap(StepMap::General)) return GOT_LOST;
-			}
-		}
+//		if(state == REACHED_GOAL){
+//			candidates.erase(std::find(candidates.begin(),candidates.end(), pv));
+//			if(candidates.empty()){
+//				state = SEARCHING_ADDITIONALLY;
+//			}else{
+//				stepMap.update(candidates, StepMap::General);
+//				if(!calcNextDirByStepMap(StepMap::General)) return GOT_LOST;
+//			}
+//		}
 
 		if(state == SEARCHING_ADDITIONALLY){
 			findShortestCandidates();

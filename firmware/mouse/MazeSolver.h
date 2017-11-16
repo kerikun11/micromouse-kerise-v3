@@ -106,21 +106,15 @@ class MazeSolver: TaskBase {
     Agent agent;
     bool isForceShortestPath = false;
 
-    bool search_run() {
-      sr.set_action(SearchRun::START_STEP);
-      agent.updateCurVecDir(Vector(0, 1), Dir::North);
+    bool search_run(bool start_step = true, const Vector start_vec = Vector(0, 1), const Dir start_dir = Dir::North) {
+      if (start_step) {
+        sr.set_action(SearchRun::START_STEP);
+      }
+      agent.updateCurVecDir(start_vec, start_dir);
       sr.enable();
       Agent::State prevState = agent.getState();
       while (1) {
-        uint32_t ms;
-
-        //        us = micros();
-        //        backup();
-        //        printf("backup(); %ld [us]\n", micros() - us);
-
         sr.waitForEnd();
-
-        //        delay(100); // センサが安定するのを待つ
 
         const Vector v = agent.getCurVec();
         const Dir d = agent.getCurDir();
@@ -130,7 +124,7 @@ class MazeSolver: TaskBase {
         agent.updateWall(v, d - 1, wd.wall[1]); // right
         bz.play(Buzzer::SHORT);
 
-        ms = millis();
+        uint32_t ms = millis();
         agent.calcNextDir();
         printf("agent.calcNextDir(); %lu [ms]\n", millis() - ms);
         Agent::State newState = agent.getState();
@@ -147,6 +141,26 @@ class MazeSolver: TaskBase {
           /* BACKING_TO_START */
           bz.play(Buzzer::COMPLETE);
         }
+        if (newState != prevState && newState == Agent::GOT_LOST) {
+          /* GOT_LOST */
+          bz.play(Buzzer::ERROR);
+          sr.set_action(SearchRun::STOP);
+          sr.waitForEnd();
+          sr.disable();
+          while (!maze_backup.empty()) maze_backup.pop_back();
+          readyToStartWait(6000); //< 回収されるまで待つ
+          maze.reset();           //< 迷子になったので，迷路をリセットして探索を再開する
+          agent.updateWall(v, d + 1 + 2, wd.wall[0]); // left
+          agent.updateWall(v, d + 0 + 2, wd.wall[2]); // front
+          agent.updateWall(v, d - 1 + 2, wd.wall[1]); // right
+          agent.updateWall(v, d + 2, false); //< 現在の区画の壁を更新する
+          agent.reset();
+          agent.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
+          sr.set_action(SearchRun::RETURN);
+          sr.set_action(SearchRun::GO_HALF);
+          sr.enable();
+          continue;
+        }
         prevState = newState;
         auto nextDirs = agent.getNextDirs();
         if (nextDirs.empty()) {
@@ -154,22 +168,7 @@ class MazeSolver: TaskBase {
           sr.set_action(SearchRun::STOP);
           sr.waitForEnd();
           sr.disable();
-          while (!maze_backup.empty())maze_backup.pop_back();
-          readyToStartWait(6000);
-          // 迷子になったので，迷路をリセットして探索を再開する
-          maze.reset();
-          // 現在の区画の壁を更新する
-          //          agent.updateWall(v, d + 1, wd.wall[0]); // left
-          //          agent.updateWall(v, d + 0, wd.wall[2]); // front
-          //          agent.updateWall(v, d - 1, wd.wall[1]); // right
-          agent.updateWall(v, 2 + d, false); // back
-          agent.reset();
-          agent.updateCurVecDir(v.next(d + 2), d + 2);      // u-turn
-          agent.calcNextDir();
-          nextDirs = agent.getNextDirs();
-          sr.set_action(SearchRun::RETURN);
-          sr.set_action(SearchRun::GO_HALF);
-          sr.enable();
+          while (1) delay(1000);
         }
         int straight_count = 0;
         for (auto nextDir : nextDirs) {
@@ -216,9 +215,11 @@ class MazeSolver: TaskBase {
     void fast_run() {
       auto path = agent.getShortestDirs();
       path.erase(path.begin());
-      Dir prev_dir = Dir::North;
+      Dir d = Dir::North;
+      Vector v(0, 1);
       for (auto nextDir : path) {
-        switch (Dir(nextDir - prev_dir)) {
+        v = v.next(nextDir);
+        switch (Dir(nextDir - d)) {
           case Dir::East:
             fr.set_action(FastRun::FAST_GO_STRAIGHT);
             break;
@@ -231,7 +232,7 @@ class MazeSolver: TaskBase {
             fr.set_action(FastRun::FAST_TURN_RIGHT_90);
             break;
         }
-        prev_dir = nextDir;
+        d = nextDir;
       }
 
       // start drive
@@ -243,43 +244,54 @@ class MazeSolver: TaskBase {
       // end drive
       readyToStartWait(2000);
 
-      // back to start
-      printf("Back to Start\n");
-      sc.position.reset();
-      sr.set_action(SearchRun::RETURN);
-      sr.set_action(SearchRun::GO_HALF);
-      path = agent.getShortestDirs();
-      prev_dir = path.back();
-      path.pop_back();
-      std::reverse(path.begin(), path.end());
-      int straight_count = 0;
-      for (auto nextDir : path) {
-        switch (Dir(nextDir - prev_dir)) {
-          case Dir::East:
-            straight_count++;
-            break;
-          case Dir::North:
-            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-            straight_count = 0;
-            sr.set_action(SearchRun::TURN_LEFT_90);
-            break;
-          case Dir::West:
-            break;
-          case Dir::South:
-            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-            straight_count = 0;
-            sr.set_action(SearchRun::TURN_RIGHT_90);
-            break;
+      agent.reset();
+      if (agent.getState() != Agent::REACHED_START) {
+        bz.play(Buzzer::CONFIRM);
+        readyToStartWait(4000);
+        printf("Additionally Searching\n");
+        sc.position.reset();
+        sr.set_action(SearchRun::RETURN);
+        sr.set_action(SearchRun::GO_HALF);
+        if (!search_run(false, v.next(d + 2), d + 2)) while (1) delay(1000);
+      } else {
+        // back to start
+        printf("Back to Start\n");
+        sc.position.reset();
+        sr.set_action(SearchRun::RETURN);
+        sr.set_action(SearchRun::GO_HALF);
+        path = agent.getShortestDirs();
+        d = path.back();
+        path.pop_back();
+        std::reverse(path.begin(), path.end());
+        int straight_count = 0;
+        for (auto nextDir : path) {
+          switch (Dir(nextDir - d)) {
+            case Dir::East:
+              straight_count++;
+              break;
+            case Dir::North:
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
+              sr.set_action(SearchRun::TURN_LEFT_90);
+              break;
+            case Dir::West:
+              break;
+            case Dir::South:
+              if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+              straight_count = 0;
+              sr.set_action(SearchRun::TURN_RIGHT_90);
+              break;
+          }
+          d = nextDir;
         }
-        prev_dir = nextDir;
+        if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+        straight_count = 0;
+        sr.set_action(SearchRun::START_INIT);
+        sr.enable();
+        sr.waitForEnd();
+        sr.disable();
+        bz.play(Buzzer::CANCEL);
       }
-      if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-      straight_count = 0;
-      sr.set_action(SearchRun::START_INIT);
-      sr.enable();
-      sr.waitForEnd();
-      sr.disable();
-      bz.play(Buzzer::CANCEL);
     }
     void readyToStartWait(const int wait_ms = 3000) {
       for (int ms = 0; ms < wait_ms; ms++) {
@@ -298,18 +310,15 @@ class MazeSolver: TaskBase {
       bz.play(Buzzer::CANCEL);
 
       maze = maze_backup.back();
-      if (!isForceShortestPath) {
-        agent.reset();
-        if (agent.getState() != Agent::REACHED_START) {
-          maze = maze_backup.front();
+      agent.reset();
+      if (agent.getState() != Agent::REACHED_START) {
+        if (agent.getState() == Agent::SEARCHING_FOR_GOAL || !isForceShortestPath) {
           maze = maze_backup.front();
           agent.reset();
-          if (!search_run()) {
-            while (1) delay(1000);
-          }
+          if (!search_run()) while (1) delay(1000);
           backup();
           bz.play(Buzzer::MAZE_BACKUP);
-          readyToStartWait();
+          readyToStartWait(2000);
         }
       }
       if (!agent.calcShortestDirs()) {
