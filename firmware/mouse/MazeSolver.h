@@ -312,7 +312,7 @@ class MazeSolver: TaskBase {
       maze = maze_backup.back();
       agent.reset();
       if (agent.getState() != Agent::REACHED_START) {
-        if (agent.getState() == Agent::SEARCHING_FOR_GOAL || isForceSearch) {
+        if (!agent.calcShortestDirs() || isForceSearch) {
           maze = maze_backup.front();
           agent.reset();
           if (!search_run()) while (1) delay(1000);

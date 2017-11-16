@@ -19,9 +19,9 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          36
+#define FAST_PROP_GAIN          30
 
-//#define printf  lg.printf
+#define printf  lg.printf
 
 class FastTrajectory {
   public:
@@ -222,6 +222,35 @@ class FV90: public FastTrajectory {
     }
 };
 
+class FS90: public FastTrajectory {
+  public:
+    FS90(bool mirror = false) : mirror(mirror) {}
+    const float velocity = 345.3346843519961;
+    const float straight = 5.0f;
+  private:
+    bool mirror;
+    virtual int size() const {
+      return 68;
+    }
+    virtual Position position(int index) const {
+      static const float data[68 + 1][3] = {
+        {0.0000000000, 0.0000000000, 0.0000000000}, {0.9999999969, 0.0000128655, 0.0000514475}, {1.9999999767, 0.0002054567, 0.0004105330}, {2.9999995941, 0.0010374504, 0.0013796779}, {3.9999969172, 0.0032655949, 0.0032509596}, {4.9999857301, 0.0079326054, 0.0063011584}, {5.9999493780, 0.0163467153, 0.0107870647}, {6.9998538431, 0.0300624008, 0.0169411245}, {7.9996350035, 0.0508515233, 0.0249674984}, {8.9991859300, 0.0806730363, 0.0350385993}, {9.9983403107, 0.1216405145, 0.0472921695}, {10.9968538204, 0.1759799367, 0.0618289446}, {11.9943880293, 0.2459950543, 0.0787109454}, {12.9904908870, 0.3340180492, 0.0979604269}, {13.9845840564, 0.4423685588, 0.1195595000}, {14.9759507350, 0.5733061612, 0.1434504358}, {15.9637303686, 0.7289811107, 0.1695366435}, {16.9469187946, 0.9113935790, 0.1976843091}, {17.9243774449, 1.1223431750, 0.2277246639}, {18.8948464476, 1.3633940454, 0.2594568460}, {19.8569711939, 1.6358354803, 0.2926513068}, {20.8093302309, 1.9406532983, 0.3270537027}, {21.7504727755, 2.2785083279, 0.3623892082}, {22.6789624336, 2.6497217809, 0.3983671757}, {23.5934181942, 3.0542717129, 0.4346860636}, {24.4925590437, 3.4918050160, 0.4710749589}, {25.3751867882, 3.9617602514, 0.5074639206}, {26.2401328195, 4.4635151936, 0.5438528823}, {27.0862519384, 4.9964055128, 0.5802418441}, {27.9124238790, 5.5597256597, 0.6166308058}, {28.7175547731, 6.1527297870, 0.6530197675}, {29.5005786299, 6.7746327593, 0.6894087293}, {30.2604587044, 7.4246111597, 0.7257976910}, {30.9961889225, 8.1018044233, 0.7621866527}, {31.7067951532, 8.8053159237, 0.7985756145}, {32.3913365638, 9.5342142216, 0.8349645762}, {33.0489067970, 10.2875342296, 0.8713535379}, {33.6786352395, 11.0642785631, 0.9077424997}, {34.2796881090, 11.8634187856, 0.9441314614}, {34.8512696189, 12.6838968453, 0.9805204231}, {35.3926229776, 13.5246264040, 1.0169093849}, {35.9030314371, 14.3844943415, 1.0532983466}, {36.3818192040, 15.2623621717, 1.0896873083}, {36.8283523630, 16.1570675965, 1.1260762701}, {37.2420453643, 17.0674235213, 1.1624354693}, {37.6224679368, 17.9921777631, 1.1985378943}, {37.9695038062, 18.9299730998, 1.2340801324}, {38.2833796418, 19.8793847084, 1.2687680306}, {38.5646639140, 20.8389599480, 1.3023219223}, {38.8142540108, 21.8072671782, 1.3344813692}, {39.0333589784, 22.7829286628, 1.3650095780}, {39.2234697785, 23.7646563211, 1.3936974146}, {39.3863253498, 24.7512761981, 1.4203669512}, {39.5238753350, 25.7417457896, 1.4448744823}, {39.6382318381, 26.7351647260, 1.4671129624}, {39.7316305952, 27.7307770380, 1.4870138203}, {39.8063777491, 28.7279666694, 1.5045481223}, {39.8648076788, 29.7262484751, 1.5197270625}, {39.9092361539, 30.7252542911, 1.5326017732}, {39.9419142574, 31.7247152858, 1.5432624578}, {39.9649916098, 32.7244460959, 1.5518368613}, {39.9804720233, 33.7243243272, 1.5584881043}, {39.9901831909, 34.7242761652, 1.5634119167}, {39.9957418185, 35.7242602587, 1.5668333195}, {39.9985266444, 36.7242561425, 1.5690028089}, {39.9996557964, 37.7242554891, 1.5701921086}, {39.9999659232, 38.7242554139, 1.5706895630}, {39.9999999178, 39.7242554131, 1.5707952473}, {40.0000000000, 40.0000000055, 1.5707963268},
+      };
+      Position ret;
+      if (index < 0) {
+        ret = Position(0 + interval * index, 0, 0);
+      } else if (index > size() - 1) {
+        Position end(data[size()][0], data[size()][1], data[size()][2]);
+        ret = end + Position((index - size()) * interval * cos(end.theta), (index - size()) * interval * sin(end.theta), 0);
+      } else {
+        ret = Position(data[index][0], data[index][1], data[index][2]);
+      }
+      if (mirror)
+        return ret.mirror_x();
+      return ret;
+    }
+};
+
 class FastRun: TaskBase {
   public:
     FastRun() : TaskBase("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE) {}
@@ -237,14 +266,16 @@ class FastRun: TaskBase {
       FAST_TURN_RIGHT_45R = 'C',
       FAST_TURN_LEFT_90 = 'l',
       FAST_TURN_RIGHT_90 = 'r',
-      FAST_TURN_LEFT_V90 = 'q',
-      FAST_TURN_RIGHT_V90 = 'e',
+      FAST_TURN_LEFT_V90 = 'p',
+      FAST_TURN_RIGHT_V90 = 'P',
+      FAST_TURN_LEFT_S90 = 'q',
+      FAST_TURN_RIGHT_S90 = 'Q',
       FAST_TURN_LEFT_135 = 'a',
       FAST_TURN_RIGHT_135 = 'd',
       FAST_TURN_LEFT_135R = 'A',
       FAST_TURN_RIGHT_135R = 'D',
-      FAST_TURN_LEFT_180 = 'Q',
-      FAST_TURN_RIGHT_180 = 'E',
+      FAST_TURN_LEFT_180 = 'u',
+      FAST_TURN_RIGHT_180 = 'U',
     };
     struct RunParameter {
       RunParameter(const float curve_gain = 0.5, const float max_speed = 600, const float accel = 4800, const float decel = 2400): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
@@ -261,6 +292,7 @@ class FastRun: TaskBase {
     bool wallAvoidFlag = true;
     bool wallAvoid45Flag = true;
     bool wallCutFlag = true;
+    bool V90Enabled = true;
     void enable() {
       printf("FastRun Enabled\n");
       delete_task();
@@ -335,14 +367,16 @@ class FastRun: TaskBase {
               Position prev = sc.position;
               Position fix = sc.position.rotate(-origin.theta);
               fix.x = floor((fix.x + 45) / 90) * 90 - 20;
-              sc.position = fix.rotate(origin.theta);
+              fix = fix.rotate(origin.theta);
+              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f) sc.position = fix;
               printf("WallCut[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
             }
             if (!prev_wall[i] && wd.wall[i]) {
               Position prev = sc.position;
               Position fix = sc.position.rotate(-origin.theta);
               fix.x = floor((fix.x + 45) / 90) * 90 - 30;
-              sc.position = fix.rotate(origin.theta);
+              fix = fix.rotate(origin.theta);
+              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f) sc.position = fix;
               printf("WallCut[%d] _X (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
             }
             prev_wall[i] = wd.wall[i];
@@ -401,35 +435,44 @@ class FastRun: TaskBase {
       if (path[0] != 'x' && path[0] != 'c' && path[0] != 'z') {
         path = "x" + path + "x";
       }
-
       printf("Input Path: %s\n", path.c_str());
-      path.replace("s", "xx");
-      path.replace("l", "LL");
-      path.replace("r", "RR");
+      if (V90Enabled) {
+        path.replace("s", "xx");
+        path.replace("l", "LL");
+        path.replace("r", "RR");
 
-      path.replace("RLLLLR", "RLqLR");
-      path.replace("LRRRRL", "LReRL");
+        path.replace("RLLLLR", "RLpLR");
+        path.replace("LRRRRL", "LRPRL");
 
-      path.replace("xLLR", "zLR");
-      path.replace("xRRL", "cRL");
-      path.replace("LRRx", "LRC");
-      path.replace("RLLx", "RLZ");
+        path.replace("xLLR", "zLR");
+        path.replace("xRRL", "cRL");
+        path.replace("LRRx", "LRC");
+        path.replace("RLLx", "RLZ");
 
-      path.replace("xLLLLR", "aLR");
-      path.replace("xRRRRL", "dRL");
-      path.replace("RLLLLx", "RLA");
-      path.replace("LRRRRx", "LRD");
+        path.replace("xLLLLR", "aLR");
+        path.replace("xRRRRL", "dRL");
+        path.replace("RLLLLx", "RLA");
+        path.replace("LRRRRx", "LRD");
 
-      path.replace("xLLLLx", "Q");
-      path.replace("xRRRRx", "E");
+        path.replace("xLLLLx", "u");
+        path.replace("xRRRRx", "U");
 
-      path.replace("RLLR", "RLwLR");
-      path.replace("LRRL", "LRWRL");
+        path.replace("RLLR", "RLwLR");
+        path.replace("LRRL", "LRWRL");
 
-      path.replace("RL", "");
-      path.replace("LR", "");
-      path.replace("xRRx", "r");
-      path.replace("xLLx", "l");
+        path.replace("RL", "");
+        path.replace("LR", "");
+        path.replace("xRRx", "r");
+        path.replace("xLLx", "l");
+      } else {
+        path.replace("s", "xx");
+
+        path.replace("xllx", "u");
+        path.replace("xrrx", "U");
+
+        path.replace("l", "q");
+        path.replace("r", "Q");
+      }
       printf("Running Path: %s\n", path.c_str());
 
       const float v_max = runParameter.max_speed;
@@ -439,7 +482,7 @@ class FastRun: TaskBase {
       delay(200);
       mt.free();
       // 走行開始
-      fan.drive(0.3);
+      fan.drive(0.2);
       delay(500); //< ファンの回転数が一定なるのを待つ
       setPosition();
       sc.enable(false); //< 速度コントローラ始動
@@ -505,6 +548,28 @@ class FastRun: TaskBase {
             break;
           case FAST_TURN_RIGHT_V90: {
               FV90 tr(true);
+              straight += tr.straight;
+              if (straight > 1.0f) {
+                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight = 0;
+              }
+              trace(tr, sc.actual.trans);
+              straight += tr.straight;
+            }
+            break;
+          case FAST_TURN_LEFT_S90: {
+              FS90 tr(false);
+              straight += tr.straight;
+              if (straight > 1.0f) {
+                straight_x(straight, v_max, tr.velocity * curve_gain);
+                straight = 0;
+              }
+              trace(tr, sc.actual.trans);
+              straight += tr.straight;
+            }
+            break;
+          case FAST_TURN_RIGHT_S90: {
+              FS90 tr(true);
               straight += tr.straight;
               if (straight > 1.0f) {
                 straight_x(straight, v_max, tr.velocity * curve_gain);

@@ -244,12 +244,13 @@ void normal_drive() {
       break;
     //* 壁制御の設定
     case 2: {
-        int value = waitForSelect(8);
+        int value = waitForSelect(16);
         if (value < 0) return;
         if (!waitForCover()) return;
         fr.wallAvoidFlag = value & 0x01;
         fr.wallAvoid45Flag = value & 0x02;
         fr.wallCutFlag = value & 0x04;
+        fr.V90Enabled = value & 0x08;
         bz.play(Buzzer::SUCCESSFUL);
       }
       break;
@@ -266,7 +267,7 @@ void normal_drive() {
     //* ゴール区画の設定
     case 4: {
         for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
-        int value = waitForSelect(4);
+        int value = waitForSelect(6);
         if (value < 0) return;
         if (!waitForCover()) return;
         switch (value) {
@@ -274,6 +275,7 @@ void normal_drive() {
           case 1: ms.set_goal({Vector(1, 0)}); break;
           case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
           case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
+          case 4: ms.set_goal({Vector(1, 14)}); break;
         }
         bz.play(Buzzer::SUCCESSFUL);
       }
@@ -295,15 +297,15 @@ void normal_drive() {
         bz.play(Buzzer::ERROR);
       }
       break;
-    //* 8マス直線
-    case 9:
+    //* マス直線
+    case 7:
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
       axis.calibration();
       bz.play(Buzzer::CANCEL);
       sc.enable();
-      straight_x(8 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
+      straight_x(16 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
       sc.disable();
       break;
   }
