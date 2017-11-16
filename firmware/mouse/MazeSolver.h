@@ -39,8 +39,8 @@ class MazeSolver: TaskBase {
       maze_backup.push_back(maze);
     }
     virtual ~MazeSolver() {}
-    void start(bool isForceShortestPath = false) {
-      this->isForceShortestPath = isForceShortestPath;
+    void start(bool isForceSearch = false) {
+      this->isForceSearch = isForceSearch;
       terminate();
       create_task();
     }
@@ -104,7 +104,7 @@ class MazeSolver: TaskBase {
     Maze maze;
     std::deque<Maze> maze_backup;
     Agent agent;
-    bool isForceShortestPath = false;
+    bool isForceSearch = false;
 
     bool search_run(bool start_step = true, const Vector start_vec = Vector(0, 1), const Dir start_dir = Dir::North) {
       if (start_step) {
@@ -312,7 +312,7 @@ class MazeSolver: TaskBase {
       maze = maze_backup.back();
       agent.reset();
       if (agent.getState() != Agent::REACHED_START) {
-        if (agent.getState() == Agent::SEARCHING_FOR_GOAL || !isForceShortestPath) {
+        if (agent.getState() == Agent::SEARCHING_FOR_GOAL || isForceSearch) {
           maze = maze_backup.front();
           agent.reset();
           if (!search_run()) while (1) delay(1000);

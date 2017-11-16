@@ -206,10 +206,10 @@ void normal_drive() {
         bz.play(Buzzer::SUCCESSFUL);
         if (!waitForCover()) return;
         led = 9;
-        ms.start(false);
+        ms.start(true);
       } else {
         led = 9;
-        ms.start(true);
+        ms.start();
       }
       break;
     //* 走行パラメータの選択 & 走行
@@ -240,7 +240,7 @@ void normal_drive() {
       }
       if (!waitForCover()) return;
       led = 9;
-      ms.start(true);
+      ms.start();
       break;
     //* 壁制御の設定
     case 2: {
