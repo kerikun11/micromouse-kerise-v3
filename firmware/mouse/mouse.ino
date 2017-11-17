@@ -217,25 +217,25 @@ void normal_drive() {
         int preset = waitForSelect(16);
         if (preset < 0) break;
         switch (preset) {
-          case 0:  fr.runParameter = FastRun::RunParameter(0.7,  300, 2400, 1200); break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.7,  600, 4800, 2400); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.7,  900, 6000, 3000); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.7, 1200, 9000, 4500); break;
+          case 0:  fr.runParameter = FastRun::RunParameter(0.7,  600, 2400, 1200); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.7,  900, 3600, 1800); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.7, 1200, 4800, 2400); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.7, 1500, 6000, 3000); break;
 
           case 4:  fr.runParameter = FastRun::RunParameter(0.8,  600, 2400, 1200); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.8,  900, 3000, 1500); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 6000, 3000); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.8, 1500, 9000, 4500); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.8,  900, 3600, 1800); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 4800, 2400); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.8, 1500, 6000, 3000); break;
 
           case 8:  fr.runParameter = FastRun::RunParameter(0.9,  600, 2400, 1200); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(0.9,  900, 3000, 1500); break;
-          case 10: fr.runParameter = FastRun::RunParameter(0.9, 1200, 6000, 3000); break;
-          case 11: fr.runParameter = FastRun::RunParameter(0.9, 1500, 9000, 4500); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(0.9,  900, 3600, 1800); break;
+          case 10: fr.runParameter = FastRun::RunParameter(0.9, 1200, 4800, 2400); break;
+          case 11: fr.runParameter = FastRun::RunParameter(0.9, 1500, 6000, 3000); break;
 
-          case 12: fr.runParameter = FastRun::RunParameter(1.0,  900, 4800, 2400); break;
-          case 13: fr.runParameter = FastRun::RunParameter(1.0, 1200, 6000, 3000); break;
-          case 14: fr.runParameter = FastRun::RunParameter(1.0, 1500, 9000, 4500); break;
-          case 15: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 4500); break;
+          case 12: fr.runParameter = FastRun::RunParameter(1.0,  600, 2400, 1200); break;
+          case 13: fr.runParameter = FastRun::RunParameter(1.0,  900, 3600, 1800); break;
+          case 14: fr.runParameter = FastRun::RunParameter(1.0, 1200, 4800, 2400); break;
+          case 15: fr.runParameter = FastRun::RunParameter(1.0, 1500, 6000, 3000); break;
         }
       }
       if (!waitForCover()) return;
@@ -249,12 +249,12 @@ void normal_drive() {
         value = waitForSelect(16);
         if (value < 0) return;
         const float curve_gain = 0.1f * value;
+        value = waitForSelect(7);
+        if (value < 0) return;
+        const float v_max = 300.0f * value;
         value = waitForSelect(16);
         if (value < 0) return;
-        const float v_max = 200.0f * value;
-        value = waitForSelect(16);
-        if (value < 0) return;
-        const float accel = 1000.0f * value;
+        const float accel = 600.0f * value;
         fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel / 2);
         bz.play(Buzzer::SUCCESSFUL);
         if (!waitForCover()) return;
@@ -285,7 +285,7 @@ void normal_drive() {
           case 1: ms.set_goal({Vector(1, 0)}); break;
           case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
           case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
-          case 4: ms.set_goal({Vector(1, 14)}); break;
+          case 4: ms.set_goal({Vector(4, 8)}); break;
         }
         bz.play(Buzzer::SUCCESSFUL);
       }

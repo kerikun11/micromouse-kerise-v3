@@ -328,10 +328,10 @@ class MazeSolver: TaskBase {
       }
       while (1) {
         fast_run();
-        fr.runParameter.curve_gain *= 1.1;
+        fr.runParameter.curve_gain *= 1.05f;
         fr.runParameter.max_speed *= 1.2;
-        fr.runParameter.accel *= 1.1;
-        fr.runParameter.decel *= 1.1;
+        fr.runParameter.accel *= 1.05f;
+        fr.runParameter.decel *= 1.05f;
         readyToStartWait();
         bz.play(Buzzer::CONFIRM);
         axis.calibration();

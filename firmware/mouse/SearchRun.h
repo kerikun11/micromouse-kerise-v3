@@ -28,7 +28,7 @@
 
 #define SEARCH_RUN_VELOCITY         240.0f
 #define SEARCH_RUN_V_CURVE          240.0f
-#define SEARCH_RUN_V_MAX            900.0f
+#define SEARCH_RUN_V_MAX            1200.0f
 
 //#define printf  lg.printf
 
@@ -264,8 +264,8 @@ class SearchRun: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end) {
-      const float accel = 2000;
-      const float decel = 1000;
+      const float accel = 2400;
+      const float decel = 1200;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -281,7 +281,7 @@ class SearchRun: TaskBase {
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD + velocity / 100) - cur.theta;
+        float theta = atan2f(-cur.y, SEARCH_LOOK_AHEAD + velocity / 60) - cur.theta;
         sc.set_target(velocity, SEARCH_PROP_GAIN * theta);
         wall_avoid(distance);
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -374,7 +374,7 @@ class SearchRun: TaskBase {
             straight_x(SEGMENT_WIDTH * num, v_max, velocity);
             break;
           case GO_HALF:
-            straight_x(SEGMENT_WIDTH / 2 * num, v_max, velocity);
+            straight_x(SEGMENT_WIDTH / 2 * num, velocity, velocity);
             break;
           case TURN_LEFT_90:
             for (int i = 0; i < num; i++) {

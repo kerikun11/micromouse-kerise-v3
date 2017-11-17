@@ -19,7 +19,7 @@
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          30
+#define FAST_PROP_GAIN          27
 
 //#define printf  lg.printf
 
@@ -33,7 +33,7 @@ class FastTrajectory {
     void reset() {
       last_index = -FAST_LOOK_AHEAD;
     }
-    Position getNextDir(const Position &cur) {
+    Position getNextDir(const Position &cur, const float velocity) {
       int index_cur = getNextIndex(cur);
       int look_ahead = FAST_LOOK_AHEAD;
       Position dir = (getPosition(index_cur + look_ahead) - cur).rotate(-cur.theta);
@@ -278,7 +278,7 @@ class FastRun: TaskBase {
       FAST_TURN_RIGHT_180 = 'U',
     };
     struct RunParameter {
-      RunParameter(const float curve_gain = 0.7, const float max_speed = 600, const float accel = 4800, const float decel = 2400): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
+      RunParameter(const float curve_gain = 0.6, const float max_speed = 900, const float accel = 4800, const float decel = 2400): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
       float curve_gain;
       float max_speed;
       float accel, decel;
@@ -344,7 +344,7 @@ class FastRun: TaskBase {
       // 90 [deg] の倍数
       if (wallAvoidFlag && (int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
         const float gain = 0.0004f;
-        const float satu = 0.25f;
+        const float satu = 0.2f;
         if (ref.side(0) > 60) sc.position += Position(0, std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu), 0).rotate(origin.theta);
         if (ref.side(1) > 60) sc.position -= Position(0, std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu), 0).rotate(origin.theta);
         led = 9;
@@ -402,7 +402,8 @@ class FastRun: TaskBase {
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        float theta = atan2f(-cur.y, FAST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
+        int look_ahead = FAST_LOOK_AHEAD * (0.5f + velocity / 300);
+        float theta = atan2f(-cur.y, look_ahead) - cur.theta;
         sc.set_target(velocity, FAST_PROP_GAIN * theta);
         wallAvoid();
         wallCut();
@@ -419,7 +420,7 @@ class FastRun: TaskBase {
       while (1) {
         if (tr.getRemain() < FAST_LOOK_AHEAD) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-        Position dir = tr.getNextDir(getRelativePosition());
+        Position dir = tr.getNextDir(getRelativePosition(), velocity);
         sc.set_target(velocity, FAST_PROP_GAIN * dir.theta);
         if (fabs(getRelativePosition().theta) < 0.01f * PI) {
           wallAvoid();
@@ -482,7 +483,7 @@ class FastRun: TaskBase {
       delay(200);
       mt.free();
       // 走行開始
-      fan.drive(0.3);
+      fan.drive(0.4);
       delay(500); //< ファンの回転数が一定なるのを待つ
       setPosition();
       sc.enable(false); //< 速度コントローラ始動
