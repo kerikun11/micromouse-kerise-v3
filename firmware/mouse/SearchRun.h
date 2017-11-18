@@ -28,7 +28,7 @@
 
 #define SEARCH_RUN_VELOCITY         240.0f
 #define SEARCH_RUN_V_CURVE          240.0f
-#define SEARCH_RUN_V_MAX            1200.0f
+#define SEARCH_RUN_V_MAX            900.0f
 
 //#define printf  lg.printf
 
@@ -171,12 +171,12 @@ class SearchRun: TaskBase {
         int cnt = 0;
         while (1) {
           SpeedController::WheelParameter wp;
-          const float gain = 0.2f;
+          const float gain = 0.3f;
           const float satu = 100.0f;
           wp.wheel[0] = -std::max(std::min(wd.wall_diff.front[0] * gain, satu), -satu);
           wp.wheel[1] = -std::max(std::min(wd.wall_diff.front[1] * gain, satu), -satu);
           wp.wheel2pole();
-          if (fabs(wp.wheel[0]) + fabs(wp.wheel[1]) < 0.2f) break;
+          if (fabs(wp.wheel[0]) + fabs(wp.wheel[1]) < 0.5f) break;
           sc.set_target(wp.trans, wp.rot);
           vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         }
