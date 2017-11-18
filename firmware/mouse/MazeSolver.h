@@ -112,7 +112,7 @@ class MazeSolver: TaskBase {
       }
       agent.updateCurVecDir(start_vec, start_dir);
       sr.enable();
-      Agent::State prevState = agent.getState();
+      //      Agent::State prevState = agent.getState();
       while (1) {
         sr.waitForEnd();
 
@@ -125,6 +125,7 @@ class MazeSolver: TaskBase {
         bz.play(Buzzer::SHORT);
 
         uint32_t ms = millis();
+        Agent::State prevState = agent.getState();
         agent.calcNextDir();
         printf("agent.calcNextDir(); %lu [ms]\n", millis() - ms);
         Agent::State newState = agent.getState();
@@ -136,10 +137,30 @@ class MazeSolver: TaskBase {
         if (newState != prevState && newState == Agent::SEARCHING_ADDITIONALLY) {
           /* SEARCHING_ADDITIONALLY */
           bz.play(Buzzer::CONFIRM);
+          sr.set_action(SearchRun::STOP);
+          sr.waitForEnd();
+          sr.disable();
+          backup();
+          bz.play(Buzzer::MAZE_BACKUP);
+          agent.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
+          sr.set_action(SearchRun::RETURN);
+          sr.set_action(SearchRun::GO_HALF);
+          sr.enable();
+          continue;
         }
         if (newState != prevState && newState == Agent::BACKING_TO_START) {
           /* BACKING_TO_START */
           bz.play(Buzzer::COMPLETE);
+          sr.set_action(SearchRun::STOP);
+          sr.waitForEnd();
+          sr.disable();
+          backup();
+          bz.play(Buzzer::MAZE_BACKUP);
+          agent.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
+          sr.set_action(SearchRun::RETURN);
+          sr.set_action(SearchRun::GO_HALF);
+          sr.enable();
+          continue;
         }
         if (newState != prevState && newState == Agent::GOT_LOST) {
           /* GOT_LOST */
@@ -147,9 +168,10 @@ class MazeSolver: TaskBase {
           sr.set_action(SearchRun::STOP);
           sr.waitForEnd();
           sr.disable();
-          while (!maze_backup.empty()) maze_backup.pop_back();
           readyToStartWait(6000); //< 回収されるまで待つ
-          maze.reset();           //< 迷子になったので，迷路をリセットして探索を再開する
+          //                    maze.reset();           //< 迷子になったので，迷路をリセットして探索を再開する
+          maze = maze_backup.front();
+          while (!maze_backup.empty()) maze_backup.pop_back();
           agent.updateWall(v, d + 1 + 2, wd.wall[0]); // left
           agent.updateWall(v, d + 0 + 2, wd.wall[2]); // front
           agent.updateWall(v, d - 1 + 2, wd.wall[1]); // right
@@ -161,7 +183,6 @@ class MazeSolver: TaskBase {
           sr.enable();
           continue;
         }
-        prevState = newState;
         auto nextDirs = agent.getNextDirs();
         if (nextDirs.empty()) {
           bz.play(Buzzer::ERROR);
@@ -316,8 +337,8 @@ class MazeSolver: TaskBase {
           maze = maze_backup.front();
           agent.reset();
           if (!search_run()) while (1) delay(1000);
-          backup();
-          bz.play(Buzzer::MAZE_BACKUP);
+          //          backup();
+          //          bz.play(Buzzer::MAZE_BACKUP);
           readyToStartWait(2000);
         }
       }
