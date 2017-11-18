@@ -326,7 +326,7 @@ class MazeSolver: TaskBase {
     virtual void task() {
       bz.play(Buzzer::CONFIRM);
       axis.calibration(false);
-      wd.calibration();
+      //      wd.calibration();
       axis.calibrationWait();
       bz.play(Buzzer::CANCEL);
 

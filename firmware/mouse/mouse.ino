@@ -198,7 +198,7 @@ void turn_test() {
 
 void normal_drive() {
   if (ms.isRunning()) ms.terminate();
-  int mode = waitForSelect(10);
+  int mode = waitForSelect(12);
   switch (mode) {
     //* 走行
     case 0:
@@ -274,37 +274,16 @@ void normal_drive() {
         bz.play(Buzzer::SUCCESSFUL);
       }
       break;
-    //* ゴール区画の設定
+    //* ファンの設定
     case 4: {
-        for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
-        int value = waitForSelect(6);
+        fan.drive(0.2);
+        delay(100);
+        fan.drive(0);
+        int value = waitForSelect(2);
         if (value < 0) return;
         if (!waitForCover()) return;
-        switch (value) {
-          case 0: ms.set_goal({Vector(14, 14)}); break;
-          case 1: ms.set_goal({Vector(1, 0)}); break;
-          case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
-          case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
-          case 4: ms.set_goal({Vector(4, 8)}); break;
-        }
+        fr.fanDuty = 0.1f * value;
         bz.play(Buzzer::SUCCESSFUL);
-      }
-      break;
-    //* 前壁キャリブレーション
-    case 5:
-      if (!waitForCover(true)) return;
-      delay(1000);
-      bz.play(Buzzer::CONFIRM);
-      wd.calibrationFront();
-      bz.play(Buzzer::CANCEL);
-      break;
-    //* 前壁補正データの保存
-    case 6:
-      if (!waitForCover()) return;
-      if (backup()) {
-        bz.play(Buzzer::SUCCESSFUL);
-      } else {
-        bz.play(Buzzer::ERROR);
       }
       break;
     //* 迷路データの復元
@@ -317,8 +296,48 @@ void normal_drive() {
         bz.play(Buzzer::ERROR);
       }
       break;
-    //* マス直線
+    //* 前壁キャリブレーション
     case 8:
+      if (!waitForCover(true)) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibrationFront();
+      bz.play(Buzzer::CANCEL);
+      break;
+    //* 横壁キャリブレーション
+    case 9:
+      if (!waitForCover()) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibrationSide();
+      bz.play(Buzzer::CANCEL);
+      break;
+    //* 前壁補正データの保存
+    case 10:
+      if (!waitForCover()) return;
+      if (backup()) {
+        bz.play(Buzzer::SUCCESSFUL);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    //* ゴール区画の設定
+    case 11: {
+        for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
+        int value = waitForSelect(4);
+        if (value < 0) return;
+        if (!waitForCover()) return;
+        switch (value) {
+          case 0: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(4, 6), Vector(5, 4), Vector(5, 5), Vector(5, 6), Vector(6, 4), Vector(6, 5), Vector(6, 6)}); break;
+          case 1: ms.set_goal({Vector(1, 0)}); break;
+          case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
+          case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
+        }
+        bz.play(Buzzer::SUCCESSFUL);
+      }
+      break;
+    //* マス直線
+    case 12:
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
@@ -327,18 +346,6 @@ void normal_drive() {
       sc.enable();
       straight_x(16 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
       sc.disable();
-      break;
-    //* ファンの設定
-    case 9: {
-        fan.drive(0.2);
-        delay(100);
-        fan.drive(0);
-        int value = waitForSelect(2);
-        if (value < 0) return;
-        if (!waitForCover()) return;
-        fr.fanDuty = 0.1f * value;
-        bz.play(Buzzer::SUCCESSFUL);
-      }
       break;
   }
 }

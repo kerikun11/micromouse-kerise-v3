@@ -35,7 +35,7 @@ class ExternalController: TaskBase {
             case 't':
               bz.play(Buzzer::CONFIRM);
               axis.calibration();
-              wd.calibration();
+              //              wd.calibration();
               break;
             case 'p':
               tof.print();

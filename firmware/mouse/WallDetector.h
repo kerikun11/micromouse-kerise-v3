@@ -27,12 +27,17 @@ class WallDetector {
         }, "WallDetector", WALL_DETECTOR_STACK_SIZE, this, WALL_DETECTOR_TASK_PRIORITY, &task_handle);
       }
     }
-    void calibration(bool waitUntilTheEnd = true) {
+    //    void calibration(bool waitUntilTheEnd = true) {
+    //      xSemaphoreTake(calibrationEndSemaphore, 0); //< 前のキャリブレーションの終了を待つ
+    //      xSemaphoreGive(calibrationStartSemaphore);
+    //      if (waitUntilTheEnd) calibrationWait();
+    //    }
+    //    void calibrationWait() {
+    //      xSemaphoreTake(calibrationEndSemaphore, portMAX_DELAY);
+    //    }
+    void calibrationSide() {
       xSemaphoreTake(calibrationEndSemaphore, 0); //< 前のキャリブレーションの終了を待つ
       xSemaphoreGive(calibrationStartSemaphore);
-      if (waitUntilTheEnd) calibrationWait();
-    }
-    void calibrationWait() {
       xSemaphoreTake(calibrationEndSemaphore, portMAX_DELAY);
     }
     void calibrationFront() {
