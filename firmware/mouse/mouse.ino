@@ -198,7 +198,7 @@ void turn_test() {
 
 void normal_drive() {
   if (ms.isRunning()) ms.terminate();
-  int mode = waitForSelect(9);
+  int mode = waitForSelect(10);
   switch (mode) {
     //* 走行
     case 0:
@@ -327,6 +327,18 @@ void normal_drive() {
       sc.enable();
       straight_x(16 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
       sc.disable();
+      break;
+    //* ファンの設定
+    case 9: {
+        fan.drive(0.2);
+        delay(100);
+        fan.drive(0);
+        int value = waitForSelect(2);
+        if (value < 0) return;
+        if (!waitForCover()) return;
+        fr.fanDuty = 0.1f * value;
+        bz.play(Buzzer::SUCCESSFUL);
+      }
       break;
   }
 }

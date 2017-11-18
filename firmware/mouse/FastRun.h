@@ -293,6 +293,8 @@ class FastRun: TaskBase {
     bool wallAvoid45Flag = true;
     bool wallCutFlag = true;
     bool V90Enabled = true;
+    float fanDuty = 0.4f;
+
     void enable() {
       printf("FastRun Enabled\n");
       delete_task();
@@ -483,7 +485,7 @@ class FastRun: TaskBase {
       delay(200);
       mt.free();
       // 走行開始
-      fan.drive(0.4);
+      fan.drive(fanDuty);
       delay(500); //< ファンの回転数が一定なるのを待つ
       setPosition();
       sc.enable(false); //< 速度コントローラ始動
