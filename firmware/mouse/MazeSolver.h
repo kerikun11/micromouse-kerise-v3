@@ -24,10 +24,10 @@
 #define MAZE_SOLVER_STACK_SIZE    8192
 
 //#define MAZE_GOAL           {Vector(1,0)}
-#define MAZE_GOAL           {Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}
+//#define MAZE_GOAL           {Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}
 //#define MAZE_GOAL           {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
-//#define MAZE_GOAL           {Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}
-#define MAZE_BACKUP_SIZE    5
+#define MAZE_GOAL           {Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}
+#define MAZE_BACKUP_SIZE    7
 
 //#define printf  lg.printf
 

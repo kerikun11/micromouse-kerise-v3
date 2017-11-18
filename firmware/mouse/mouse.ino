@@ -92,7 +92,7 @@ void setup() {
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
-const int searchig_time_ms = 5 * 60 * 1000;
+const int searchig_time_ms = 7 * 60 * 1000;
 bool timeup = false;
 
 void loop() {
