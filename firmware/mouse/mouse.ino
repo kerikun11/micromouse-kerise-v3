@@ -92,7 +92,7 @@ void setup() {
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
-const int searchig_time_ms = 7 * 60 * 1000;
+const int searchig_time_ms = 6 * 60 * 1000;
 bool timeup = false;
 
 void loop() {
@@ -198,7 +198,7 @@ void turn_test() {
 
 void normal_drive() {
   if (ms.isRunning()) ms.terminate();
-  int mode = waitForSelect(12);
+  int mode = waitForSelect(13);
   switch (mode) {
     //* 走行
     case 0:
@@ -277,9 +277,9 @@ void normal_drive() {
     //* ファンの設定
     case 4: {
         fan.drive(0.2);
-        delay(100);
+        delay(200);
         fan.drive(0);
-        int value = waitForSelect(2);
+        int value = waitForSelect(6);
         if (value < 0) return;
         if (!waitForCover()) return;
         fr.fanDuty = 0.1f * value;
