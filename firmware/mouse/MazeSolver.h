@@ -119,6 +119,7 @@ class MazeSolver: TaskBase {
         const Vector v = agent.getCurVec();
         const Dir d = agent.getCurDir();
         printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), agent.stateString(agent.getState()));
+        printf("Tof: %d\n", tof.getDistance());
         agent.updateWall(v, d + 1, wd.wall[0]); // left
         agent.updateWall(v, d + 0, wd.wall[2]); // front
         agent.updateWall(v, d - 1, wd.wall[1]); // right

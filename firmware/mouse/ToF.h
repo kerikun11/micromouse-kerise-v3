@@ -12,7 +12,7 @@ class ToF {
     ToF(const int pin_sda, const int pin_scl): pin_sda(pin_sda), pin_scl(pin_scl) {}
     bool begin() {
       Wire.begin(pin_sda, pin_scl);
-      sensor.setTimeout(100);
+      sensor.setTimeout(50);
       if (!sensor.init()) return false;
       //      sensor.setAddress(0x55);
       sensor.setMeasurementTimingBudget(20000);
@@ -32,7 +32,8 @@ class ToF {
       log_d("ToF: %d\n", getDistance());
     }
     void csv() {
-      printf("0,90,180,270,360,%d\n", getDistance());
+      //      printf("0,90,180,270,360,%d\n", getDistance());
+      printf("0,20,40,%d\n", passed_ms);
     }
   private:
     const int pin_sda, pin_scl;
@@ -40,8 +41,6 @@ class ToF {
     uint16_t distance;
     uint16_t passed_ms;
 
-    void read() {
-    }
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
@@ -53,14 +52,28 @@ class ToF {
         sensor.writeReg(0xFF, 0x00);
         sensor.writeReg(0x80, 0x00);
         sensor.writeReg(VL53L0X::SYSRANGE_START, 0x01);
-        for (int i = 0; i < 22; i++) {
-          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-          passed_ms++;
+        {
+          uint32_t startAt = millis();
+          while (sensor.readReg(VL53L0X::SYSRANGE_START) & 0x01) {
+            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+            passed_ms++;
+            if (millis() - startAt > 100) break;
+          }
         }
-        uint16_t value = sensor.readRangeContinuousMillimeters();
-        if (value < 2000)
-          distance = value - 3;
-        passed_ms = 0;
+        {
+          uint32_t startAt = millis();
+          while ((sensor.readReg(VL53L0X::RESULT_INTERRUPT_STATUS) & 0x07) == 0) {
+            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+            passed_ms++;
+            if (millis() - startAt > 100) break;
+          }
+        }
+        uint16_t range = sensor.readReg16Bit(VL53L0X::RESULT_RANGE_STATUS + 10);
+        sensor.writeReg(VL53L0X::SYSTEM_INTERRUPT_CLEAR, 0x01);
+        if (range > 5 && range < 300) {
+          distance = range - 3;
+          passed_ms = 0;
+        }
       }
     }
 };

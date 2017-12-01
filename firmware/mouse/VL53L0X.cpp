@@ -316,7 +316,7 @@ uint8_t VL53L0X::readReg(uint8_t reg)
 
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
+  last_status = Wire.endTransmission(false);
 
   Wire.requestFrom(address, (uint8_t)1);
   value = Wire.read();
@@ -331,7 +331,7 @@ uint16_t VL53L0X::readReg16Bit(uint8_t reg)
 
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
+  last_status = Wire.endTransmission(false);
 
   Wire.requestFrom(address, (uint8_t)2);
   value  = (uint16_t)Wire.read() << 8; // value high byte
@@ -347,7 +347,7 @@ uint32_t VL53L0X::readReg32Bit(uint8_t reg)
 
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
+  last_status = Wire.endTransmission(false);
 
   Wire.requestFrom(address, (uint8_t)4);
   value  = (uint32_t)Wire.read() << 24; // value highest byte
@@ -379,7 +379,7 @@ void VL53L0X::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
 {
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
+  last_status = Wire.endTransmission(false);
 
   Wire.requestFrom(address, count);
 
@@ -820,7 +820,6 @@ uint16_t VL53L0X::readRangeContinuousMillimeters(void)
       did_timeout = true;
       return 65535;
     }
-    delay(1);
   }
 
   // assumptions: Linearity Corrective Gain is 1000 (default);

@@ -29,7 +29,7 @@ void batteryCheck() {
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  Serial.begin(115200);
+  Serial.begin(2000000);
   log_i("KERISE");
 
   batteryCheck();
@@ -42,12 +42,12 @@ void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1000 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    tof.csv();
   }
 }
 
 void loop() {
-  tof.csv();
   delay(100);
 }
 
