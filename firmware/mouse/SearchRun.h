@@ -168,7 +168,6 @@ class SearchRun: TaskBase {
 #if SEARCH_WALL_ATTACH_ENABLED
       if (tof.getDistance() < 90) {
         portTickType xLastWakeTime = xTaskGetTickCount();
-        int cnt = 0;
         while (1) {
           SpeedController::WheelParameter wp;
           const float gain = 0.3f;

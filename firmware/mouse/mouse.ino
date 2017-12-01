@@ -138,13 +138,13 @@ void trapizoid_test() {
   if (!waitForCover()) return;
   delay(1000);
   axis.calibration();
-  fan.drive(0.3);
+  fan.drive(0.5);
   delay(500);
   lg.start();
   sc.enable();
   const float accel = 9000;
   const float decel = 6000;
-  const float v_max = 1500;
+  const float v_max = 1200;
   const float v_start = 0;
   float T = 1.5f * (v_max - v_start) / accel;
   for (int ms = 0; ms / 1000.0f < T; ms++) {
@@ -217,25 +217,25 @@ void normal_drive() {
         int preset = waitForSelect(16);
         if (preset < 0) break;
         switch (preset) {
-          case 0:  fr.runParameter = FastRun::RunParameter(0.7,  600, 2400, 1200); break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.7,  900, 3600, 1800); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.7, 1200, 4800, 2400); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.7, 1500, 6000, 3000); break;
+          case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 3000); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 3600); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 4500); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2700, 12000, 6000); break;
 
-          case 4:  fr.runParameter = FastRun::RunParameter(0.8,  600, 2400, 1200); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.8,  900, 3600, 1800); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 4800, 2400); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.8, 1500, 6000, 3000); break;
+          case 4:  fr.runParameter = FastRun::RunParameter(0.9,  900, 6000, 3000); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.9, 1200, 7200, 3600); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1800, 9000, 4500); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2700, 12000, 6000); break;
 
-          case 8:  fr.runParameter = FastRun::RunParameter(0.9,  600, 2400, 1200); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(0.9,  900, 3600, 1800); break;
-          case 10: fr.runParameter = FastRun::RunParameter(0.9, 1200, 4800, 2400); break;
-          case 11: fr.runParameter = FastRun::RunParameter(0.9, 1500, 6000, 3000); break;
+          case 8:  fr.runParameter = FastRun::RunParameter(1.0,  900, 6000, 3000); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(1.0, 1200, 7200, 3600); break;
+          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 4500); break;
+          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2700, 12000, 6000); break;
 
-          case 12: fr.runParameter = FastRun::RunParameter(1.0,  600, 2400, 1200); break;
-          case 13: fr.runParameter = FastRun::RunParameter(1.0,  900, 3600, 1800); break;
-          case 14: fr.runParameter = FastRun::RunParameter(1.0, 1200, 4800, 2400); break;
-          case 15: fr.runParameter = FastRun::RunParameter(1.0, 1500, 6000, 3000); break;
+          case 12: fr.runParameter = FastRun::RunParameter(1.1,  900, 6000, 3000); break;
+          case 13: fr.runParameter = FastRun::RunParameter(1.1, 1200, 7200, 3600); break;
+          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1800, 9000, 4500); break;
+          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2700, 12000, 6000); break;
         }
       }
       if (!waitForCover()) return;
@@ -249,7 +249,7 @@ void normal_drive() {
         value = waitForSelect(16);
         if (value < 0) return;
         const float curve_gain = 0.1f * value;
-        value = waitForSelect(7);
+        value = waitForSelect(16);
         if (value < 0) return;
         const float v_max = 300.0f * value;
         value = waitForSelect(16);
@@ -276,10 +276,10 @@ void normal_drive() {
       break;
     //* ファンの設定
     case 4: {
-        fan.drive(0.2);
-        delay(200);
+        fan.drive(fr.fanDuty);
+        waitForSelect(1);
         fan.drive(0);
-        int value = waitForSelect(6);
+        int value = waitForSelect(11);
         if (value < 0) return;
         if (!waitForCover()) return;
         fr.fanDuty = 0.1f * value;
@@ -344,7 +344,7 @@ void normal_drive() {
       axis.calibration();
       bz.play(Buzzer::CANCEL);
       sc.enable();
-      straight_x(16 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
+      straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
       sc.disable();
       break;
   }

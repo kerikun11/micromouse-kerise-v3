@@ -18,8 +18,12 @@
 
 #define FAST_RUN_PERIOD         1000
 
-#define FAST_LOOK_AHEAD         12
-#define FAST_PROP_GAIN          27
+#define FAST_END_REMAIN         6
+
+#define FAST_LOOK_AHEAD(v)      (6+10*v/100)
+#define FAST_STRAIGHT_FB_GAIN   30
+
+#define FAST_CURVE_FB_GAIN      3.0f
 
 //#define printf  lg.printf
 
@@ -31,13 +35,14 @@ class FastTrajectory {
     virtual ~FastTrajectory() {
     }
     void reset() {
-      last_index = -FAST_LOOK_AHEAD;
+      last_index = -FAST_END_REMAIN;
     }
     Position getNextDir(const Position &cur, const float velocity) {
       int index_cur = getNextIndex(cur);
-      int look_ahead = FAST_LOOK_AHEAD;
-      Position dir = (getPosition(index_cur + look_ahead) - cur).rotate(-cur.theta);
-      dir.theta = atan2f(dir.y, dir.x);
+      Position dir = (getPosition(index_cur + 6) - cur).rotate(-cur.theta);
+      float dt = 1.0f / velocity;
+      float ff = (getPosition(last_index + 1).theta - getPosition(last_index).theta) / dt;
+      dir.theta = ff + FAST_CURVE_FB_GAIN * atan2f(dir.y, dir.x);
       return dir;
     }
     float getRemain() const {
@@ -280,7 +285,7 @@ class FastRun: TaskBase {
       FAST_TURN_RIGHT_180 = 'U',
     };
     struct RunParameter {
-      RunParameter(const float curve_gain = 0.6, const float max_speed = 900, const float accel = 4800, const float decel = 2400): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
+      RunParameter(const float curve_gain = 0.8, const float max_speed = 1200, const float accel = 6000, const float decel = 3000): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
       float curve_gain;
       float max_speed;
       float accel, decel;
@@ -398,17 +403,17 @@ class FastRun: TaskBase {
       for (int i = 0; i < 2; i++) prev_wall[i] = wd.wall[i];
       while (1) {
         Position cur = getRelativePosition();
-        if (v_end >= 1.0f && cur.x > distance - FAST_LOOK_AHEAD) break;
+        if (v_end >= 1.0f && cur.x > distance - FAST_END_REMAIN) break;
         if (v_end < 1.0f && cur.x > distance - 1.0f) break;
-        float extra = distance - cur.x - FAST_LOOK_AHEAD;
+        float extra = distance - cur.x - FAST_END_REMAIN;
         float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
         float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        int look_ahead = FAST_LOOK_AHEAD * (0.5f + velocity / 300);
-        float theta = atan2f(-cur.y, look_ahead) - cur.theta;
-        sc.set_target(velocity, FAST_PROP_GAIN * theta);
+        //        int look_ahead = FAST_STRAIGHT_GAIN * (0.5f + velocity / 300);
+        float theta = atan2f(-cur.y, FAST_LOOK_AHEAD(velocity)) - cur.theta;
+        sc.set_target(velocity, FAST_STRAIGHT_FB_GAIN * theta);
         wallAvoid();
         wallCut();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
@@ -422,10 +427,10 @@ class FastRun: TaskBase {
     void trace(C tr, const float velocity) {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        if (tr.getRemain() < FAST_LOOK_AHEAD) break;
+        if (tr.getRemain() < FAST_END_REMAIN) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         Position dir = tr.getNextDir(getRelativePosition(), velocity);
-        sc.set_target(velocity, FAST_PROP_GAIN * dir.theta);
+        sc.set_target(velocity, dir.theta);
         if (fabs(getRelativePosition().theta) < 0.01f * PI) {
           wallAvoid();
           wallCut();
@@ -489,6 +494,7 @@ class FastRun: TaskBase {
       // 走行開始
       fan.drive(fanDuty);
       delay(500); //< ファンの回転数が一定なるのを待つ
+      //      lg.start();
       setPosition();
       sc.enable(false); //< 速度コントローラ始動
       float straight = SEGMENT_WIDTH / 2 - MACHINE_TAIL_LENGTH - WALL_THICKNESS / 2;
@@ -692,6 +698,7 @@ class FastRun: TaskBase {
       sc.set_target(0, 0);
       fan.drive(0);
       delay(100);
+      //      lg.end();
       sc.disable();
       bz.play(Buzzer::COMPLETE);
       last_path = path;

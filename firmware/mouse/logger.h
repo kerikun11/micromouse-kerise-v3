@@ -62,7 +62,8 @@ class Logger: TaskBase {
         //                 sc.Kd * sc.differential.rot,
         //                 sc.Kp * sc.proportional.rot + sc.Ki * sc.integral.rot + sc.Kd * sc.differential.rot
         //                );
-        sprintf(str, "%f,%f,%f,%f\n", sc.position.x, sc.position.y, sc.target.trans, sc.target.rot);
+        //        sprintf(str, "%f,%f,%f,%f\n", sc.position.x, sc.position.y, sc.target.trans, sc.target.rot);
+        sprintf(str, "%f,%f,%f\n", sc.position.x, sc.position.y, sc.position.theta);
         log += str;
       }
     }

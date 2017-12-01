@@ -136,7 +136,7 @@ class SpeedController {
     }
   private:
     bool enabled = false;
-    static const int ave_num = 5;
+    static const int ave_num = 16;
     float wheel_position[ave_num][2];
     float accel[ave_num];
     float gyro[ave_num];
