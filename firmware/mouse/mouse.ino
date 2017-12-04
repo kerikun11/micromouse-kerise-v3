@@ -6,13 +6,12 @@
 
 #include <WiFi.h>
 #include <SPIFFS.h>
-#include <Preferences.h>
-Preferences pref;
-
 #include "config.h"
 
 /* Hardware */
-#include "UserInterface.h"
+#include "buzzer.h"
+#include "button.h"
+#include "led.h"
 #include "motor.h"
 #include "imu.h"
 #include "encoder.h"
@@ -34,6 +33,7 @@ ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 #include "Emergency.h"
 #include "ExternalController.h"
 #include "logger.h"
+#include "DataSaver.h"
 //#include "BLETransmitter.h"
 #include "SearchRun.h"
 #include "FastRun.h"
@@ -43,6 +43,7 @@ WallDetector wd;
 Emergency em;
 ExternalController ec;
 Logger lg;
+DataSaver ds;
 //BLETransmitter ble;
 SearchRun sr;
 FastRun fr;
@@ -72,17 +73,17 @@ void setup() {
   batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  pref.begin("mouse", false);
-  restore();
-
   if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
+  ds.begin();
+  ds.restore();
+
   imu.begin(true);
   enc.begin(false);
   ref.begin();
   if (!tof.begin()) bz.play(Buzzer::ERROR);
   wd.begin();
-  em.init();
-  ec.init();
+  em.begin();
+  ec.begin();
   //  ble.begin();
 
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
@@ -311,7 +312,7 @@ void normal_drive() {
     //* 前壁補正データの保存
     case 10:
       if (!waitForCover()) return;
-      if (backup()) {
+      if (ds.backup()) {
         bz.play(Buzzer::SUCCESSFUL);
       } else {
         bz.play(Buzzer::ERROR);

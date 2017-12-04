@@ -8,7 +8,9 @@ extern Preferences pref;
 #include "config.h"
 
 /* Hardware */
-#include "UserInterface.h"
+#include "buzzer.h"
+#include "led.h"
+#include "button.h"
 #include "motor.h"
 #include "imu.h"
 #include "encoder.h"
@@ -185,26 +187,5 @@ bool waitForFix() {
       return false;
     }
   }
-}
-
-bool restore() {
-  size_t n = pref.getBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
-  if (n == 0) {
-    log_e("Restore Failed:(");
-    return false;
-  }
-  log_i("Restore Successful");
-  log_d("wd.wall_ref: %d, %d, %d, %d", wd.wall_ref.side[0], wd.wall_ref.front[0], wd.wall_ref.front[1], wd.wall_ref.side[1]);
-  return true;
-}
-
-bool backup() {
-  size_t n = pref.putBytes("wd.wall_ref", &(wd.wall_ref), sizeof(WallDetector::WallValue));
-  if (n == 0) {
-    log_e("Backup Failed:(");
-    return false;
-  }
-  log_i("Backup Successful");
-  return true;
 }
 

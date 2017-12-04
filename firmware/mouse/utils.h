@@ -7,6 +7,4 @@ void batteryCheck();
 int waitForSelect(int range = 16);
 bool waitForCover(bool side = false);
 bool waitForFix();
-bool restore();
-bool backup();
 

@@ -1,26 +1,6 @@
 #pragma once
 
 /* Hardware Mapping */
-//#define BAT_VOL_PIN             36
-//#define PR_TX_PINS              {16, 17, 16, 17}
-//#define PR_RX_PINS              {12, 13, 32, 33}
-//#define BUZZER_PIN              21
-//#define LED_PINS                {5, 2}
-//#define BUTTON_PIN              0
-//#define MOTOR_L_CTRL1_PIN       18
-//#define MOTOR_L_CTRL2_PIN       23
-//#define MOTOR_R_CTRL1_PIN       19
-//#define MOTOR_R_CTRL2_PIN       22
-//#define FAN_PIN                 15
-//#define AS5145_MISO_PIN         34
-//#define AS5145_MOSI_PIN         38
-//#define AS5145_SCLK_PIN         4
-//#define AS5145_CS_PIN           14
-//#define MPU6500_MOSI_PIN        27
-//#define MPU6500_MISO_PIN        35
-//#define MPU6500_SCLK_PIN        26
-//#define MPU6500_CS_PIN          25
-
 #define BAT_VOL_PIN             35
 #define PR_TX_PINS              {12, 13, 12, 13}
 #define PR_RX_PINS              {36, 38, 39, 37}

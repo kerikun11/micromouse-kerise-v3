@@ -6,12 +6,13 @@
 #include "reflector.h"
 #include "tof.h"
 
-#define WALL_DETECTOR_TASK_PRIORITY 4
-#define WALL_DETECTOR_STACK_SIZE    4096
+#define WALL_DETECTOR_TASK_PRIORITY   4
+#define WALL_DETECTOR_STACK_SIZE      4096
 
-#define WALL_DETECTOR_FLONT_RATIO   2.6f
+#define WALL_DETECTOR_THRESHOLD_FRONT 120
+#define WALL_DETECTOR_THRESHOLD_SIDE  60
 
-#define WALL_UPDATE_PERIOD_US       1000
+#define WALL_UPDATE_PERIOD_US         1000
 
 class WallDetector {
   public:
@@ -27,14 +28,6 @@ class WallDetector {
         }, "WallDetector", WALL_DETECTOR_STACK_SIZE, this, WALL_DETECTOR_TASK_PRIORITY, &task_handle);
       }
     }
-    //    void calibration(bool waitUntilTheEnd = true) {
-    //      xSemaphoreTake(calibrationEndSemaphore, 0); //< 前のキャリブレーションの終了を待つ
-    //      xSemaphoreGive(calibrationStartSemaphore);
-    //      if (waitUntilTheEnd) calibrationWait();
-    //    }
-    //    void calibrationWait() {
-    //      xSemaphoreTake(calibrationEndSemaphore, portMAX_DELAY);
-    //    }
     void calibrationSide() {
       xSemaphoreTake(calibrationEndSemaphore, 0); //< 前のキャリブレーションの終了を待つ
       xSemaphoreGive(calibrationStartSemaphore);
@@ -87,10 +80,6 @@ class WallDetector {
         delay(1);
       }
       for (int i = 0; i < 2; i++) wall_ref.side[i] = sum[i] / ave_count;
-      //      for (int i = 0; i < 2; i++) wall_ref.front[i] =  WALL_DETECTOR_FLONT_RATIO * (wall_ref.side[0] + wall_ref.side[1]) / 2;
-      //      wall_ref.front[0] += 4;
-      //      wall_ref.front[1] -= 4;
-      //      printf("Wall Calibration Side:\t%04d\t%04d\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.front[0], (int) wall_ref.front[1], (int) wall_ref.side[1]);
       printf("Wall Calibration Side:\t%04d\t%04d\n", (int) wall_ref.side[0], (int) wall_ref.side[1]);
     }
     void calibration_front() {
@@ -108,19 +97,19 @@ class WallDetector {
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
-        const int threshold_front = 120;
-        if (tof.getDistance() < threshold_front * 0.95f) wall[2] = true;
-        else if (tof.getDistance() > threshold_front * 1.05f) wall[2] = false;
+        // detect front wall
+        if (tof.getDistance() < WALL_DETECTOR_THRESHOLD_FRONT * 0.95f) wall[2] = true;
+        else if (tof.getDistance() > WALL_DETECTOR_THRESHOLD_FRONT * 1.05f) wall[2] = false;
 
-        const int threshold_side = 60;
+        // detect side wall
         for (int i = 0; i < 2; i++) {
           for (int j = ave_num - 1; j > 0; j--) side_buf[j][i] = side_buf[j - 1][i];
           side_buf[0][i] = ref.side(i);
           int sum = 0;
           for (int j = 0; j < ave_num; j++) sum += side_buf[j][i];
           sum /= ave_num;
-          if (sum > threshold_side * 1.1f) wall[i] = true;
-          else if (sum < threshold_side * 0.9f) wall[i] = false;
+          if (sum > WALL_DETECTOR_THRESHOLD_SIDE * 1.1f) wall[i] = true;
+          else if (sum < WALL_DETECTOR_THRESHOLD_SIDE * 0.9f) wall[i] = false;
         }
 
         for (int i = 0; i < 2; i++) {

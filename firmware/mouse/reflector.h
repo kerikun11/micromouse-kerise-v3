@@ -18,8 +18,6 @@ class Reflector {
         pinMode(tx_pins[i], OUTPUT);
       }
       analogSetCycles(2);
-      //      oneshotStartSemaphore = xSemaphoreCreateBinary();
-      //      oneshotEndSemaphore = xSemaphoreCreateBinary();
       if (task_handle == NULL) {
         xTaskCreatePinnedToCore([](void* obj) {
           static_cast<Reflector*>(obj)->task();
@@ -41,28 +39,14 @@ class Reflector {
       }
       return value[ch];
     }
-    //    void oneshot() {
-    //      xSemaphoreGive(oneshotStartSemaphore);
-    //      xSemaphoreTake(oneshotEndSemaphore, portMAX_DELAY);
-    //    }
-    //    int16_t getOneshotValue(const int ch) const {
-    //      if (ch < 0 || ch >= REFLECTOR_CH_SIZE) {
-    //        log_e("you refered an invalid channel!");
-    //        return 0;
-    //      }
-    //      return value_oneshot[ch];
-    //    }
     void csv() const {
       printf("0,900");
       for (int i = 0; i < REFLECTOR_CH_SIZE; i++) printf(",%d", value[i]);
-      //      for (int i = 0; i < REFLECTOR_CH_SIZE; i++) printf(",%d", value_oneshot[i]);
       printf("\n");
     }
     void print() const {
       printf("Reflector: ");
       for (int i = 0; i < REFLECTOR_CH_SIZE; i++) printf("\t%04d", value[i]);
-      //      printf("\tOneshot:");
-      //      for (int i = 0; i < REFLECTOR_CH_SIZE; i++) printf("\t%04d", value_oneshot[i]);
       printf("\n");
     }
   private:
@@ -72,10 +56,7 @@ class Reflector {
     const std::array<int, REFLECTOR_CH_SIZE> tx_pins;
     const std::array<int, REFLECTOR_CH_SIZE> rx_pins;
     int16_t value[REFLECTOR_CH_SIZE];
-    //    int16_t value_oneshot[REFLECTOR_CH_SIZE];
     int16_t offset[REFLECTOR_CH_SIZE];
-    //    SemaphoreHandle_t oneshotStartSemaphore;
-    //    SemaphoreHandle_t oneshotEndSemaphore;
 
     void calibration() {
       printf("Reflector Offset: ");
@@ -125,19 +106,6 @@ class Reflector {
           }
           value[i] = sum / ave_num;
         }
-        //        // oneshotが要求されていれば実行
-        //        if (xSemaphoreTake(oneshotStartSemaphore, 0) == pdTRUE) {
-        //          for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
-        //            digitalWrite(tx_pins[i], LOW);
-        //            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); // 充電時間
-        //            digitalWrite(tx_pins[i], HIGH);
-        //            const int sample_wait_us = 10;
-        //            delayMicroseconds(sample_wait_us); // 波形がピークになるまで待つ
-        //            int temp = offset[i] - analogRead(rx_pins[i]);
-        //            value_oneshot[i] = (temp < 0) ? 1 : temp;
-        //          }
-        //          xSemaphoreGive(oneshotEndSemaphore);
-        //        }
       }
     }
 };

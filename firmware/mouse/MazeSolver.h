@@ -7,13 +7,6 @@
 #include "Maze.h"
 #include "Agent.h"
 
-#include "encoder.h"
-#include "UserInterface.h"
-#include "Emergency.h"
-#include "logger.h"
-#include "motor.h"
-#include "imu.h"
-#include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "SearchRun.h"
