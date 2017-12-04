@@ -6,7 +6,7 @@
 
 #include "UserInterface.h"
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "encoder.h"
 #include "reflector.h"
 #include "WallDetector.h"
@@ -34,12 +34,12 @@ class ExternalController: TaskBase {
           switch (c) {
             case 't':
               bz.play(Buzzer::CONFIRM);
-              axis.calibration();
+              imu.calibration();
               //              wd.calibration();
               break;
             case 'p':
               tof.print();
-              axis.print();
+              imu.print();
               ref.print();
               wd.print();
               break;

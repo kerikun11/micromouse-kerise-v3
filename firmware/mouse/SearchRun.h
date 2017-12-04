@@ -8,7 +8,7 @@
 #include "logger.h"
 #include "encoder.h"
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -320,7 +320,7 @@ class SearchRun: TaskBase {
       sc.enable(true);
     }
     void uturn() {
-      if (axis.angle.z > 0) {
+      if (imu.angle.z > 0) {
         wall_attach();
         turn(-M_PI / 2);
         wall_attach();

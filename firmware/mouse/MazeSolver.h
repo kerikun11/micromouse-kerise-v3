@@ -13,7 +13,7 @@
 #include "debug.h"
 #include "logger.h"
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "reflector.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
@@ -259,7 +259,7 @@ class MazeSolver: TaskBase {
 
       // start drive
       bz.play(Buzzer::CONFIRM);
-      axis.calibration();
+      imu.calibration();
       fr.enable();
       fr.waitForEnd();
       fr.disable();
@@ -318,7 +318,7 @@ class MazeSolver: TaskBase {
     void readyToStartWait(const int wait_ms = 3000) {
       for (int ms = 0; ms < wait_ms; ms++) {
         delay(1);
-        if (fabs(axis.accel.z) > 9800 * 1) {
+        if (fabs(imu.accel.z) > 9800 * 1) {
           bz.play(Buzzer::CANCEL);
           while (1) delay(1000);
         }
@@ -326,9 +326,9 @@ class MazeSolver: TaskBase {
     }
     virtual void task() {
       bz.play(Buzzer::CONFIRM);
-      axis.calibration(false);
+      imu.calibration(false);
       //      wd.calibration();
-      axis.calibrationWait();
+      imu.calibrationWait();
       bz.play(Buzzer::CANCEL);
 
       maze = maze_backup.back();
@@ -356,7 +356,7 @@ class MazeSolver: TaskBase {
         fr.runParameter.decel *= 1.05f;
         readyToStartWait();
         bz.play(Buzzer::CONFIRM);
-        axis.calibration();
+        imu.calibration();
         bz.play(Buzzer::CANCEL);
       }
     }

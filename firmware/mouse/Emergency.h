@@ -6,7 +6,7 @@
 
 #include "UserInterface.h"
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "MazeSolver.h"
 #include "SearchRun.h"
 #include "FastRun.h"
@@ -26,7 +26,7 @@ class Emergency: TaskBase {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-        if (fabs(axis.accel.y) > 9800 * 12 || fabs(axis.gyro.z) > 11 * PI) {
+        if (fabs(imu.accel.y) > 9800 * 12 || fabs(imu.gyro.z) > 11 * PI) {
           mt.emergency_stop();
           fan.drive(0);
           bz.play(Buzzer::EMERGENCY);

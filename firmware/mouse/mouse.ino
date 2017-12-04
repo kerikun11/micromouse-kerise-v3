@@ -14,7 +14,7 @@ Preferences pref;
 /* Hardware */
 #include "UserInterface.h"
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "encoder.h"
 #include "reflector.h"
 #include "tof.h"
@@ -23,27 +23,27 @@ Button btn(BUTTON_PIN);
 LED led(LED_PINS);
 Motor mt;
 Fan fan;
-Axis axis;
+IMU imu;
 Encoder enc;
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
 ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
+#include "SpeedController.h"
+#include "WallDetector.h"
 #include "Emergency.h"
 #include "debug.h"
 #include "logger.h"
 //#include "BLETransmitter.h"
-#include "WallDetector.h"
-#include "SpeedController.h"
 #include "SearchRun.h"
 #include "FastRun.h"
 #include "MazeSolver.h"
+SpeedController sc;
+WallDetector wd;
 Emergency em;
 ExternalController ec;
 Logger lg;
 //BLETransmitter ble;
-WallDetector wd;
-SpeedController sc;
 SearchRun sr;
 FastRun fr;
 MazeSolver ms;
@@ -61,26 +61,22 @@ void task(void* arg) {
     //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
-    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 10);
+    //    printf("0,%f,%f,%f\n", PI, -PI, imu.gyro.z * 10);
   }
 }
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  //  Serial.begin(115200);
   Serial.begin(2000000);
-  pinMode(RX, INPUT_PULLUP);
   printf("\n************ KERISE v3-2 ************\n");
-  led = 0xf;
   batteryCheck();
   bz.play(Buzzer::BOOT);
-  log_i("tskNO_AFFINITY => %d", tskNO_AFFINITY);
 
   pref.begin("mouse", false);
   restore();
 
   if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
-  axis.begin(true);
+  imu.begin(true);
   enc.begin(false);
   ref.begin();
   if (!tof.begin()) bz.play(Buzzer::ERROR);
@@ -128,7 +124,7 @@ void position_test() {
   if (!waitForCover()) return;
   delay(1000);
   bz.play(Buzzer::SELECT);
-  axis.calibration();
+  imu.calibration();
   bz.play(Buzzer::CANCEL);
   sc.enable();
   sc.set_target(0, 0);
@@ -137,7 +133,7 @@ void position_test() {
 void trapizoid_test() {
   if (!waitForCover()) return;
   delay(1000);
-  axis.calibration();
+  imu.calibration();
   fan.drive(0.5);
   delay(500);
   lg.start();
@@ -171,7 +167,7 @@ void straight_test() {
   if (!waitForCover()) return;
   delay(1000);
   bz.play(Buzzer::SELECT);
-  axis.calibration();
+  imu.calibration();
   sc.enable();
   fan.drive(0.3);
   delay(500);
@@ -185,7 +181,7 @@ void straight_test() {
 void turn_test() {
   if (!waitForCover()) return;
   delay(1000);
-  axis.calibration();
+  imu.calibration();
   bz.play(Buzzer::CONFIRM);
   lg.start();
   sc.enable();
@@ -341,7 +337,7 @@ void normal_drive() {
       if (!waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
-      axis.calibration();
+      imu.calibration();
       bz.play(Buzzer::CANCEL);
       sc.enable();
       straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);

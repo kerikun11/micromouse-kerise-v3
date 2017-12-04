@@ -10,7 +10,7 @@ extern Preferences pref;
 /* Hardware */
 #include "UserInterface.h"
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "encoder.h"
 #include "reflector.h"
 #include "tof.h"
@@ -170,7 +170,7 @@ bool waitForFix() {
   int fix_count = 0;
   while (1) {
     delay(1);
-    if (fabs(axis.gyro.x) < 0.01f * PI && fabs(axis.gyro.y) < 0.01f * PI && fabs(axis.gyro.z) < 0.01f * PI) {
+    if (fabs(imu.gyro.x) < 0.01f * PI && fabs(imu.gyro.y) < 0.01f * PI && fabs(imu.gyro.z) < 0.01f * PI) {
       if (fix_count++ > 1000) {
         bz.play(Buzzer::CONFIRM);
         log_i("waitForFix() => true");

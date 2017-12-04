@@ -11,9 +11,9 @@
 #define ICM20602_ACCEL_FACTOR 2048.0f
 #define ICM20602_GYRO_FACTOR  16.4f
 
-class Axis {
+class IMU {
   public:
-    Axis() {}
+    IMU() {}
     void begin(bool spi_initializing) {
       if (spi_initializing) {
         // ESP-IDF SPI bus initialization
@@ -38,8 +38,8 @@ class Axis {
       calibration_end_semaphore = xSemaphoreCreateBinary();
       // sampling task execution
       xTaskCreate([](void* obj) {
-        static_cast<Axis*>(obj)->task();
-      }, "Axis", AXIS_TASK_STACK_SIZE, this, AXIS_TASK_PRIORITY, &task_handle);
+        static_cast<IMU*>(obj)->task();
+      }, "IMU", AXIS_TASK_STACK_SIZE, this, AXIS_TASK_PRIORITY, &task_handle);
     }
     struct MotionParameter {
       float x, y, z;
@@ -182,5 +182,5 @@ class Axis {
     }
 };
 
-extern Axis axis;
+extern IMU imu;
 

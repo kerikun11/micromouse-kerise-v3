@@ -4,7 +4,7 @@
 #include <deque>
 
 #include "motor.h"
-#include "axis.h"
+#include "imu.h"
 #include "encoder.h"
 
 class Position {
@@ -174,8 +174,8 @@ class SpeedController {
           accel[j] = accel[j - 1];
           gyro[j] = gyro[j - 1];
         }
-        accel[0] = axis.accel.y;
-        gyro[0] = axis.gyro.z;
+        accel[0] = imu.accel.y;
+        gyro[0] = imu.gyro.z;
         float sum_accel = 0.0f;
         for (int j = 0; j < ave_num - 1; j++) sum_accel += accel[j];
         for (int i = 0; i < 2; i++) {
@@ -184,10 +184,10 @@ class SpeedController {
           enconly.wheel[i] = (wheel_position[0][i] - wheel_position[1][i]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
         }
         enconly.wheel2pole();
-        //        enconly.rot = axis.gyro.z;
+        //        enconly.rot = imu.gyro.z;
         //        enconly.pole2wheel();
         actual.wheel2pole();
-        actual.rot = axis.gyro.z;
+        actual.rot = imu.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
           integral.wheel[i] += (target.wheel[i] - actual.wheel[i]) * SPEED_CONTROLLER_PERIOD_US / 1000000;

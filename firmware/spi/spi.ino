@@ -26,10 +26,10 @@
 #define MACHINE_WHEEL_DIAMETER  13.28f
 #define MACHINE_TAIL_LENGTH     18.4f
 
-#include "axis.h"
+#include "imu.h"
 #include "encoder.h"
 
-Axis axis;
+IMU imu;
 Encoder enc;
 
 void batteryCheck() {
@@ -53,10 +53,10 @@ void setup() {
   log_i("KERISE v3-2");
   batteryCheck();
 
-  axis.begin(true);
+  imu.begin(true);
   enc.begin(false);
   //  delay(2000);
-  //  axis.calibration();
+  //  imu.calibration();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
 }
 
@@ -66,20 +66,20 @@ void task(void* arg) {
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
     //    enc.csv();
-    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 1000);
-    //    printf("0,%f,%f,%f,%f,%f\n", 9806.65f, -9806.65f, axis.accel.x, axis.accel.y, axis.accel.z);
-    //    printf("0,%f,%f,%f\n", PI, -PI, axis.gyro.z * 100);
+    //    printf("0,%f,%f,%f\n", PI, -PI, imu.gyro.z * 1000);
+    //    printf("0,%f,%f,%f,%f,%f\n", 9806.65f, -9806.65f, imu.accel.x, imu.accel.y, imu.accel.z);
+    //    printf("0,%f,%f,%f\n", PI, -PI, imu.gyro.z * 100);
   }
 }
 
 void loop() {
-  axis.print();
+  imu.print();
   //  enc.print();
   delay(100);
   if (Serial.available()) {
     switch (Serial.read()) {
       case 't':
-        axis.calibration();
+        imu.calibration();
         break;
       default:
         break;
