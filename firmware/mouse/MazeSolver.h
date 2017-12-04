@@ -7,6 +7,7 @@
 #include "Maze.h"
 #include "Agent.h"
 
+#include "Logger.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 #include "SearchRun.h"

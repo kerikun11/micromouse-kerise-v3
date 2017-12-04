@@ -5,11 +5,11 @@
 #include <queue>
 #include "TaskBase.h"
 #include "config.h"
-#include "logger.h"
 #include "encoder.h"
 #include "motor.h"
 #include "imu.h"
 #include "reflector.h"
+#include "Logger.h"
 #include "WallDetector.h"
 #include "SpeedController.h"
 

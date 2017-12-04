@@ -28,16 +28,18 @@ Reflector ref(PR_TX_PINS, PR_RX_PINS);
 ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 
 /* Software */
+#include "UserInterface.h"
 #include "SpeedController.h"
 #include "WallDetector.h"
 #include "Emergency.h"
 #include "ExternalController.h"
-#include "logger.h"
+#include "Logger.h"
 #include "DataSaver.h"
 //#include "BLETransmitter.h"
 #include "SearchRun.h"
 #include "FastRun.h"
 #include "MazeSolver.h"
+UserInterface ui;
 SpeedController sc;
 WallDetector wd;
 Emergency em;
@@ -48,8 +50,6 @@ DataSaver ds;
 SearchRun sr;
 FastRun fr;
 MazeSolver ms;
-
-#include "utils.h"
 
 //#define printf lg.printf
 
@@ -70,13 +70,11 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(2000000);
   printf("\n************ KERISE v3-2 ************\n");
-  batteryCheck();
+  ui.batteryCheck();
   bz.play(Buzzer::BOOT);
 
   if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
-  ds.begin();
-  ds.restore();
-
+  ds.begin(); ds.restore();
   imu.begin(true);
   enc.begin(false);
   ref.begin();
@@ -86,7 +84,7 @@ void setup() {
   ec.begin();
   //  ble.begin();
 
-  xTaskCreate(task, "test", 4096, NULL, 0, NULL);
+  xTaskCreate(task, "test", 4096, NULL, 0, NULL); // debug output
 }
 
 const int searchig_time_ms = 6 * 60 * 1000;
@@ -108,9 +106,8 @@ void loop() {
     timeup = true;
     bz.play(Buzzer::LOW_BATTERY);
     ms.forceBackToStart();
-    //    ms.terminate();
   }
-  delay(10);
+  delay(1);
 }
 
 void task() {
@@ -121,8 +118,162 @@ void task() {
   //  turn_test();
 }
 
+void normal_drive() {
+  if (ms.isRunning()) ms.terminate();
+  int mode = ui.waitForSelect(13);
+  switch (mode) {
+    //* 走行
+    case 0:
+      if (!ui.waitForCover()) {
+        bz.play(Buzzer::SUCCESSFUL);
+        if (!ui.waitForCover()) return;
+        led = 9;
+        ms.start(true);
+      } else {
+        led = 9;
+        ms.start();
+      }
+      break;
+    //* 走行パラメータの選択 & 走行
+    case 1: {
+        int preset = ui.waitForSelect(16);
+        if (preset < 0) break;
+        switch (preset) {
+          case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 3000); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 3600); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 4500); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2700, 12000, 6000); break;
+
+          case 4:  fr.runParameter = FastRun::RunParameter(0.9,  900, 6000, 3000); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.9, 1200, 7200, 3600); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1800, 9000, 4500); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2700, 12000, 6000); break;
+
+          case 8:  fr.runParameter = FastRun::RunParameter(1.0,  900, 6000, 3000); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(1.0, 1200, 7200, 3600); break;
+          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 4500); break;
+          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2700, 12000, 6000); break;
+
+          case 12: fr.runParameter = FastRun::RunParameter(1.1,  900, 6000, 3000); break;
+          case 13: fr.runParameter = FastRun::RunParameter(1.1, 1200, 7200, 3600); break;
+          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1800, 9000, 4500); break;
+          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2700, 12000, 6000); break;
+        }
+      }
+      if (!ui.waitForCover()) return;
+      led = 9;
+      ms.start();
+      break;
+    //* 速度の設定
+    case 2: {
+        bz.play(Buzzer::SELECT);
+        int value;
+        value = ui.waitForSelect(16);
+        if (value < 0) return;
+        const float curve_gain = 0.1f * value;
+        value = ui.waitForSelect(16);
+        if (value < 0) return;
+        const float v_max = 300.0f * value;
+        value = ui.waitForSelect(16);
+        if (value < 0) return;
+        const float accel = 600.0f * value;
+        fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel / 2);
+        bz.play(Buzzer::SUCCESSFUL);
+        if (!ui.waitForCover()) return;
+        led = 9;
+        ms.start();
+      }
+      break;
+    //* 壁制御の設定
+    case 3: {
+        int value = ui.waitForSelect(16);
+        if (value < 0) return;
+        if (!ui.waitForCover()) return;
+        fr.wallAvoidFlag = value & 0x01;
+        fr.wallAvoid45Flag = value & 0x02;
+        fr.wallCutFlag = value & 0x04;
+        fr.V90Enabled = value & 0x08;
+        bz.play(Buzzer::SUCCESSFUL);
+      }
+      break;
+    //* ファンの設定
+    case 4: {
+        fan.drive(fr.fanDuty);
+        ui.waitForSelect(1);
+        fan.drive(0);
+        int value = ui.waitForSelect(11);
+        if (value < 0) return;
+        if (!ui.waitForCover()) return;
+        fr.fanDuty = 0.1f * value;
+        bz.play(Buzzer::SUCCESSFUL);
+      }
+      break;
+    //* 迷路データの復元
+    case 7:
+      bz.play(Buzzer::MAZE_RESTORE);
+      if (!ui.waitForCover()) return;
+      if (ms.restore()) {
+        bz.play(Buzzer::SUCCESSFUL);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    //* 前壁キャリブレーション
+    case 8:
+      if (!ui.waitForCover(true)) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibrationFront();
+      bz.play(Buzzer::CANCEL);
+      break;
+    //* 横壁キャリブレーション
+    case 9:
+      if (!ui.waitForCover()) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      wd.calibrationSide();
+      bz.play(Buzzer::CANCEL);
+      break;
+    //* 前壁補正データの保存
+    case 10:
+      if (!ui.waitForCover()) return;
+      if (ds.backup()) {
+        bz.play(Buzzer::SUCCESSFUL);
+      } else {
+        bz.play(Buzzer::ERROR);
+      }
+      break;
+    //* ゴール区画の設定
+    case 11: {
+        for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
+        int value = ui.waitForSelect(4);
+        if (value < 0) return;
+        if (!ui.waitForCover()) return;
+        switch (value) {
+          case 0: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(4, 6), Vector(5, 4), Vector(5, 5), Vector(5, 6), Vector(6, 4), Vector(6, 5), Vector(6, 6)}); break;
+          case 1: ms.set_goal({Vector(1, 0)}); break;
+          case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
+          case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
+        }
+        bz.play(Buzzer::SUCCESSFUL);
+      }
+      break;
+    //* マス直線
+    case 12:
+      if (!ui.waitForCover(true)) return;
+      delay(1000);
+      bz.play(Buzzer::CONFIRM);
+      imu.calibration();
+      bz.play(Buzzer::CANCEL);
+      sc.enable();
+      straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
+      sc.disable();
+      break;
+  }
+}
+
 void position_test() {
-  if (!waitForCover()) return;
+  if (!ui.waitForCover()) return;
   delay(1000);
   bz.play(Buzzer::SELECT);
   imu.calibration();
@@ -132,7 +283,7 @@ void position_test() {
 }
 
 void trapizoid_test() {
-  if (!waitForCover()) return;
+  if (!ui.waitForCover()) return;
   delay(1000);
   imu.calibration();
   fan.drive(0.5);
@@ -165,7 +316,7 @@ void trapizoid_test() {
 }
 
 void straight_test() {
-  if (!waitForCover()) return;
+  if (!ui.waitForCover()) return;
   delay(1000);
   bz.play(Buzzer::SELECT);
   imu.calibration();
@@ -180,7 +331,7 @@ void straight_test() {
 }
 
 void turn_test() {
-  if (!waitForCover()) return;
+  if (!ui.waitForCover()) return;
   delay(1000);
   imu.calibration();
   bz.play(Buzzer::CONFIRM);
@@ -193,157 +344,69 @@ void turn_test() {
   lg.end();
 }
 
-void normal_drive() {
-  if (ms.isRunning()) ms.terminate();
-  int mode = waitForSelect(13);
-  switch (mode) {
-    //* 走行
-    case 0:
-      if (!waitForCover()) {
-        bz.play(Buzzer::SUCCESSFUL);
-        if (!waitForCover()) return;
-        led = 9;
-        ms.start(true);
-      } else {
-        led = 9;
-        ms.start();
-      }
-      break;
-    //* 走行パラメータの選択 & 走行
-    case 1: {
-        int preset = waitForSelect(16);
-        if (preset < 0) break;
-        switch (preset) {
-          case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 3000); break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 3600); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 4500); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2700, 12000, 6000); break;
+#define TEST_LOOK_AHEAD 12
+#define TEST_PROP_GAIN  20
 
-          case 4:  fr.runParameter = FastRun::RunParameter(0.9,  900, 6000, 3000); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.9, 1200, 7200, 3600); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1800, 9000, 4500); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2700, 12000, 6000); break;
-
-          case 8:  fr.runParameter = FastRun::RunParameter(1.0,  900, 6000, 3000); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(1.0, 1200, 7200, 3600); break;
-          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 4500); break;
-          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2700, 12000, 6000); break;
-
-          case 12: fr.runParameter = FastRun::RunParameter(1.1,  900, 6000, 3000); break;
-          case 13: fr.runParameter = FastRun::RunParameter(1.1, 1200, 7200, 3600); break;
-          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1800, 9000, 4500); break;
-          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2700, 12000, 6000); break;
-        }
-      }
-      if (!waitForCover()) return;
-      led = 9;
-      ms.start();
-      break;
-    //* 速度の設定
-    case 2: {
-        bz.play(Buzzer::SELECT);
-        int value;
-        value = waitForSelect(16);
-        if (value < 0) return;
-        const float curve_gain = 0.1f * value;
-        value = waitForSelect(16);
-        if (value < 0) return;
-        const float v_max = 300.0f * value;
-        value = waitForSelect(16);
-        if (value < 0) return;
-        const float accel = 600.0f * value;
-        fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel / 2);
-        bz.play(Buzzer::SUCCESSFUL);
-        if (!waitForCover()) return;
-        led = 9;
-        ms.start();
-      }
-      break;
-    //* 壁制御の設定
-    case 3: {
-        int value = waitForSelect(16);
-        if (value < 0) return;
-        if (!waitForCover()) return;
-        fr.wallAvoidFlag = value & 0x01;
-        fr.wallAvoid45Flag = value & 0x02;
-        fr.wallCutFlag = value & 0x04;
-        fr.V90Enabled = value & 0x08;
-        bz.play(Buzzer::SUCCESSFUL);
-      }
-      break;
-    //* ファンの設定
-    case 4: {
-        fan.drive(fr.fanDuty);
-        waitForSelect(1);
-        fan.drive(0);
-        int value = waitForSelect(11);
-        if (value < 0) return;
-        if (!waitForCover()) return;
-        fr.fanDuty = 0.1f * value;
-        bz.play(Buzzer::SUCCESSFUL);
-      }
-      break;
-    //* 迷路データの復元
-    case 7:
-      bz.play(Buzzer::MAZE_RESTORE);
-      if (!waitForCover()) return;
-      if (ms.restore()) {
-        bz.play(Buzzer::SUCCESSFUL);
-      } else {
-        bz.play(Buzzer::ERROR);
-      }
-      break;
-    //* 前壁キャリブレーション
-    case 8:
-      if (!waitForCover(true)) return;
-      delay(1000);
-      bz.play(Buzzer::CONFIRM);
-      wd.calibrationFront();
-      bz.play(Buzzer::CANCEL);
-      break;
-    //* 横壁キャリブレーション
-    case 9:
-      if (!waitForCover()) return;
-      delay(1000);
-      bz.play(Buzzer::CONFIRM);
-      wd.calibrationSide();
-      bz.play(Buzzer::CANCEL);
-      break;
-    //* 前壁補正データの保存
-    case 10:
-      if (!waitForCover()) return;
-      if (ds.backup()) {
-        bz.play(Buzzer::SUCCESSFUL);
-      } else {
-        bz.play(Buzzer::ERROR);
-      }
-      break;
-    //* ゴール区画の設定
-    case 11: {
-        for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
-        int value = waitForSelect(4);
-        if (value < 0) return;
-        if (!waitForCover()) return;
-        switch (value) {
-          case 0: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(4, 6), Vector(5, 4), Vector(5, 5), Vector(5, 6), Vector(6, 4), Vector(6, 5), Vector(6, 6)}); break;
-          case 1: ms.set_goal({Vector(1, 0)}); break;
-          case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
-          case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
-        }
-        bz.play(Buzzer::SUCCESSFUL);
-      }
-      break;
-    //* マス直線
-    case 12:
-      if (!waitForCover(true)) return;
-      delay(1000);
-      bz.play(Buzzer::CONFIRM);
-      imu.calibration();
-      bz.play(Buzzer::CANCEL);
-      sc.enable();
-      straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
-      sc.disable();
-      break;
+void straight_x(const float distance, const float v_max, const float v_end) {
+  const float accel = 1500;
+  const float decel = 1200;
+  int ms = 0;
+  const float v_start = sc.actual.trans;
+  const float T = 1.5f * (v_max - v_start) / accel;
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    Position cur = sc.position;
+    if (v_end >= 1.0f && cur.x > distance - TEST_LOOK_AHEAD) break;
+    if (v_end < 1.0f && cur.x > distance - 1.0f) break;
+    float extra = distance - cur.x;
+    float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
+    float velocity_d = sqrt(2 * decel * fabs(extra) + v_end * v_end);
+    float velocity = v_max;
+    if (velocity > velocity_d) velocity = velocity_d;
+    if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
+    float theta = atan2f(-cur.y, TEST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
+    sc.set_target(velocity, TEST_PROP_GAIN * theta);
+    //    if (avoid) wall_avoid();
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    ms++;
+    printf("%f\t[%c %c]\n", cur.x + 6 + MACHINE_TAIL_LENGTH, wd.wall[0] ? 'X' : '_', wd.wall[1] ? 'X' : '_');
   }
+  sc.set_target(v_end, 0);
+}
+
+void turn(const float angle) {
+  const float speed = 3 * M_PI;
+  const float accel = 36 * M_PI;
+  const float decel = 12 * M_PI;
+  const float back_gain = 5.0f;
+  int ms = 0;
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  while (1) {
+    if (fabs(sc.actual.rot) > speed) break;
+    float delta = sc.position.x * cos(-sc.position.theta) - sc.position.y * sin(-sc.position.theta);
+    if (angle > 0) {
+      sc.set_target(-delta * back_gain, ms / 1000.0f * accel);
+    } else {
+      sc.set_target(-delta * back_gain, -ms / 1000.0f * accel);
+    }
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    ms++;
+  }
+  while (1) {
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    float extra = angle - sc.position.theta;
+    if (fabs(sc.actual.rot) < 0.1 && fabs(extra) < 0.1) break;
+    float target_speed = sqrt(2 * decel * fabs(extra));
+    float delta = sc.position.x * cos(-sc.position.theta) - sc.position.y * sin(-sc.position.theta);
+    target_speed = (target_speed > speed) ? speed : target_speed;
+    if (extra > 0) {
+      sc.set_target(-delta * back_gain, target_speed);
+    } else {
+      sc.set_target(-delta * back_gain, -target_speed);
+    }
+  }
+  sc.set_target(0, 0);
+  //  updateOrigin(Position(0, 0, angle));
+  //  printPosition("Turn End");
 }
 
