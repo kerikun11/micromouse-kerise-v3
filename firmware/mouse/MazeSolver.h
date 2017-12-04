@@ -10,7 +10,6 @@
 #include "encoder.h"
 #include "UserInterface.h"
 #include "Emergency.h"
-#include "debug.h"
 #include "logger.h"
 #include "motor.h"
 #include "imu.h"

@@ -17,7 +17,6 @@ extern Preferences pref;
 
 /* Software */
 #include "Emergency.h"
-#include "debug.h"
 #include "logger.h"
 //#include "BLETransmitter.h"
 #include "WallDetector.h"

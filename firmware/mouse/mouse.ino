@@ -32,7 +32,7 @@ ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 #include "SpeedController.h"
 #include "WallDetector.h"
 #include "Emergency.h"
-#include "debug.h"
+#include "ExternalController.h"
 #include "logger.h"
 //#include "BLETransmitter.h"
 #include "SearchRun.h"
