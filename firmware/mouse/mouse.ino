@@ -139,25 +139,25 @@ void normal_drive() {
         int preset = ui.waitForSelect(16);
         if (preset < 0) break;
         switch (preset) {
-          case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 3000); break;
-          case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 3600); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 4500); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2700, 12000, 6000); break;
+          case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 6000); break;
+          case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 7200); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 9000); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2700, 12000, 12000); break;
 
-          case 4:  fr.runParameter = FastRun::RunParameter(0.9,  900, 6000, 3000); break;
-          case 5:  fr.runParameter = FastRun::RunParameter(0.9, 1200, 7200, 3600); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1800, 9000, 4500); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2700, 12000, 6000); break;
+          case 4:  fr.runParameter = FastRun::RunParameter(0.9,  900, 6000, 6000); break;
+          case 5:  fr.runParameter = FastRun::RunParameter(0.9, 1200, 7200, 7200); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1800, 9000, 9000); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2700, 12000, 12000); break;
 
-          case 8:  fr.runParameter = FastRun::RunParameter(1.0,  900, 6000, 3000); break;
-          case 9:  fr.runParameter = FastRun::RunParameter(1.0, 1200, 7200, 3600); break;
-          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 4500); break;
-          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2700, 12000, 6000); break;
+          case 8:  fr.runParameter = FastRun::RunParameter(1.0,  900, 6000, 6000); break;
+          case 9:  fr.runParameter = FastRun::RunParameter(1.0, 1200, 7200, 7200); break;
+          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 9000); break;
+          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2700, 12000, 12000); break;
 
-          case 12: fr.runParameter = FastRun::RunParameter(1.1,  900, 6000, 3000); break;
-          case 13: fr.runParameter = FastRun::RunParameter(1.1, 1200, 7200, 3600); break;
-          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1800, 9000, 4500); break;
-          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2700, 12000, 6000); break;
+          case 12: fr.runParameter = FastRun::RunParameter(1.1,  900, 6000, 6000); break;
+          case 13: fr.runParameter = FastRun::RunParameter(1.1, 1200, 7200, 7200); break;
+          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1800, 9000, 9000); break;
+          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2700, 12000, 12000); break;
         }
       }
       if (!ui.waitForCover()) return;
@@ -177,7 +177,7 @@ void normal_drive() {
         value = ui.waitForSelect(16);
         if (value < 0) return;
         const float accel = 600.0f * value;
-        fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel / 2);
+        fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel);
         bz.play(Buzzer::SUCCESSFUL);
         if (!ui.waitForCover()) return;
         led = 9;

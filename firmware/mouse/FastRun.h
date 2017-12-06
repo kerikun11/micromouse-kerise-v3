@@ -15,14 +15,11 @@
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
-
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_END_REMAIN         6
-
-#define FAST_LOOK_AHEAD(v)      (6+10*v/100)
-#define FAST_STRAIGHT_FB_GAIN   30
-
+#define FAST_ST_LOOK_AHEAD(v)   (6+10*v/100)
+#define FAST_ST_FB_GAIN         30
 #define FAST_CURVE_FB_GAIN      3.0f
 
 //#define printf  lg.printf
@@ -285,7 +282,7 @@ class FastRun: TaskBase {
       FAST_TURN_RIGHT_180 = 'U',
     };
     struct RunParameter {
-      RunParameter(const float curve_gain = 0.8, const float max_speed = 1200, const float accel = 6000, const float decel = 3000): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
+      RunParameter(const float curve_gain = 0.8, const float max_speed = 1200, const float accel = 6000, const float decel = 6000): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
       float curve_gain;
       float max_speed;
       float accel, decel;
@@ -352,8 +349,8 @@ class FastRun: TaskBase {
     void wallAvoid() {
       // 90 [deg] の倍数
       if (wallAvoidFlag && (int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
-        const float gain = 0.0004f;
-        const float satu = 0.2f;
+        const float gain = 0.0003f;
+        const float satu = 0.3f;
         if (ref.side(0) > 60) sc.position += Position(0, std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu), 0).rotate(origin.theta);
         if (ref.side(1) > 60) sc.position -= Position(0, std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu), 0).rotate(origin.theta);
         led = 9;
@@ -411,9 +408,8 @@ class FastRun: TaskBase {
         float velocity = v_max;
         if (velocity > velocity_d) velocity = velocity_d;
         if (ms / 1000.0f < T && velocity > velocity_a) velocity = velocity_a;
-        //        int look_ahead = FAST_STRAIGHT_GAIN * (0.5f + velocity / 300);
-        float theta = atan2f(-cur.y, FAST_LOOK_AHEAD(velocity)) - cur.theta;
-        sc.set_target(velocity, FAST_STRAIGHT_FB_GAIN * theta);
+        float theta = atan2f(-cur.y, FAST_ST_LOOK_AHEAD(velocity)) - cur.theta;
+        sc.set_target(velocity, FAST_ST_FB_GAIN * theta);
         wallAvoid();
         wallCut();
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
