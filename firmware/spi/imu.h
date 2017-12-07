@@ -14,7 +14,7 @@
 class IMU {
   public:
     IMU() {}
-    void begin(bool spi_initializing) {
+    bool begin(bool spi_initializing) {
       if (spi_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
@@ -33,6 +33,8 @@ class IMU {
       device_cfg.spics_io_num = ICM20602_CS_PIN;
       device_cfg.queue_size = 1;
       ESP_ERROR_CHECK(spi_bus_add_device(ICM20602_SPI_HOST, &device_cfg, &spi_handle));
+      // Who am I check
+      if (!whoami()) return false;
       // calibration semaphore
       calibration_start_semaphore = xSemaphoreCreateBinary();
       calibration_end_semaphore = xSemaphoreCreateBinary();
@@ -40,6 +42,7 @@ class IMU {
       xTaskCreate([](void* obj) {
         static_cast<IMU*>(obj)->task();
       }, "IMU", AXIS_TASK_STACK_SIZE, this, AXIS_TASK_PRIORITY, &task_handle);
+      return true;
     }
     struct MotionParameter {
       float x, y, z;
@@ -119,18 +122,21 @@ class IMU {
         }
       }
     }
+    bool whoami() {
+      if (readReg(117) != 0x12) {
+        log_e("whoami failed:(");
+        return false;
+      }
+      return true;
+    }
     void reset() {
       writeReg(0x6b, 0x81); //< power management 1
       delay(100);
       writeReg(0x6b, 0x01); //< power management 1
       writeReg(0x1b, 0x18); //< gyro range
       writeReg(0x1c, 0x18); //< accel range
-      //      writeReg(0x1a, 0x07); //< DLPF_CFG
-      //      writeReg(0x1b, 0x1a); //< gyro range
       delay(100);
-      if (readReg(117) != 0x12) {
-        log_e("whoami failed:(");
-      }
+      whoami();
     }
     void update() {
       union {

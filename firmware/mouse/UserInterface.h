@@ -109,3 +109,5 @@ class UserInterface {
 
 };
 
+extern UserInterface ui;
+

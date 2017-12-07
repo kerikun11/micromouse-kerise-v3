@@ -12,7 +12,7 @@
 class Encoder {
   public:
     Encoder() {}
-    void begin(bool spi_initializing) {
+    bool begin(bool spi_initializing) {
       if (spi_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
@@ -39,10 +39,11 @@ class Encoder {
       ESP_ERROR_CHECK(spi_bus_add_device(AS5048A_SPI_HOST, &encoder_dev_cfg, &encoder_spi));
       digitalWrite(AS5048A_CS_PIN, HIGH);
       pinMode(AS5048A_CS_PIN, OUTPUT);
-
+      // sampling task execution
       xTaskCreate([](void* obj) {
         static_cast<Encoder*>(obj)->task();
       }, "Encoder", ENCODER_TASK_STACK_SIZE, this, ENCODER_TASK_PRIORITY, &task_handle);
+      return true;
     }
     void print() {
       printf("L: %d\tR: %d\n", getRaw(0), getRaw(1));
@@ -101,5 +102,5 @@ class Encoder {
     }
 };
 
-extern Encoder as;
+extern Encoder enc;
 

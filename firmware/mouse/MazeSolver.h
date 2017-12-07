@@ -24,7 +24,7 @@
 
 //#define printf  lg.printf
 
-#define MAZE_BACKUP_PATH    "/maze_backup.maze"
+#define MAZE_BACKUP_PATH    "/maze_backup.bin"
 
 class MazeSolver: TaskBase {
   public:

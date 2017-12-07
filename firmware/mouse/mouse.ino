@@ -34,8 +34,6 @@ ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
 #include "Emergency.h"
 #include "ExternalController.h"
 #include "Logger.h"
-#include "DataSaver.h"
-//#include "BLETransmitter.h"
 #include "SearchRun.h"
 #include "FastRun.h"
 #include "MazeSolver.h"
@@ -45,8 +43,6 @@ WallDetector wd;
 Emergency em;
 ExternalController ec;
 Logger lg;
-DataSaver ds;
-//BLETransmitter ble;
 SearchRun sr;
 FastRun fr;
 MazeSolver ms;
@@ -73,21 +69,19 @@ void setup() {
   ui.batteryCheck();
   bz.play(Buzzer::BOOT);
 
-  if (!SPIFFS.begin(true)) log_e("SPIFFS Mount Failed");
-  ds.begin(); ds.restore();
-  imu.begin(true);
-  enc.begin(false);
+  if (!SPIFFS.begin(true)) bz.play(Buzzer::ERROR);
+  if (!imu.begin(true)) bz.play(Buzzer::ERROR);
+  if (!enc.begin(false)) bz.play(Buzzer::ERROR);
   ref.begin();
   if (!tof.begin()) bz.play(Buzzer::ERROR);
-  wd.begin();
+  if (!wd.begin()) bz.play(Buzzer::ERROR);
   em.begin();
   ec.begin();
-  //  ble.begin();
 
   xTaskCreate(task, "test", 4096, NULL, 0, NULL); // debug output
 }
 
-const int searchig_time_ms = 6 * 60 * 1000;
+const int searchig_time_ms = 1 * 60 * 1000;
 bool timeup = false;
 
 void loop() {
@@ -237,7 +231,7 @@ void normal_drive() {
     //* 前壁補正データの保存
     case 10:
       if (!ui.waitForCover()) return;
-      if (ds.backup()) {
+      if (wd.backup()) {
         bz.play(Buzzer::SUCCESSFUL);
       } else {
         bz.play(Buzzer::ERROR);

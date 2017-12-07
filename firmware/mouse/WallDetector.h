@@ -8,25 +8,56 @@
 
 #define WALL_DETECTOR_TASK_PRIORITY   4
 #define WALL_DETECTOR_STACK_SIZE      4096
+#define WALL_UPDATE_PERIOD_US         1000
+
+#define WALL_DETECTOR_BACKUP_PATH     "/WallDetector.bin"
 
 #define WALL_DETECTOR_THRESHOLD_FRONT 120
 #define WALL_DETECTOR_THRESHOLD_SIDE  60
 
-#define WALL_UPDATE_PERIOD_US         1000
-
 class WallDetector {
   public:
     WallDetector() {}
-    void begin() {
+    bool begin() {
       calibrationStartSemaphore = xSemaphoreCreateBinary();
       calibrationEndSemaphore = xSemaphoreCreateBinary();
       calibrationFrontStartSemaphore = xSemaphoreCreateBinary();
       calibrationFrontEndSemaphore = xSemaphoreCreateBinary();
       if (task_handle == NULL) {
-        xTaskCreate([](void* obj) {
-          static_cast<WallDetector*>(obj)->task();
-        }, "WallDetector", WALL_DETECTOR_STACK_SIZE, this, WALL_DETECTOR_TASK_PRIORITY, &task_handle);
+        log_w("WallDetector is already running!");
       }
+      xTaskCreate([](void* obj) {
+        static_cast<WallDetector*>(obj)->task();
+      }, "WallDetector", WALL_DETECTOR_STACK_SIZE, this, WALL_DETECTOR_TASK_PRIORITY, &task_handle);
+      if (!restore()) return false;
+      return true;
+    }
+    bool backup() {
+      uint32_t us = micros();
+      File file = SPIFFS.open(WALL_DETECTOR_BACKUP_PATH, FILE_WRITE);
+      if (!file) {
+        log_e("Can't open file!");
+        return false;
+      }
+      file.write((const uint8_t*)(&(wall_ref)), sizeof(WallDetector::WallValue));
+      log_d("Backup: %d [us]", micros() - us);
+      return true;
+    }
+    bool restore() {
+      File file = SPIFFS.open(WALL_DETECTOR_BACKUP_PATH, FILE_READ);
+      if (!file) {
+        log_e("Can't open file!");
+        return false;
+      }
+      if (file.available() == sizeof(WallDetector::WallValue)) {
+        uint8_t data[sizeof(WallDetector::WallValue)];
+        file.read(data, sizeof(WallDetector::WallValue));
+        memcpy((uint8_t*)(&(wall_ref)), data, sizeof(WallDetector::WallValue));
+      } else {
+        log_e("File size is invalid!");
+        return false;
+      }
+      return true;
     }
     void calibrationSide() {
       xSemaphoreTake(calibrationEndSemaphore, 0); //< 前のキャリブレーションの終了を待つ
