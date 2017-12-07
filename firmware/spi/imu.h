@@ -34,7 +34,7 @@ class IMU {
       device_cfg.queue_size = 1;
       ESP_ERROR_CHECK(spi_bus_add_device(ICM20602_SPI_HOST, &device_cfg, &spi_handle));
       // Who am I check
-      if (!whoami()) return false;
+      if (!reset()) return false;
       // calibration semaphore
       calibration_start_semaphore = xSemaphoreCreateBinary();
       calibration_end_semaphore = xSemaphoreCreateBinary();
@@ -129,14 +129,14 @@ class IMU {
       }
       return true;
     }
-    void reset() {
+    bool reset() {
       writeReg(0x6b, 0x81); //< power management 1
       delay(100);
       writeReg(0x6b, 0x01); //< power management 1
       writeReg(0x1b, 0x18); //< gyro range
       writeReg(0x1c, 0x18); //< accel range
       delay(100);
-      whoami();
+      return whoami();
     }
     void update() {
       union {

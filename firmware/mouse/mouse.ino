@@ -284,15 +284,16 @@ void trapizoid_test() {
   delay(500);
   lg.start();
   sc.enable();
-  const float accel = 9000;
-  const float decel = 6000;
-  const float v_max = 1200;
+  const float accel = 15000;
+  const float decel = 12000;
+  const float v_max = 2400;
   const float v_start = 0;
   float T = 1.5f * (v_max - v_start) / accel;
+  portTickType xLastWakeTime = xTaskGetTickCount();
   for (int ms = 0; ms / 1000.0f < T; ms++) {
     float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
     sc.set_target(velocity_a, 0);
-    delay(1);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
   }
   bz.play(Buzzer::SELECT);
   delay(150);
@@ -369,10 +370,10 @@ void straight_x(const float distance, const float v_max, const float v_end) {
 }
 
 void turn(const float angle) {
-  const float speed = 3 * M_PI;
+  const float speed = 3.6 * M_PI;
   const float accel = 36 * M_PI;
-  const float decel = 12 * M_PI;
-  const float back_gain = 5.0f;
+  const float decel = 36 * M_PI;
+  const float back_gain = 1.0f;
   int ms = 0;
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {

@@ -23,7 +23,7 @@ class WallDetector {
       calibrationEndSemaphore = xSemaphoreCreateBinary();
       calibrationFrontStartSemaphore = xSemaphoreCreateBinary();
       calibrationFrontEndSemaphore = xSemaphoreCreateBinary();
-      if (task_handle == NULL) {
+      if (task_handle != NULL) {
         log_w("WallDetector is already running!");
       }
       xTaskCreate([](void* obj) {

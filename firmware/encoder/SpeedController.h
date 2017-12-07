@@ -166,7 +166,7 @@ class SpeedController {
     }
   private:
     bool enabled = false;
-    static const int acc_num = 16;
+    static const int acc_num = 32;
     Accumulator<float, acc_num> wheel_position[2];
     Accumulator<float, acc_num> accel;
     Accumulator<float, acc_num> gyro;
@@ -225,7 +225,7 @@ class SpeedController {
         differential.pole2wheel();
         float pwm_value[2];
         for (int i = 0; i < 2; i++) pwm_value[i] = Kp * proportional.wheel[i] + Ki * integral.wheel[i] + Kd * differential.wheel[i];
-        mt.drive(pwm_value[0], pwm_value[1]);
+        //        mt.drive(pwm_value[0], pwm_value[1]);
 
         proportional.wheel2pole();
         integral.wheel2pole();
