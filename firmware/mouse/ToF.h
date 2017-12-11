@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include "VL53L0X.h"
 
-#define TOF_TASK_PRIORITY     2
+#define TOF_TASK_PRIORITY     1
 #define TOF_TASK_STACK_SIZE   4096
 
 class ToF {

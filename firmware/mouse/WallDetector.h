@@ -131,6 +131,7 @@ class WallDetector {
         // detect front wall
         if (tof.getDistance() < WALL_DETECTOR_THRESHOLD_FRONT * 0.95f) wall[2] = true;
         else if (tof.getDistance() > WALL_DETECTOR_THRESHOLD_FRONT * 1.05f) wall[2] = false;
+        if (tof.passedTimeMs() > 200) wall[2] = false;
 
         // detect side wall
         for (int i = 0; i < 2; i++) {

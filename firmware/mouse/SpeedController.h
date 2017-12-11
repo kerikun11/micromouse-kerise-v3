@@ -147,7 +147,7 @@ class SpeedController {
         static_cast<SpeedController*>(obj)->task();
       }, "SpeedController", SPEED_CONTROLLER_STACK_SIZE, this, SPEED_CONTROLLER_TASK_PRIORITY, NULL);
     }
-    void enable(bool reset_position = true) {
+    void enable(const bool& reset_position = true) {
       reset();
       if (reset_position) position.reset();
       enabled = true;
@@ -159,7 +159,7 @@ class SpeedController {
       mt.free();
       printf("Speed Controller disabled\n");
     }
-    void set_target(float trans, float rot) {
+    void set_target(const float& trans, const float& rot) {
       target.trans = trans;
       target.rot = rot;
       target.pole2wheel();
@@ -170,9 +170,6 @@ class SpeedController {
     Accumulator<float, acc_num> wheel_position[2];
     Accumulator<float, acc_num> accel;
     Accumulator<float, acc_num> gyro;
-    //    float wheel_position[ave_num][2];
-    //    float accel[ave_num];
-    //    float gyro[ave_num];
     WheelParameter actual_prev;
     WheelParameter target_prev;
 
@@ -193,12 +190,12 @@ class SpeedController {
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         if (enabled == false) continue;
 
-        for (int i = 0; i < 2; i++) {
-          wheel_position[i].push(enc.position(i));
-        }
+        // 最新のデータの追加
+        for (int i = 0; i < 2; i++) wheel_position[i].push(enc.position(i));
         accel.push(imu.accel.y);
         gyro.push(imu.gyro.z);
 
+        // LPFのサンプル数を指定
         //        ave_num = std::min(acc_num, static_cast<int>(PI * MACHINE_GEAR_RATIO * MACHINE_WHEEL_DIAMETER / ((1.0f + fabs(target.trans)) * SPEED_CONTROLLER_PERIOD_US / 1000000)));
         ave_num = acc_num;
 
@@ -209,11 +206,11 @@ class SpeedController {
           actual.wheel[i] = (wheel_position[i][0] - wheel_position[i][ave_num - 1]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
           enconly.wheel[i] = (wheel_position[i][0] - wheel_position[i][1]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
         }
-        acconly.trans = sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000;
+        acconly.trans = sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
 
         enconly.wheel2pole();
         actual.wheel2pole();
-        actual.trans += sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000;
+        actual.trans += sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
         actual.rot = imu.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
