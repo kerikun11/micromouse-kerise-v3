@@ -64,6 +64,13 @@ class Logger: TaskBase {
         //                );
         //        sprintf(str, "%f,%f,%f,%f\n", sc.position.x, sc.position.y, sc.target.trans, sc.target.rot);
         //        sprintf(str, "%f,%f,%f\n", sc.position.x, sc.position.y, sc.position.theta);
+        snprintf(str, 64, "%d,%f,%f,%f,%f\n",
+                 sc.ave_num * 100,
+                 sc.target.trans,
+                 sc.actual.trans,
+                 sc.acconly.trans,
+                 sc.enconly.trans
+                );
         log += str;
       }
     }

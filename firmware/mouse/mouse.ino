@@ -51,14 +51,15 @@ MazeSolver ms;
 
 void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
+  //  int prev[2] = {0, 0};
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
     //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     //    tof.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
-    //    printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans, sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans, sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans, sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans + sc.Kd * sc.differential.trans);
-    //    printf("0,%f,%f,%f\n", PI, -PI, imu.gyro.z * 10);
+    //    printf("%d,%d\n", (enc.getPulses(0) - prev[0]) * 1000, (enc.getPulses(1) - prev[1]) * 1000);  prev[0] = enc.getPulses(0); prev[1] = enc.getPulses(1);
+    //    printf("%ul,%d,%f", millis(), tof.getDistance(), sc.position.x);
   }
 }
 

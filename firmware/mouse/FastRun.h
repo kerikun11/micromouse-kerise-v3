@@ -366,24 +366,46 @@ class FastRun: TaskBase {
     }
     void wallCut() {
       if (wallCutFlag) {
-        // 90 [deg] の倍数
-        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2) {
+        // 90 [deg] の倍数 かつ，ズレが +/-15度以内
+        if ((int)(fabs(origin.theta) * 180.0f / PI + 1) % 90 < 2 && fabs(origin.theta - sc.position.theta) < PI / 48) {
           for (int i = 0; i < 2; i++) {
             if (prev_wall[i] && !wd.wall[i]) {
               Position prev = sc.position;
               Position fix = sc.position.rotate(-origin.theta);
-              fix.x = floor((fix.x + 45) / 90) * 90 - 20;
+              fix.x = floor((fix.x + SEGMENT_WIDTH / 2) / SEGMENT_WIDTH) * SEGMENT_WIDTH - 20;
               fix = fix.rotate(origin.theta);
-              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f) sc.position = fix;
+              //              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f)
+              sc.position = fix;
               printf("WallCut[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
             }
             if (!prev_wall[i] && wd.wall[i]) {
               Position prev = sc.position;
               Position fix = sc.position.rotate(-origin.theta);
-              fix.x = floor((fix.x + 45) / 90) * 90 - 30;
+              fix.x = floor((fix.x + SEGMENT_WIDTH / 2) / SEGMENT_WIDTH) * SEGMENT_WIDTH - 30;
               fix = fix.rotate(origin.theta);
-              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f) sc.position = fix;
+              //              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f)
+              sc.position = fix;
               printf("WallCut[%d] _X (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+            }
+            prev_wall[i] = wd.wall[i];
+          }
+        }
+        // 45 [deg] の倍数 かつ，ズレが +/-15度以内
+        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2 && fabs(origin.theta - sc.position.theta) < PI / 48) {
+          for (int i = 0; i < 2; i++) {
+            if (prev_wall[i] && !wd.wall[i]) {
+              Position prev = sc.position;
+              Position fix = sc.position.rotate(-origin.theta);
+              const float extra = 40;
+              if (i == 0) {
+                fix.x = floor((fix.x + extra) / SEGMENT_DIAGONAL_WIDTH) * SEGMENT_DIAGONAL_WIDTH + SEGMENT_DIAGONAL_WIDTH / 2 + extra;
+              } else {
+                fix.x = floor((fix.x + SEGMENT_DIAGONAL_WIDTH / 2 + extra) / SEGMENT_DIAGONAL_WIDTH) * SEGMENT_DIAGONAL_WIDTH + extra;
+              }
+              fix = fix.rotate(origin.theta);
+              //              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f)
+              sc.position = fix;
+              printf("WallCutDiag[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
             }
             prev_wall[i] = wd.wall[i];
           }
@@ -422,6 +444,7 @@ class FastRun: TaskBase {
     template<class C>
     void trace(C tr, const float velocity) {
       portTickType xLastWakeTime = xTaskGetTickCount();
+      for (int i = 0; i < 2; i++) prev_wall[i] = wd.wall[i];
       while (1) {
         if (tr.getRemain() < FAST_END_REMAIN) break;
         vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);

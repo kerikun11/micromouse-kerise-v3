@@ -229,9 +229,9 @@ class SearchRun: TaskBase {
 #endif
     }
     void turn(const float angle) {
-      const float speed = 3 * M_PI;
-      const float accel = 24 * M_PI;
-      const float decel = 24 * M_PI;
+      const float speed = 4 * M_PI;
+      const float accel = 36 * M_PI;
+      const float decel = 12 * M_PI;
       const float back_gain = 1.0f;
       int ms = 0;
       portTickType xLastWakeTime = xTaskGetTickCount();

@@ -199,7 +199,8 @@ class SpeedController {
         accel.push(imu.accel.y);
         gyro.push(imu.gyro.z);
 
-        ave_num = std::min(acc_num, static_cast<int>(PI * MACHINE_GEAR_RATIO * MACHINE_WHEEL_DIAMETER / ((1.0f + fabs(actual.trans)) * SPEED_CONTROLLER_PERIOD_US / 1000000)));
+        //        ave_num = std::min(acc_num, static_cast<int>(PI * MACHINE_GEAR_RATIO * MACHINE_WHEEL_DIAMETER / ((1.0f + fabs(target.trans)) * SPEED_CONTROLLER_PERIOD_US / 1000000)));
+        ave_num = acc_num;
 
         float sum_accel = 0.0f;
         for (int j = 0; j < ave_num - 1; j++) sum_accel += accel[j];
@@ -208,11 +209,11 @@ class SpeedController {
           actual.wheel[i] = (wheel_position[i][0] - wheel_position[i][ave_num - 1]) / (ave_num - 1) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
           enconly.wheel[i] = (wheel_position[i][0] - wheel_position[i][1]) * 1000000 / SPEED_CONTROLLER_PERIOD_US;
         }
-        acconly.trans = sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
+        acconly.trans = sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000;
 
         enconly.wheel2pole();
         actual.wheel2pole();
-        actual.trans += sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000 / 2;
+        actual.trans += sum_accel * SPEED_CONTROLLER_PERIOD_US / 1000000;
         actual.rot = imu.gyro.z;
         actual.pole2wheel();
         for (int i = 0; i < 2; i++) {
