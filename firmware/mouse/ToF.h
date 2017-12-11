@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include "VL53L0X.h"
 
-#define TOF_TASK_PRIORITY     1
+#define TOF_TASK_PRIORITY     2
 #define TOF_TASK_STACK_SIZE   4096
 
 class ToF {
@@ -70,7 +70,7 @@ class ToF {
         }
         uint16_t range = sensor.readReg16Bit(VL53L0X::RESULT_RANGE_STATUS + 10);
         sensor.writeReg(VL53L0X::SYSTEM_INTERRUPT_CLEAR, 0x01);
-        if (range > 5 && range < 300) {
+        if (range > 5 && range < 1000) {
           distance = range - 3;
           passed_ms = 0;
         }
