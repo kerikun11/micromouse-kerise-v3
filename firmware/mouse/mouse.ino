@@ -82,7 +82,7 @@ void setup() {
   xTaskCreate(task, "test", 4096, NULL, 0, NULL); // debug output
 }
 
-const int searchig_time_ms = 1 * 60 * 1000;
+const int searchig_time_ms = 3 * 60 * 1000;
 bool timeup = false;
 
 void loop() {
@@ -115,7 +115,7 @@ void task() {
 
 void normal_drive() {
   if (ms.isRunning()) ms.terminate();
-  int mode = ui.waitForSelect(13);
+  int mode = ui.waitForSelect(16);
   switch (mode) {
     //* 走行
     case 0:
@@ -136,23 +136,23 @@ void normal_drive() {
         switch (preset) {
           case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 6000); break;
           case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 7200); break;
-          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1800, 9000, 9000); break;
-          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2700, 12000, 12000); break;
+          case 2:  fr.runParameter = FastRun::RunParameter(0.8, 1500, 9000, 9000); break;
+          case 3:  fr.runParameter = FastRun::RunParameter(0.8, 2100, 12000, 12000); break;
 
           case 4:  fr.runParameter = FastRun::RunParameter(0.9,  900, 6000, 6000); break;
           case 5:  fr.runParameter = FastRun::RunParameter(0.9, 1200, 7200, 7200); break;
-          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1800, 9000, 9000); break;
-          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2700, 12000, 12000); break;
+          case 6:  fr.runParameter = FastRun::RunParameter(0.9, 1500, 9000, 9000); break;
+          case 7:  fr.runParameter = FastRun::RunParameter(0.9, 2100, 12000, 12000); break;
 
           case 8:  fr.runParameter = FastRun::RunParameter(1.0,  900, 6000, 6000); break;
           case 9:  fr.runParameter = FastRun::RunParameter(1.0, 1200, 7200, 7200); break;
-          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1800, 9000, 9000); break;
-          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2700, 12000, 12000); break;
+          case 10: fr.runParameter = FastRun::RunParameter(1.0, 1500, 9000, 9000); break;
+          case 11: fr.runParameter = FastRun::RunParameter(1.0, 2100, 12000, 12000); break;
 
           case 12: fr.runParameter = FastRun::RunParameter(1.1,  900, 6000, 6000); break;
           case 13: fr.runParameter = FastRun::RunParameter(1.1, 1200, 7200, 7200); break;
-          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1800, 9000, 9000); break;
-          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2700, 12000, 12000); break;
+          case 14: fr.runParameter = FastRun::RunParameter(1.1, 1500, 9000, 9000); break;
+          case 15: fr.runParameter = FastRun::RunParameter(1.1, 2100, 12000, 12000); break;
         }
       }
       if (!ui.waitForCover()) return;
@@ -245,10 +245,10 @@ void normal_drive() {
         if (value < 0) return;
         if (!ui.waitForCover()) return;
         switch (value) {
-          case 0: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(4, 6), Vector(5, 4), Vector(5, 5), Vector(5, 6), Vector(6, 4), Vector(6, 5), Vector(6, 6)}); break;
+          case 0: ms.set_goal({Vector(45, 39)}); break; //4238 * 3638
           case 1: ms.set_goal({Vector(1, 0)}); break;
           case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
-          case 3: ms.set_goal({Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}); break;
+          case 3: ms.set_goal({Vector(15, 15)}); break;
         }
         bz.play(Buzzer::SUCCESSFUL);
       }
@@ -263,6 +263,16 @@ void normal_drive() {
       sc.enable();
       straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
       sc.disable();
+      break;
+    case 13:
+      if (!ui.waitForCover(true)) return;
+      delay(1000);
+      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
+      //      fr.set_path("srlslrsrsrslslslrsrls");
+      imu.calibration();
+      fr.enable();
+      fr.waitForEnd();
+      fr.disable();
       break;
   }
 }

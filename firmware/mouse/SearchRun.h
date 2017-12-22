@@ -29,8 +29,8 @@
 #define SEARCH_RUN_STACK_SIZE       8192
 #define SEARCH_RUN_PERIOD           1000
 
-#define SEARCH_RUN_VELOCITY         300.0f
-#define SEARCH_RUN_V_CURVE          300.0f
+#define SEARCH_RUN_VELOCITY         240.0f
+#define SEARCH_RUN_V_CURVE          240.0f
 #define SEARCH_RUN_V_MAX            1200.0f
 
 //#define printf  lg.printf
@@ -229,7 +229,7 @@ class SearchRun: TaskBase {
 #endif
     }
     void turn(const float angle) {
-      const float speed = 4 * M_PI;
+      const float speed = 3 * M_PI;
       const float accel = 36 * M_PI;
       const float decel = 24 * M_PI;
       const float back_gain = 2.0f;
