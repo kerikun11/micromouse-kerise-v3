@@ -16,8 +16,8 @@
 #define MAZE_SOLVER_TASK_PRIORITY 2
 #define MAZE_SOLVER_STACK_SIZE    8192
 
-//#define MAZE_GOAL           {Vector(1,0)}
-#define MAZE_GOAL           {Vector(3, 3), Vector(4, 4), Vector(4, 3), Vector(3, 4)}
+#define MAZE_GOAL           {Vector(1,0)}
+//#define MAZE_GOAL           {Vector(3, 3), Vector(4, 4), Vector(4, 3), Vector(3, 4)}
 //#define MAZE_GOAL           {Vector(7,7), Vector(7,8), Vector(8,7), Vector(8,8)}
 //#define MAZE_GOAL           {Vector(19, 20), Vector(19, 21), Vector(19, 22), Vector(20, 20), Vector(20, 21), Vector(20, 22), Vector(21, 20), Vector(21, 21), Vector(21, 22)}
 #define MAZE_BACKUP_SIZE    5
@@ -35,12 +35,14 @@ class MazeSolver: TaskBase {
     void start(bool isForceSearch = false) {
       this->isForceSearch = isForceSearch;
       terminate();
+      isRunningFlag = true;
       create_task();
     }
     void terminate() {
       delete_task();
       sr.disable();
       fr.disable();
+      isRunningFlag = false;
     }
     void forceBackToStart() {
       if (agent.getState() != Agent::SEARCHING_FOR_GOAL) {
@@ -57,7 +59,7 @@ class MazeSolver: TaskBase {
       agent.printPath();
     }
     bool isRunning() {
-      return handle != NULL;
+      return isRunningFlag;
     }
     void set_goal(const std::vector<Vector>& goal) {
       agent.reset(goal);
@@ -98,6 +100,7 @@ class MazeSolver: TaskBase {
     std::deque<Maze> maze_backup;
     Agent agent;
     bool isForceSearch = false;
+    bool isRunningFlag = false;
 
     bool search_run(bool start_step = true, const Vector start_vec = Vector(0, 1), const Dir start_dir = Dir::North) {
       if (start_step) {
@@ -182,7 +185,7 @@ class MazeSolver: TaskBase {
           sr.set_action(SearchRun::STOP);
           sr.waitForEnd();
           sr.disable();
-          while (1) delay(1000);
+          waitForever();
         }
         int straight_count = 0;
         for (auto nextDir : nextDirs) {
@@ -312,14 +315,17 @@ class MazeSolver: TaskBase {
         delay(1);
         if (fabs(imu.accel.z) > 9800 * 1) {
           bz.play(Buzzer::CANCEL);
-          while (1) delay(1000);
+          waitForever();
         }
       }
+    }
+    void waitForever() {
+      isRunningFlag = false;
+      while (1) delay(1000);
     }
     virtual void task() {
       bz.play(Buzzer::CONFIRM);
       imu.calibration(false);
-      //      wd.calibration();
       imu.calibrationWait();
       bz.play(Buzzer::CANCEL);
 
@@ -329,16 +335,14 @@ class MazeSolver: TaskBase {
         if (!agent.calcShortestDirs() || isForceSearch) {
           maze = maze_backup.front();
           agent.reset();
-          if (!search_run()) while (1) delay(1000);
-          //          backup();
-          //          bz.play(Buzzer::MAZE_BACKUP);
+          if (!search_run()) waitForever();
           readyToStartWait(2000);
         }
       }
       if (!agent.calcShortestDirs()) {
         printf("Couldn't solve the maze!\n");
         bz.play(Buzzer::ERROR);
-        while (1) delay(1000);
+        waitForever();
       }
       while (1) {
         fast_run();

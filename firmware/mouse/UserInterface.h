@@ -11,36 +11,50 @@
 #include "reflector.h"
 #include "tof.h"
 
+#define ACCEL_G 9806.65f
+
 class UserInterface {
+  private:
+    const float thr_accel = 3 * ACCEL_G;
+    const float thr_gyro = 3 * PI;
+    const float wait_ms = 200;
   public:
     UserInterface() {}
-    static int waitForSelect(int range = 16) {
-      uint8_t prev = 0;
+    int waitForSelect(int range = 16) {
+      uint8_t value = 0;
+      led = value;
       while (1) {
-        delay(10);
-        uint8_t value = (enc.position(0) + enc.position(1)) / 10;
-        value %= range;
-        if (value != prev) {
-          prev = value;
-          for (int i = 0; i < value / 16; i++) bz.play(Buzzer::SELECT);
+        delay(1);
+        if (imu.gyro.y > thr_gyro) {
+          value += range - 1;
+          value %= range;
           led = value;
+          bz.play(Buzzer::SELECT);
+          delay(wait_ms);
         }
-        if (btn.pressed) {
-          btn.flags = 0;
+        if (imu.gyro.y < -thr_gyro) {
+          value += 1;
+          value %= range;
+          led = value;
+          bz.play(Buzzer::SELECT);
+          delay(wait_ms);
+        }
+        if (imu.accel.z > thr_accel) {
           bz.play(Buzzer::CONFIRM);
           log_i("waitForSelect() => %d", value);
+          delay(wait_ms);
           return value;
         }
-        if (btn.long_pressed_1) {
-          btn.flags = 0;
+        if (abs(imu.accel.x) > thr_accel) {
           bz.play(Buzzer::CANCEL);
           log_i("waitForSelect() => -1");
+          delay(wait_ms);
           return -1;
         }
       }
       return -1;
     }
-    static bool waitForCover(bool side = false) {
+    bool waitForCover(bool side = false) {
       while (1) {
         delay(1);
         if (!side && ref.front(0) > 200 && ref.front(1) > 200) {
@@ -53,35 +67,35 @@ class UserInterface {
           log_i("waitForCover(side) => true");
           return true;
         }
-        if (btn.pressed) {
-          btn.flags = 0;
+        if (abs(imu.accel.x) > thr_accel) {
           bz.play(Buzzer::CANCEL);
-          log_i("waitForCover() => true");
+          log_i("waitForSelect() => -1");
+          delay(wait_ms);
           return false;
         }
       }
     }
-    static bool waitForFix() {
-      int fix_count = 0;
-      while (1) {
-        delay(1);
-        if (fabs(imu.gyro.x) < 0.01f * PI && fabs(imu.gyro.y) < 0.01f * PI && fabs(imu.gyro.z) < 0.01f * PI) {
-          if (fix_count++ > 1000) {
-            bz.play(Buzzer::CONFIRM);
-            log_i("waitForFix() => true");
-            return true;
-          }
-        } else {
-          fix_count = 0;
-        }
-        if (btn.pressed) {
-          btn.flags = 0;
-          bz.play(Buzzer::CANCEL);
-          log_i("waitForFix() => false");
-          return false;
-        }
-      }
-    }
+    //    static bool waitForFix() {
+    //      int fix_count = 0;
+    //      while (1) {
+    //        delay(1);
+    //        if (fabs(imu.gyro.x) < 0.01f * PI && fabs(imu.gyro.y) < 0.01f * PI && fabs(imu.gyro.z) < 0.01f * PI) {
+    //          if (fix_count++ > 1000) {
+    //            bz.play(Buzzer::CONFIRM);
+    //            log_i("waitForFix() => true");
+    //            return true;
+    //          }
+    //        } else {
+    //          fix_count = 0;
+    //        }
+    //        if (btn.pressed) {
+    //          btn.flags = 0;
+    //          bz.play(Buzzer::CANCEL);
+    //          log_i("waitForFix() => false");
+    //          return false;
+    //        }
+    //      }
+    //    }
     static void batteryLedIndicate(const float voltage) {
       if (voltage < 3.9f) led = 0x01;
       else if (voltage < 4.1f) led = 0x03;

@@ -80,32 +80,12 @@ void setup() {
   ec.begin();
 
   xTaskCreate(task, "test", 4096, NULL, 0, NULL); // debug output
+  xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 0, NULL); // debug output
 }
 
 const int searchig_time_ms = 3 * 60 * 1000;
-bool timeup = false;
 
 void loop() {
-  if (btn.pressed) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    task();
-  }
-  if (btn.long_pressing_1) {
-    btn.flags = 0;
-    bz.play(Buzzer::CONFIRM);
-    ms.print();
-    lg.print();
-  }
-  if (!timeup && millis() > searchig_time_ms) {
-    timeup = true;
-    bz.play(Buzzer::LOW_BATTERY);
-    ms.forceBackToStart();
-  }
-  delay(1);
-}
-
-void task() {
   normal_drive();
   //  position_test();
   //  trapizoid_test();
@@ -113,26 +93,32 @@ void task() {
   //  turn_test();
 }
 
+void timeKeepTask(void* arg) {
+  while (millis() < searchig_time_ms) delay(1000);
+  bz.play(Buzzer::LOW_BATTERY);
+  ms.forceBackToStart();
+  while (1) delay(1000);
+}
+
 void normal_drive() {
-  if (ms.isRunning()) ms.terminate();
   int mode = ui.waitForSelect(16);
   switch (mode) {
     //* 走行
     case 0:
-      if (!ui.waitForCover()) {
-        bz.play(Buzzer::SUCCESSFUL);
-        if (!ui.waitForCover()) return;
-        led = 9;
-        ms.start(true);
-      } else {
-        led = 9;
-        ms.start();
-      }
+      bz.play(Buzzer::SUCCESSFUL);
+      if (!ui.waitForCover()) return;
+      led = 9;
+      ms.start();
+      btn.flags = 0;
+      while (ms.isRunning() && !btn.pressed) delay(100);
+      bz.play(Buzzer::CANCEL);
+      btn.flags = 0;
+      ms.terminate();
       break;
     //* 走行パラメータの選択 & 走行
     case 1: {
         int preset = ui.waitForSelect(16);
-        if (preset < 0) break;
+        if (preset < 0) return;
         switch (preset) {
           case 0:  fr.runParameter = FastRun::RunParameter(0.8,  900, 6000, 6000); break;
           case 1:  fr.runParameter = FastRun::RunParameter(0.8, 1200, 7200, 7200); break;
@@ -155,58 +141,55 @@ void normal_drive() {
           case 15: fr.runParameter = FastRun::RunParameter(1.1, 2100, 12000, 12000); break;
         }
       }
-      if (!ui.waitForCover()) return;
-      led = 9;
-      ms.start();
+      bz.play(Buzzer::SUCCESSFUL);
       break;
     //* 速度の設定
     case 2: {
-        bz.play(Buzzer::SELECT);
         int value;
+        for (int i = 0; i < 1; i++) bz.play(Buzzer::SHORT);
         value = ui.waitForSelect(16);
         if (value < 0) return;
         const float curve_gain = 0.1f * value;
+        for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
         value = ui.waitForSelect(16);
         if (value < 0) return;
         const float v_max = 300.0f * value;
+        for (int i = 0; i < 3; i++) bz.play(Buzzer::SHORT);
         value = ui.waitForSelect(16);
         if (value < 0) return;
-        const float accel = 600.0f * value;
+        const float accel = 1000.0f * value;
         fr.runParameter = FastRun::RunParameter(curve_gain,  v_max, accel, accel);
-        bz.play(Buzzer::SUCCESSFUL);
-        if (!ui.waitForCover()) return;
-        led = 9;
-        ms.start();
       }
+      bz.play(Buzzer::SUCCESSFUL);
       break;
     //* 壁制御の設定
     case 3: {
         int value = ui.waitForSelect(16);
         if (value < 0) return;
-        if (!ui.waitForCover()) return;
         fr.wallAvoidFlag = value & 0x01;
         fr.wallAvoid45Flag = value & 0x02;
         fr.wallCutFlag = value & 0x04;
         fr.V90Enabled = value & 0x08;
-        bz.play(Buzzer::SUCCESSFUL);
       }
+      bz.play(Buzzer::SUCCESSFUL);
       break;
     //* ファンの設定
     case 4: {
         fan.drive(fr.fanDuty);
-        ui.waitForSelect(1);
+        delay(100);
         fan.drive(0);
         int value = ui.waitForSelect(11);
         if (value < 0) return;
-        if (!ui.waitForCover()) return;
         fr.fanDuty = 0.1f * value;
-        bz.play(Buzzer::SUCCESSFUL);
+        fan.drive(fr.fanDuty);
+        ui.waitForSelect(1);
+        fan.drive(0);
       }
+      bz.play(Buzzer::SUCCESSFUL);
       break;
     //* 迷路データの復元
     case 7:
       bz.play(Buzzer::MAZE_RESTORE);
-      if (!ui.waitForCover()) return;
       if (ms.restore()) {
         bz.play(Buzzer::SUCCESSFUL);
       } else {
@@ -215,6 +198,7 @@ void normal_drive() {
       break;
     //* 前壁キャリブレーション
     case 8:
+      led = 6;
       if (!ui.waitForCover(true)) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
@@ -223,6 +207,7 @@ void normal_drive() {
       break;
     //* 横壁キャリブレーション
     case 9:
+      led = 9;
       if (!ui.waitForCover()) return;
       delay(1000);
       bz.play(Buzzer::CONFIRM);
@@ -243,7 +228,6 @@ void normal_drive() {
         for (int i = 0; i < 2; i++) bz.play(Buzzer::SHORT);
         int value = ui.waitForSelect(4);
         if (value < 0) return;
-        if (!ui.waitForCover()) return;
         switch (value) {
           case 0: ms.set_goal({Vector(45, 39)}); break; //4238 * 3638
           case 1: ms.set_goal({Vector(1, 0)}); break;
@@ -264,15 +248,9 @@ void normal_drive() {
       straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
       sc.disable();
       break;
-    case 13:
-      if (!ui.waitForCover(true)) return;
-      delay(1000);
-      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
-      //      fr.set_path("srlslrsrsrslslslrsrls");
-      imu.calibration();
-      fr.enable();
-      fr.waitForEnd();
-      fr.disable();
+    //* リセット
+    case 15:
+      ESP.restart();
       break;
   }
 }

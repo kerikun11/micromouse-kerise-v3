@@ -391,25 +391,25 @@ class FastRun: TaskBase {
           }
         }
         // 45 [deg] の倍数 かつ，ズレが +/-15度以内
-        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2 && fabs(origin.theta - sc.position.theta) < PI / 48) {
-          for (int i = 0; i < 2; i++) {
-            if (prev_wall[i] && !wd.wall[i]) {
-              Position prev = sc.position;
-              Position fix = sc.position.rotate(-origin.theta);
-              const float extra = 40;
-              if (i == 0) {
-                fix.x = floor((fix.x + extra) / SEGMENT_DIAGONAL_WIDTH) * SEGMENT_DIAGONAL_WIDTH + SEGMENT_DIAGONAL_WIDTH / 2 + extra;
-              } else {
-                fix.x = floor((fix.x + SEGMENT_DIAGONAL_WIDTH / 2 + extra) / SEGMENT_DIAGONAL_WIDTH) * SEGMENT_DIAGONAL_WIDTH + extra;
-              }
-              fix = fix.rotate(origin.theta);
-              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f)
-                sc.position = fix;
-              printf("WallCutDiag[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
-            }
-            prev_wall[i] = wd.wall[i];
-          }
-        }
+        //        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2 && fabs(origin.theta - sc.position.theta) < PI / 48) {
+        //          for (int i = 0; i < 2; i++) {
+        //            if (prev_wall[i] && !wd.wall[i]) {
+        //              Position prev = sc.position;
+        //              Position fix = sc.position.rotate(-origin.theta);
+        //              const float extra = 40;
+        //              if (i == 0) {
+        //                fix.x = floor((fix.x + extra) / SEGMENT_DIAGONAL_WIDTH) * SEGMENT_DIAGONAL_WIDTH + SEGMENT_DIAGONAL_WIDTH / 2 + extra;
+        //              } else {
+        //                fix.x = floor((fix.x + SEGMENT_DIAGONAL_WIDTH / 2 + extra) / SEGMENT_DIAGONAL_WIDTH) * SEGMENT_DIAGONAL_WIDTH + extra;
+        //              }
+        //              fix = fix.rotate(origin.theta);
+        //              if (fabs(prev.rotate(-origin.theta).x - fix.rotate(-origin.theta).x) < 15.0f)
+        //                sc.position = fix;
+        //              printf("WallCutDiag[%d] X_ (%.1f, %.1f, %.1f) => (%.1f, %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f / PI, sc.position.x, sc.position.y, sc.position.theta * 180 / PI);
+        //            }
+        //            prev_wall[i] = wd.wall[i];
+        //          }
+        //        }
       }
     }
     void straight_x(const float distance, const float v_max, const float v_end) {
