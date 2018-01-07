@@ -51,6 +51,18 @@ class UserInterface {
           delay(wait_ms);
           return -1;
         }
+        if (btn.pressed) {
+          btn.flags = 0;
+          bz.play(Buzzer::CONFIRM);
+          log_i("waitForSelect() => %d", value);
+          return value;
+        }
+        if (btn.long_pressed_1) {
+          btn.flags = 0;
+          bz.play(Buzzer::CANCEL);
+          log_i("waitForSelect() => -1");
+          return -1;
+        }
       }
       return -1;
     }
@@ -69,8 +81,14 @@ class UserInterface {
         }
         if (abs(imu.accel.x) > thr_accel) {
           bz.play(Buzzer::CANCEL);
-          log_i("waitForSelect() => -1");
+          log_i("waitForCover() => false");
           delay(wait_ms);
+          return false;
+        }
+        if (btn.long_pressed_1) {
+          btn.flags = 0;
+          bz.play(Buzzer::CANCEL);
+          log_i("waitForCover() => false");
           return false;
         }
       }
@@ -109,9 +127,9 @@ class UserInterface {
       if (voltage < 3.8f) {
         printf("Battery Low!\n");
         bz.play(Buzzer::LOW_BATTERY);
-        while (!btn.pressed)delay(100);
+        while (!btn.pressed) delay(100);
         btn.flags = 0;
-        //    led = 0;
+        led = 0;
         //    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
         //    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
         //    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);

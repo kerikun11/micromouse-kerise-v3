@@ -190,11 +190,11 @@ void normal_drive() {
     //* 迷路データの復元
     case 7:
       bz.play(Buzzer::MAZE_RESTORE);
-      if (ms.restore()) {
-        bz.play(Buzzer::SUCCESSFUL);
-      } else {
+      if (!ms.restore()) {
         bz.play(Buzzer::ERROR);
+        return;
       }
+      bz.play(Buzzer::SUCCESSFUL);
       break;
     //* 前壁キャリブレーション
     case 8:

@@ -5,6 +5,16 @@
 
 #include <WiFi.h>
 
+#define MACHINE_ROTATION_RADIUS 16.7f
+#define MACHINE_GEAR_RATIO      (1.0f/3.0f) //< 10/30
+#define MACHINE_WHEEL_DIAMETER  13.28f
+#define MACHINE_TAIL_LENGTH     18.4f
+
+#include "imu.h"
+#include "encoder.h"
+IMU imu;
+Encoder enc;
+
 #define BAT_VOL_PIN             35
 
 #define AS5048A_MOSI_PIN        23
@@ -20,17 +30,6 @@
 #define ICM20602_CS_PIN         14
 #define ICM20602_SPI_HOST       HSPI_HOST
 #define ICM20602_SPI_DMA_CHAIN  1
-
-#define MACHINE_ROTATION_RADIUS 16.7f
-#define MACHINE_GEAR_RATIO      (1.0f/3.0f) //< 10/30
-#define MACHINE_WHEEL_DIAMETER  13.28f
-#define MACHINE_TAIL_LENGTH     18.4f
-
-#include "imu.h"
-#include "encoder.h"
-
-IMU imu;
-Encoder enc;
 
 void batteryCheck() {
   float voltage = 2 * 1.1f * 3.54813389f * analogRead(BAT_VOL_PIN) / 4095;
@@ -49,12 +48,13 @@ void batteryCheck() {
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  Serial.begin(115200);
+  Serial.begin(2000000);
   log_i("KERISE v3-2");
   batteryCheck();
 
-  imu.begin(true);
-  enc.begin(false);
+  //  imu.begin(true);
+  imu.begin(true, ICM20602_SCLK_PIN, ICM20602_MISO_PIN, ICM20602_MOSI_PIN, ICM20602_CS_PIN, ICM20602_SPI_HOST);
+  enc.begin(false, AS5048A_SCLK_PIN, AS5048A_MISO_PIN, AS5048A_MOSI_PIN, AS5048A_CS_PIN, AS5048A_SPI_HOST);
   //  delay(2000);
   //  imu.calibration();
   xTaskCreate(task, "test", 4096, NULL, 0, NULL);
@@ -74,7 +74,7 @@ void task(void* arg) {
 
 void loop() {
   imu.print();
-  //  enc.print();
+  enc.print();
   delay(100);
   if (Serial.available()) {
     switch (Serial.read()) {
