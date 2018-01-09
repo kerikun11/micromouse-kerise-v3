@@ -67,13 +67,14 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(2000000);
   printf("\n************ KERISE v3-2 ************\n");
+  if (!led.begin()) bz.play(Buzzer::ERROR);
   ui.batteryCheck();
   bz.play(Buzzer::BOOT);
 
   if (!SPIFFS.begin(true)) bz.play(Buzzer::ERROR);
-  if (!imu.begin(true)) bz.play(Buzzer::ERROR);
-  if (!enc.begin(false)) bz.play(Buzzer::ERROR);
-  ref.begin();
+  if (!imu.begin(true, ICM20602_SCLK_PIN, ICM20602_MISO_PIN, ICM20602_MOSI_PIN, ICM20602_CS_PIN, ICM20602_SPI_HOST)) bz.play(Buzzer::ERROR);
+  if (!enc.begin(false, AS5048A_SCLK_PIN, AS5048A_MISO_PIN, AS5048A_MOSI_PIN, AS5048A_CS_PIN, AS5048A_SPI_HOST)) bz.play(Buzzer::ERROR);
+  if (!ref.begin()) bz.play(Buzzer::ERROR);
   if (!tof.begin()) bz.play(Buzzer::ERROR);
   if (!wd.begin()) bz.play(Buzzer::ERROR);
   em.begin();

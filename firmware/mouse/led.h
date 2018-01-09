@@ -5,8 +5,10 @@
 
 class LED {
   public:
-    LED(const std::vector<int> pins): pins(pins) {
+    LED(const std::vector<int> pins): pins(pins), value(0) {}
+    bool begin() {
       for (auto pin : pins) pinMode(pin, OUTPUT);
+      return true;
     }
     operator uint8_t() const {
       return value;

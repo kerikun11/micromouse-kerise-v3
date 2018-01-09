@@ -28,18 +28,17 @@
 
 class MazeSolver: TaskBase {
   public:
-    MazeSolver(): TaskBase("Maze Solver", MAZE_SOLVER_TASK_PRIORITY, MAZE_SOLVER_STACK_SIZE), agent(maze, MAZE_GOAL) {
+    MazeSolver(): agent(maze, MAZE_GOAL) {
       maze_backup.push_back(maze);
     }
-    virtual ~MazeSolver() {}
     void start(bool isForceSearch = false) {
       this->isForceSearch = isForceSearch;
       terminate();
       isRunningFlag = true;
-      create_task();
+      createTask("Maze Solver", MAZE_SOLVER_TASK_PRIORITY, MAZE_SOLVER_STACK_SIZE);
     }
     void terminate() {
-      delete_task();
+      deleteTask();
       sr.disable();
       fr.disable();
       isRunningFlag = false;

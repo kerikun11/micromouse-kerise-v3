@@ -1,47 +1,69 @@
+/**
+    @file TaskBase.h
+    @brief FreeRTOSのTaskにC++の関数を渡すためのクラスを定義したファイル．
+    @author KERI (Github: kerikun11)
+    @date 2017.11.27
+*/
 #pragma once
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
 
+/** @class TaskBase
+    @brief FreeRTOSのタスクのベースとなるクラス．
+    実行したい関数をもつクラスでこのクラスを継承して使用する．
+*/
 class TaskBase {
   public:
-    // デフォルトコンストラクタを禁止
-    // 継承先のコンストラクタでTaskBaseの初期化を強制するため
-    TaskBase() = delete;
-
-    TaskBase(const char *_name, int _priority, uint32_t _stack_size = configMINIMAL_STACK_SIZE)
-      : name(_name), priority(_priority), stack_size(_stack_size) {
+    /** @function Constructor
+        このクラス単体を宣言することはないだろう
+    */
+    TaskBase(): pxCreatedTask(NULL) {}
+    /** @function Destructor
+        もしタスクが実行中なら削除する
+    */
+    ~TaskBase() {
+      deleteTask();
     }
-    virtual ~TaskBase() {
-      delete_task();
-    }
-    void create_task(const BaseType_t xCoreID = tskNO_AFFINITY) {
-      if (handle != NULL) {
-        vTaskDelete(handle);
+    /** @function createTask
+        @brief タスクを生成する関数
+    */
+    bool createTask(const char* pcName, UBaseType_t uxPriority = 0, const uint16_t usStackDepth = configMINIMAL_STACK_SIZE, const BaseType_t xCoreID = tskNO_AFFINITY) {
+      if (pxCreatedTask != NULL) {
+        log_w("task %s is already created", pcName);
+        return false;
       }
-      //      xTaskCreate(task_entry_point, name, stack_size, this, priority, &handle);
-      xTaskCreatePinnedToCore(task_entry_point, name, stack_size, this, priority, &handle, xCoreID);
+      // Taskを生成
+      BaseType_t res = xTaskCreatePinnedToCore(pxTaskCode, pcName, usStackDepth, this, uxPriority, pxCreatedTask, xCoreID);
+      if (res != pdPASS) {
+        log_w("couldn't create the task %s", pcName);
+        return false;
+      }
+      return true;
     }
-    void delete_task() {
-      if (handle == NULL) {
+    /** @function deleteTask
+        @brief タスクを削除する関数
+    */
+    void deleteTask() {
+      if (pxCreatedTask == NULL) {
+        log_w("task is not created");
         return;
       }
-      vTaskDelete(handle);
-      handle = NULL;
+      vTaskDelete(pxCreatedTask);
     }
 
   protected:
-    xTaskHandle handle = 0;
-    const char *name;
-    int priority;
-    uint32_t stack_size;
+    TaskHandle_t* pxCreatedTask;  //< タスクのハンドル
 
+    /** @function task
+        @brief FreeRTOSにより実行される関数名
+    */
     virtual void task() = 0;
-
-    static void task_entry_point(void* task_instance) {
-      static_cast<TaskBase*>(task_instance)->task();
+    /** @function task
+        @brief FreeRTOSにより実行される関数ポインタ
+    */
+    static void pxTaskCode(void* const pvParameters) {
+      static_cast<TaskBase*>(pvParameters)->task();
     }
 };
 

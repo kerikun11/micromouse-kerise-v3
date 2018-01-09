@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include "TaskBase.h"
 #include "config.h"
 
 #include "Reflector.h"
@@ -10,16 +9,17 @@
 #define LOGGER_TASK_PRIORITY 1
 #define LOGGER_STACK_SIZE    4096
 
-class Logger: TaskBase {
+class Logger {
   public:
-    Logger(): TaskBase("Logger", LOGGER_TASK_PRIORITY, LOGGER_STACK_SIZE) {}
-    virtual ~Logger() {}
+    Logger() {}
     void start() {
       log = "";
-      create_task();
+      xTaskCreate([](void* obj) {
+        static_cast<Logger*>(obj)->task();
+      }, "Logger", LOGGER_STACK_SIZE, this, LOGGER_TASK_PRIORITY, &task_handle);
     }
     void end() {
-      delete_task();
+      vTaskDelete(&task_handle);
     }
     void print() {
       Serial.print(log);
@@ -36,8 +36,9 @@ class Logger: TaskBase {
       log += s;
     }
   private:
+    xTaskHandle task_handle;
     String log;
-    virtual void task() {
+    void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);

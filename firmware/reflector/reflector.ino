@@ -8,9 +8,6 @@
 #define BAT_VOL_PIN             35
 #define PR_TX_PINS              {12, 13, 12, 13}
 #define PR_RX_PINS              {36, 38, 39, 37}
-//#define BAT_VOL_PIN             36
-//#define PR_TX_PINS              {16, 17, 16, 17}
-//#define PR_RX_PINS              {12, 13, 32, 33}
 
 #include "reflector.h"
 Reflector ref(PR_TX_PINS, PR_RX_PINS);
@@ -20,6 +17,7 @@ void batteryCheck() {
   printf("Battery Voltage: %.3f\n", voltage);
   if (voltage < 3.8f) {
     printf("Battery Low!\n");
+    //    bz.play(Buzzer::LOW_BATTERY);
     delay(3000);
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
     esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);
@@ -31,7 +29,7 @@ void batteryCheck() {
 
 void setup() {
   WiFi.mode(WIFI_OFF);
-  Serial.begin(115200);
+  Serial.begin(2000000);
   log_i("KERISE Reflector Sample");
   batteryCheck();
 
@@ -44,13 +42,11 @@ void task(void* arg) {
   portTickType xLastWakeTime;
   xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1000 / portTICK_RATE_MS);
-    //    ref.oneshot();
+    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
   }
 }
 
 void loop() {
-  ref.csv();
-  delay(20);
+  delay(1000);
 }
 

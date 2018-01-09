@@ -257,8 +257,7 @@ class FS90: public FastTrajectory {
 
 class FastRun: TaskBase {
   public:
-    FastRun() : TaskBase("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE) {}
-    virtual ~FastRun() {}
+    FastRun() {}
     enum FAST_ACTION : char {
       FAST_GO_STRAIGHT = 's',
       FAST_GO_HALF = 'x',
@@ -301,11 +300,11 @@ class FastRun: TaskBase {
 
     void enable() {
       printf("FastRun Enabled\n");
-      delete_task();
-      create_task();
+      deleteTask();
+      createTask("FastRun", FAST_RUN_TASK_PRIORITY, FAST_RUN_STACK_SIZE);
     }
     void disable() {
-      delete_task();
+      deleteTask();
       sc.disable();
       path = "";
       printf("FastRun Disabled\n");

@@ -116,7 +116,7 @@ class S90: public SearchTrajectory {
 
 class SearchRun: TaskBase {
   public:
-    SearchRun() : TaskBase("SearchRun", SEARCH_RUN_TASK_PRIORITY, SEARCH_RUN_STACK_SIZE) {}
+    SearchRun() {}
     virtual ~SearchRun() {}
     enum ACTION {
       START_STEP, START_INIT, GO_STRAIGHT, GO_HALF, TURN_LEFT_90, TURN_RIGHT_90, TURN_BACK, RETURN, STOP,
@@ -131,13 +131,13 @@ class SearchRun: TaskBase {
     }
     void enable() {
       printf("SearchRun Enabled\n");
-      delete_task();
-      create_task();
+      deleteTask();
+      createTask("SearchRun", SEARCH_RUN_TASK_PRIORITY, SEARCH_RUN_STACK_SIZE);
       //      lg.start();
     }
     void disable() {
       //      lg.end();
-      delete_task();
+      deleteTask();
       sc.disable();
       while (q.size()) {
         q.pop();

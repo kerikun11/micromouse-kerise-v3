@@ -1,6 +1,6 @@
 /**
     @file TaskBase.h
-    @brief FreeRTOSのTaskにC++の関数を渡すためのクラスTaskBaseを定義したファイル．
+    @brief FreeRTOSのTaskにC++の関数を渡すためのクラスを定義したファイル．
     @author KERI (Github: kerikun11)
     @date 2017.11.27
 */
@@ -8,7 +8,6 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp32-hal-log.h"
 
 /** @class TaskBase
     @brief FreeRTOSのタスクのベースとなるクラス．
@@ -17,11 +16,11 @@
 class TaskBase {
   public:
     /** @function Constructor
-        このクラスを単体で宣言することはないだろう
+        このクラス単体を宣言することはないだろう
     */
     TaskBase(): pxCreatedTask(NULL) {}
     /** @function Destructor
-        タスクが実行中なら削除する
+        もしタスクが実行中なら削除する
     */
     ~TaskBase() {
       deleteTask();
@@ -55,6 +54,7 @@ class TaskBase {
 
   protected:
     TaskHandle_t* pxCreatedTask;  //< タスクのハンドル
+
     /** @function task
         @brief FreeRTOSにより実行される関数名
     */

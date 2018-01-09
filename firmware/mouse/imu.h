@@ -1,48 +1,56 @@
 #pragma once
 
 #include <Arduino.h>
+#include "TaskBase.h"
 #include "driver/spi_master.h"
 #include "esp_err.h"
 
-#define AXIS_TASK_PRIORITY    5
-#define AXIS_TASK_STACK_SIZE  2048
-#define AXIS_UPDATE_PERIOD_US 1000
-
 #define ICM20602_ACCEL_FACTOR 2048.0f
 #define ICM20602_GYRO_FACTOR  16.4f
+#define ACCEL_G               9806.65f
 
-class IMU {
+#define IMU_UPDATE_PERIOD_US 1000
+
+class IMU : TaskBase {
   public:
     IMU() {}
-    bool begin(bool spi_initializing) {
-      if (spi_initializing) {
+    bool begin(bool spi_bus_initializing, int8_t pin_sclk, int8_t pin_miso, int8_t pin_mosi, int8_t pin_cs,
+               spi_host_device_t spi_host, int dma_chain = 0,
+               UBaseType_t uxPriority = 5, const uint16_t usStackDepth = 2048) {
+      if (spi_bus_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
-        bus_cfg.mosi_io_num = ICM20602_MOSI_PIN;
-        bus_cfg.miso_io_num = ICM20602_MISO_PIN;
-        bus_cfg.sclk_io_num = ICM20602_SCLK_PIN;
-        bus_cfg.quadwp_io_num = -1;
-        bus_cfg.max_transfer_sz = 0; // defaults to 4094 if 0
-        ESP_ERROR_CHECK(spi_bus_initialize(ICM20602_SPI_HOST, &bus_cfg, ICM20602_SPI_DMA_CHAIN));
+        bus_cfg.mosi_io_num = pin_mosi; ///< GPIO pin for Master Out Slave In (=spi_d) signal, or -1 if not used.
+        bus_cfg.miso_io_num = pin_miso; ///< GPIO pin for Master In Slave Out (=spi_q) signal, or -1 if not used.
+        bus_cfg.sclk_io_num = pin_sclk; ///< GPIO pin for Spi CLocK signal, or -1 if not used.
+        bus_cfg.quadwp_io_num = -1;     ///< GPIO pin for WP (Write Protect) signal which is used as D2 in 4-bit communication modes, or -1 if not used.
+        bus_cfg.quadhd_io_num = -1;     ///< GPIO pin for HD (HolD) signal which is used as D3 in 4-bit communication modes, or -1 if not used.
+        bus_cfg.max_transfer_sz = 0;    ///< Maximum transfer size, in bytes. Defaults to 4094 if 0.
+        ESP_ERROR_CHECK(spi_bus_initialize(spi_host, &bus_cfg, dma_chain));
       }
       // ESP-IDF SPI device initialization
-      spi_device_interface_config_t device_cfg = {0};
-      device_cfg.address_bits = 8;
-      device_cfg.mode = 3;
-      device_cfg.clock_speed_hz = 10000000;
-      device_cfg.spics_io_num = ICM20602_CS_PIN;
-      device_cfg.queue_size = 1;
-      ESP_ERROR_CHECK(spi_bus_add_device(ICM20602_SPI_HOST, &device_cfg, &spi_handle));
+      spi_device_interface_config_t dev_cfg = {0};
+      dev_cfg.command_bits = 0;         ///< Default amount of bits in command phase (0-16), used when ``SPI_TRANS_VARIABLE_CMD`` is not used, otherwise ignored.
+      dev_cfg.address_bits = 8;         ///< Default amount of bits in address phase (0-64), used when ``SPI_TRANS_VARIABLE_ADDR`` is not used, otherwise ignored.
+      dev_cfg.dummy_bits = 0;           ///< Amount of dummy bits to insert between address and data phase
+      dev_cfg.mode = 3;                 ///< SPI mode (0-3)
+      dev_cfg.duty_cycle_pos = 0;       ///< Duty cycle of positive clock, in 1/256th increments (128 = 50%/50% duty). Setting this to 0 (=not setting it) is equivalent to setting this to 128.
+      dev_cfg.cs_ena_pretrans = 0;      ///< Amount of SPI bit-cycles the cs should be activated before the transmission (0-16). This only works on half-duplex transactions.
+      dev_cfg.cs_ena_posttrans = 0;     ///< Amount of SPI bit-cycles the cs should stay active after the transmission (0-16)
+      dev_cfg.clock_speed_hz = 10000000;///< Clock speed, in Hz
+      dev_cfg.spics_io_num = pin_cs;    ///< CS GPIO pin for this device, or -1 if not used
+      dev_cfg.flags = 0;                ///< Bitwise OR of SPI_DEVICE_* flags
+      dev_cfg.queue_size = 1;           ///< Transaction queue size. This sets how many transactions can be 'in the air' (queued using spi_device_queue_trans but not yet finished using spi_device_get_trans_result) at the same time
+      dev_cfg.pre_cb = NULL;            ///< Callback to be called before a transmission is started. This callback is called within interrupt context.
+      dev_cfg.post_cb = NULL;           ///< Callback to be called after a transmission has completed. This callback is called within interrupt context.
+      ESP_ERROR_CHECK(spi_bus_add_device(spi_host, &dev_cfg, &spi_handle));
       // Who am I check
       if (!reset()) return false;
       // calibration semaphore
       calibration_start_semaphore = xSemaphoreCreateBinary();
       calibration_end_semaphore = xSemaphoreCreateBinary();
       // sampling task execution
-      xTaskCreate([](void* obj) {
-        static_cast<IMU*>(obj)->task();
-      }, "IMU", AXIS_TASK_STACK_SIZE, this, AXIS_TASK_PRIORITY, &task_handle);
-      return true;
+      return createTask("IMU", uxPriority, usStackDepth);
     }
     struct MotionParameter {
       float x, y, z;
@@ -95,9 +103,9 @@ class IMU {
         update();
 
         // calculation of angle and velocity from motion sensor
-        velocity += (accel + accel_prev) / 2 * AXIS_UPDATE_PERIOD_US / 1000000;
+        velocity += (accel + accel_prev) / 2 * IMU_UPDATE_PERIOD_US / 1000000;
         accel_prev = accel;
-        angle += (gyro + gyro_prev) / 2 * AXIS_UPDATE_PERIOD_US / 1000000;
+        angle += (gyro + gyro_prev) / 2 * IMU_UPDATE_PERIOD_US / 1000000;
         gyro_prev = gyro;
 
         if (xSemaphoreTake(calibration_start_semaphore, 0) == pdTRUE) {
@@ -130,12 +138,9 @@ class IMU {
       return true;
     }
     bool reset() {
-      writeReg(0x6b, 0x81); //< power management 1
-      delay(100);
       writeReg(0x6b, 0x01); //< power management 1
       writeReg(0x1b, 0x18); //< gyro range
       writeReg(0x1c, 0x18); //< accel range
-      delay(100);
       return whoami();
     }
     void update() {
@@ -149,11 +154,11 @@ class IMU {
       uint8_t rx[14];
       readReg(0x3b, rx, 14);
       bond.h = rx[0]; bond.l = rx[1];
-      accel.x = bond.i / ICM20602_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.x;
+      accel.x = bond.i / ICM20602_ACCEL_FACTOR * 1000 * ACCEL_G - accel_offset.x;
       bond.h = rx[2]; bond.l = rx[3];
-      accel.y = bond.i / ICM20602_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.y;
+      accel.y = bond.i / ICM20602_ACCEL_FACTOR * 1000 * ACCEL_G - accel_offset.y;
       bond.h = rx[4]; bond.l = rx[5];
-      accel.z = bond.i / ICM20602_ACCEL_FACTOR * 1000 * 9.80665 - accel_offset.z;
+      accel.z = bond.i / ICM20602_ACCEL_FACTOR * 1000 * ACCEL_G - accel_offset.z;
 
       bond.h = rx[8]; bond.l = rx[9];
       gyro.x = bond.i / ICM20602_GYRO_FACTOR * PI / 180 - gyro_offset.x;
@@ -187,6 +192,4 @@ class IMU {
       ESP_ERROR_CHECK(spi_device_transmit(spi_handle, &tx));
     }
 };
-
-extern IMU imu;
 
