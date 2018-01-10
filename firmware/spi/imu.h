@@ -154,11 +154,11 @@ class IMU : TaskBase {
       uint8_t rx[14];
       readReg(0x3b, rx, 14);
       bond.h = rx[0]; bond.l = rx[1];
-      accel.x = bond.i / ICM20602_ACCEL_FACTOR * 1000 * ACCEL_G - accel_offset.x;
+      accel.x = bond.i / ICM20602_ACCEL_FACTOR * ACCEL_G - accel_offset.x;
       bond.h = rx[2]; bond.l = rx[3];
-      accel.y = bond.i / ICM20602_ACCEL_FACTOR * 1000 * ACCEL_G - accel_offset.y;
+      accel.y = bond.i / ICM20602_ACCEL_FACTOR * ACCEL_G - accel_offset.y;
       bond.h = rx[4]; bond.l = rx[5];
-      accel.z = bond.i / ICM20602_ACCEL_FACTOR * 1000 * ACCEL_G - accel_offset.z;
+      accel.z = bond.i / ICM20602_ACCEL_FACTOR * ACCEL_G - accel_offset.z;
 
       bond.h = rx[8]; bond.l = rx[9];
       gyro.x = bond.i / ICM20602_GYRO_FACTOR * PI / 180 - gyro_offset.x;
