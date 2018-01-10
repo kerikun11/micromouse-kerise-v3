@@ -7,11 +7,41 @@
 #include "Maze.h"
 #include "Agent.h"
 
-#include "Logger.h"
-#include "WallDetector.h"
+/* Hardware */
+#include "buzzer.h"
+extern Buzzer bz;
+#include "button.h"
+extern Button btn;
+#include "led.h"
+extern LED led;
+#include "motor.h"
+extern Motor mt;
+#include "fan.h"
+extern Fan fan;
+#include "imu.h"
+extern IMU imu;
+#include "encoder.h"
+extern Encoder enc;
+#include "reflector.h"
+extern Reflector ref;
+#include "tof.h"
+extern ToF tof;
+
+/* Software */
+#include "UserInterface.h"
+extern UserInterface ui;
 #include "SpeedController.h"
+extern SpeedController sc;
+#include "WallDetector.h"
+extern WallDetector wd;
+#include "ExternalController.h"
+extern ExternalController ec;
+#include "Logger.h"
+extern Logger lg;
 #include "SearchRun.h"
+extern SearchRun sr;
 #include "FastRun.h"
+extern FastRun fr;
 
 #define MAZE_SOLVER_TASK_PRIORITY 2
 #define MAZE_SOLVER_STACK_SIZE    8192
@@ -356,6 +386,4 @@ class MazeSolver: TaskBase {
       }
     }
 };
-
-extern MazeSolver ms;
 

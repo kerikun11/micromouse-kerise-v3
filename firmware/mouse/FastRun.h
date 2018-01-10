@@ -5,13 +5,25 @@
 #include <queue>
 #include "TaskBase.h"
 #include "config.h"
-#include "encoder.h"
+
 #include "motor.h"
+extern Motor mt;
+#include "fan.h"
+extern Fan fan;
 #include "imu.h"
+extern IMU imu;
+#include "encoder.h"
+extern Encoder enc;
 #include "reflector.h"
-#include "Logger.h"
-#include "WallDetector.h"
+extern Reflector ref;
+
 #include "SpeedController.h"
+extern SpeedController sc;
+#include "WallDetector.h"
+extern WallDetector wd;
+
+#include "Logger.h"
+extern Logger lg;
 
 #define FAST_RUN_TASK_PRIORITY  3
 #define FAST_RUN_STACK_SIZE     8192
@@ -726,6 +738,4 @@ class FastRun: TaskBase {
       }
     }
 };
-
-extern FastRun fr;
 

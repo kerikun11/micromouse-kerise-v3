@@ -4,8 +4,11 @@
 #include <cstdlib>
 
 #include "motor.h"
+extern Motor mt;
 #include "imu.h"
+extern IMU imu;
 #include "encoder.h"
+extern Encoder enc;
 
 class Position {
   public:
@@ -236,6 +239,4 @@ class SpeedController {
       }
     }
 };
-
-extern SpeedController sc;
 

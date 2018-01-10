@@ -78,4 +78,3 @@ class ToF {
     }
 };
 
-extern ToF tof;

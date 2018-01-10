@@ -5,13 +5,34 @@
 #include <queue>
 #include "TaskBase.h"
 #include "config.h"
-#include "encoder.h"
+
+/* Hardware */
+#include "buzzer.h"
+extern Buzzer bz;
+#include "button.h"
+extern Button btn;
+#include "led.h"
+extern LED led;
 #include "motor.h"
+extern Motor mt;
+#include "fan.h"
+extern Fan fan;
 #include "imu.h"
+extern IMU imu;
+#include "encoder.h"
+extern Encoder enc;
 #include "reflector.h"
-#include "Logger.h"
-#include "WallDetector.h"
+extern Reflector ref;
+#include "tof.h"
+extern ToF tof;
+
+/* Software */
 #include "SpeedController.h"
+extern SpeedController sc;
+#include "WallDetector.h"
+extern WallDetector wd;
+#include "Logger.h"
+extern Logger lg;
 
 #define SEARCH_WALL_ATTACH_ENABLED  true
 #define SEARCH_WALL_CUT_ENABLED     true
@@ -417,6 +438,4 @@ class SearchRun: TaskBase {
       while (1) delay(1000);
     }
 };
-
-extern SearchRun sr;
 

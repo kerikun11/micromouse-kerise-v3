@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <array>
 #include "TaskBase.h"
 
 #define REFLECTOR_CH_SIZE         4

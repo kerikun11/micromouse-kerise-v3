@@ -3,8 +3,15 @@
 #include <Arduino.h>
 #include "config.h"
 
-#include "Reflector.h"
-#include "SpeedController.h"
+/* Hardware */
+#include "imu.h"
+extern IMU imu;
+#include "encoder.h"
+extern Encoder enc;
+#include "reflector.h"
+extern Reflector ref;
+#include "tof.h"
+extern ToF tof;
 
 #define LOGGER_TASK_PRIORITY 1
 #define LOGGER_STACK_SIZE    4096
@@ -76,6 +83,4 @@ class Logger {
       }
     }
 };
-
-extern Logger lg;
 

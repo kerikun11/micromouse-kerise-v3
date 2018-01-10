@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include "VL53L0X.h"
 
-#define TOF_TASK_PRIORITY     0
+#define TOF_TASK_PRIORITY     1
 #define TOF_TASK_STACK_SIZE   4096
 
 class ToF {
@@ -12,7 +12,6 @@ class ToF {
     ToF(const int pin_sda, const int pin_scl): pin_sda(pin_sda), pin_scl(pin_scl) {}
     bool begin() {
       Wire.begin(pin_sda, pin_scl);
-      Wire.reset();
       sensor.setTimeout(50);
       if (!sensor.init()) return false;
       //      sensor.setAddress(0x55);
@@ -33,8 +32,8 @@ class ToF {
       log_d("ToF: %d\n", getDistance());
     }
     void csv() {
-      //      printf("0,90,180,270,360,%d\n", getDistance());
-      printf("0,20,40,%d\n", passed_ms);
+      printf("0,90,180,270,360,%d\n", getDistance());
+      //      printf("0,20,40,%d\n", passed_ms);
     }
   private:
     const int pin_sda, pin_scl;
@@ -71,7 +70,7 @@ class ToF {
         }
         uint16_t range = sensor.readReg16Bit(VL53L0X::RESULT_RANGE_STATUS + 10);
         sensor.writeReg(VL53L0X::SYSTEM_INTERRUPT_CLEAR, 0x01);
-        if (range > 5 && range < 300) {
+        if (range > 5 && range < 1000) {
           distance = range - 3;
           passed_ms = 0;
         }
@@ -79,4 +78,3 @@ class ToF {
     }
 };
 
-extern ToF tof;

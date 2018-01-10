@@ -3,16 +3,10 @@
 #include <Arduino.h>
 #include "config.h"
 
-#include "buzzer.h"
-#include "led.h"
-#include "button.h"
-#include "motor.h"
+#include "Buzzer.h"
+extern Buzzer bz;
 #include "imu.h"
-#include "encoder.h"
-#include "reflector.h"
-#include "WallDetector.h"
-#include "SpeedController.h"
-#include "MazeSolver.h"
+extern IMU imu;
 
 #define EXTERNAL_CONTROLLER_TASK_PRIORITY 1
 #define EXTERNAL_CONTROLLER_STACK_SIZE    4096
@@ -29,7 +23,7 @@ class ExternalController {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 10 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
         while (Serial.available()) {
           char c = Serial.read();
           printf("%c\n", c);
@@ -38,17 +32,9 @@ class ExternalController {
               bz.play(Buzzer::CONFIRM);
               imu.calibration();
               break;
-            case 'p':
-              tof.print();
-              imu.print();
-              ref.print();
-              wd.print();
-              break;
           }
         }
       }
     }
 };
-
-extern ExternalController ec;
 

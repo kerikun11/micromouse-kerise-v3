@@ -11,11 +11,14 @@ class Buzzer {
   public:
     Buzzer(int pin, uint8_t channel): pin(pin), channel(channel) {
       playList = xQueueCreate(BUZZER_QUEUE_SIZE, sizeof(enum Music));
-      ledcSetup(LEDC_CH_BUZZER, 880, 4);
-      ledcAttachPin(BUZZER_PIN, LEDC_CH_BUZZER);
+    }
+    bool begin() {
+      ledcSetup(channel, 880, 4);
+      ledcAttachPin(pin, channel);
       xTaskCreate([](void* obj) {
         static_cast<Buzzer*>(obj)->task();
       }, "Buzzer", BUZZER_TASK_STACK_SIZE, this, BUZZER_TASK_PRIORITY, NULL);
+      return true;
     }
     enum Music {
       SELECT, CANCEL, CONFIRM, SUCCESSFUL, ERROR,
@@ -35,11 +38,11 @@ class Buzzer {
     uint8_t channel;
     xQueueHandle playList;
     void sound(const note_t note, uint8_t octave, uint32_t time_ms) {
-      ledcWriteNote(LEDC_CH_BUZZER, note, octave);
+      ledcWriteNote(channel, note, octave);
       vTaskDelay(time_ms / portTICK_RATE_MS);
     }
     void mute(uint32_t time_ms = 400) {
-      ledcWrite(LEDC_CH_BUZZER, 0);
+      ledcWrite(channel, 0);
       vTaskDelay(time_ms / portTICK_RATE_MS);
     }
     void task() {
@@ -142,6 +145,4 @@ class Buzzer {
       }
     }
 };
-
-extern Buzzer bz;
 

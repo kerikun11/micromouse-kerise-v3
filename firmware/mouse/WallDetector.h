@@ -1,10 +1,14 @@
 #pragma once
 
 #include <Arduino.h>
+#include <SPIFFS.h>
 #include "config.h"
 
+/* Hardware */
 #include "reflector.h"
+extern Reflector ref;
 #include "tof.h"
+extern ToF tof;
 
 #define WALL_DETECTOR_TASK_PRIORITY   4
 #define WALL_DETECTOR_STACK_SIZE      4096
@@ -161,6 +165,4 @@ class WallDetector {
       }
     }
 };
-
-extern WallDetector wd;
 

@@ -4,11 +4,17 @@
 #include "config.h"
 
 #include "buzzer.h"
+extern Buzzer bz;
 #include "led.h"
-#include "button.h"
+extern LED led;
 #include "motor.h"
+extern Motor mt;
+#include "fan.h"
+extern Fan fan;
 #include "imu.h"
+extern IMU imu;
 #include "MazeSolver.h"
+extern MazeSolver ms;
 
 #define EMERGENCY_TASK_PRIORITY 4
 #define EMERGENCY_STACK_SIZE    2048
@@ -37,6 +43,4 @@ class Emergency {
       }
     }
 };
-
-extern Emergency em;
 

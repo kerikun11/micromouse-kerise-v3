@@ -99,5 +99,3 @@ class Encoder : TaskBase {
     }
 };
 
-extern Encoder enc;
-

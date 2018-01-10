@@ -23,5 +23,3 @@ class LED {
     uint8_t value;
 };
 
-extern LED led;
-

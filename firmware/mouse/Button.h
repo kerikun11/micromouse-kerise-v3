@@ -69,5 +69,3 @@ class Button {
     }
 };
 
-extern Button btn;
-

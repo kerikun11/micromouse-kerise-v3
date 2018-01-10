@@ -2,20 +2,25 @@
 
 #include <Arduino.h>
 
+/* Hardware */
 #include "buzzer.h"
+extern Buzzer bz;
 #include "button.h"
+extern Button btn;
 #include "led.h"
-#include "motor.h"
+extern LED led;
 #include "imu.h"
+extern IMU imu;
 #include "encoder.h"
+extern Encoder enc;
 #include "reflector.h"
+extern Reflector ref;
 #include "tof.h"
-
-#define ACCEL_G 9806.65f
+extern ToF tof;
 
 class UserInterface {
   private:
-    const float thr_accel = 3 * ACCEL_G;
+    const float thr_accel = 3 * 9807;
     const float thr_gyro = 3 * PI;
     const float wait_ms = 200;
   public:
@@ -140,6 +145,4 @@ class UserInterface {
   private:
 
 };
-
-extern UserInterface ui;
 

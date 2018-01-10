@@ -6,46 +6,7 @@
 
 #include <WiFi.h>
 #include <SPIFFS.h>
-#include "config.h"
-
-/* Hardware */
-#include "buzzer.h"
-#include "button.h"
-#include "led.h"
-#include "motor.h"
-#include "imu.h"
-#include "encoder.h"
-#include "reflector.h"
-#include "tof.h"
-Buzzer bz(BUZZER_PIN, LEDC_CH_BUZZER);
-Button btn(BUTTON_PIN);
-LED led(LED_PINS);
-Motor mt;
-Fan fan;
-IMU imu;
-Encoder enc;
-Reflector ref(PR_TX_PINS, PR_RX_PINS);
-ToF tof(TOF_SDA_PIN, TOF_SCL_PIN);
-
-/* Software */
-#include "UserInterface.h"
-#include "SpeedController.h"
-#include "WallDetector.h"
-#include "Emergency.h"
-#include "ExternalController.h"
-#include "Logger.h"
-#include "SearchRun.h"
-#include "FastRun.h"
-#include "MazeSolver.h"
-UserInterface ui;
-SpeedController sc;
-WallDetector wd;
-Emergency em;
-ExternalController ec;
-Logger lg;
-SearchRun sr;
-FastRun fr;
-MazeSolver ms;
+#include "global.h"
 
 //#define printf lg.printf
 
@@ -66,7 +27,8 @@ void task(void* arg) {
 void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.begin(2000000);
-  printf("\n************ KERISE v3-2 ************\n");
+  printf("\n**************** KERISE ****************\n");
+  if (!bz.begin()) bz.play(Buzzer::ERROR);
   if (!led.begin()) bz.play(Buzzer::ERROR);
   ui.batteryCheck();
   bz.play(Buzzer::BOOT);
@@ -84,8 +46,6 @@ void setup() {
   xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 0, NULL); // debug output
 }
 
-const int searchig_time_ms = 3 * 60 * 1000;
-
 void loop() {
   normal_drive();
   //  position_test();
@@ -95,6 +55,7 @@ void loop() {
 }
 
 void timeKeepTask(void* arg) {
+  const int searchig_time_ms = 3 * 60 * 1000;
   while (millis() < searchig_time_ms) delay(1000);
   bz.play(Buzzer::LOW_BATTERY);
   ms.forceBackToStart();

@@ -79,21 +79,3 @@ class Motor {
     bool emergency;
 };
 
-#define FAN_FREQUENCY 10000
-#define FAN_BIT_NUM   8
-
-class Fan {
-  public:
-    Fan() {
-      ledcSetup(LEDC_CH_FAN, FAN_FREQUENCY, FAN_BIT_NUM);
-      ledcAttachPin(FAN_PIN, LEDC_CH_FAN);
-      ledcWrite(LEDC_CH_FAN, 0);
-    }
-    void drive(const float duty) {
-      ledcWrite(LEDC_CH_FAN, duty * (pow(2, FAN_BIT_NUM) - 1));
-    }
-};
-
-extern Motor mt;
-extern Fan fan;
-
