@@ -61,6 +61,9 @@ class WallDetector {
         log_e("File size is invalid!");
         return false;
       }
+      log_i("WallDetector Restore: %d %d %d %d",
+            wall_ref.side[0], wall_ref.front[0], wall_ref.front[1], wall_ref.side[1]
+           );
       return true;
     }
     void calibrationSide() {

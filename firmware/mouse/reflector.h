@@ -77,15 +77,15 @@ class Reflector : TaskBase {
           }
         }
         // Sampling
-        for (int i = 0; i < REFLECTOR_CH_SIZE; i++) {
+        for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
           digitalWrite(tx_pins[i], LOW);        //< 充電開始
-          delayMicroseconds(30);                //< 充電時間
+          delayMicroseconds(50);                //< 充電時間
           digitalWrite(tx_pins[i], HIGH);       //< 放電開始
-          delayMicroseconds(10);                //< 最大振幅になるまでの待ち時間
+          delayMicroseconds(15);                //< 最大振幅になるまでの待ち時間
           int raw = analogRead(rx_pins[i]);     //< サンプリング
           int temp = offset[i] - raw;           //< オフセットとの差をとる
-          value_buffer[0][i] = std::min(temp, 1);//< 0以下にならないように1で飽和
-          delayMicroseconds(100);                 // 放電時間
+          value_buffer[0][i] = std::max(temp, 1);//< 0以下にならないように1で飽和
+          delayMicroseconds(50);                 // 放電時間
         }
         // LPF
         for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
