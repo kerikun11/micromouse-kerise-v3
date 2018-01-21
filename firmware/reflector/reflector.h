@@ -4,7 +4,10 @@
 #include <array>
 #include "TaskBase.h"
 
-#define REFLECTOR_CH_SIZE         4
+#define REFLECTOR_CH_SIZE     4
+
+#define REFLECTOR_STACK_SIZE  4096
+#define REFLECTOR_PRIORITY    10
 
 class Reflector : TaskBase {
   public:
@@ -16,7 +19,7 @@ class Reflector : TaskBase {
         pinMode(tx_pins[i], OUTPUT);
         digitalWrite(tx_pins[i], LOW);
       }
-      return createTask("Reflector", 10, 4096, 1);
+      return createTask("Reflector", REFLECTOR_PRIORITY, REFLECTOR_STACK_SIZE, 1);
     }
     int16_t side(uint8_t isRight) const {
       if (isRight == 0) return read(0);

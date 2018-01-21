@@ -7,12 +7,14 @@
 
 #define ENCODER_PULSES            16384
 
+#define ENCODER_STACK_SIZE  4096
+#define ENCODER_PRIORITY    5
+
 class Encoder : TaskBase {
   public:
     Encoder() {}
     bool begin(bool spi_bus_initializing, int8_t pin_sclk, int8_t pin_miso, int8_t pin_mosi, int8_t pin_cs,
-               spi_host_device_t spi_host, int dma_chain = 1,
-               UBaseType_t uxPriority = 5, const uint16_t usStackDepth = configMINIMAL_STACK_SIZE) {
+               spi_host_device_t spi_host, int dma_chain = 0) {
       if (spi_bus_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
@@ -41,7 +43,7 @@ class Encoder : TaskBase {
       dev_cfg.post_cb = NULL;           ///< Callback to be called after a transmission has completed. This callback is called within interrupt context.
       ESP_ERROR_CHECK(spi_bus_add_device(spi_host, &dev_cfg, &encoder_spi));
       // sampling task execution
-      return createTask("Encoder", uxPriority, usStackDepth);
+      return createTask("Encoder", ENCODER_PRIORITY, ENCODER_STACK_SIZE);
     }
     void print() {
       printf("L: %d\tR: %d\n", getRaw(0), getRaw(1));

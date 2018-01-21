@@ -10,13 +10,14 @@
 #define ACCEL_G               9806.65f
 
 #define IMU_UPDATE_PERIOD_US 1000
+#define IMU_STACK_SIZE  2048
+#define IMU_PRIORITY    5
 
 class IMU : TaskBase {
   public:
     IMU() {}
     bool begin(bool spi_bus_initializing, int8_t pin_sclk, int8_t pin_miso, int8_t pin_mosi, int8_t pin_cs,
-               spi_host_device_t spi_host, int dma_chain = 0,
-               UBaseType_t uxPriority = 5, const uint16_t usStackDepth = 2048) {
+               spi_host_device_t spi_host, int dma_chain = 0) {
       if (spi_bus_initializing) {
         // ESP-IDF SPI bus initialization
         spi_bus_config_t bus_cfg = {0};
@@ -50,7 +51,7 @@ class IMU : TaskBase {
       calibration_start_semaphore = xSemaphoreCreateBinary();
       calibration_end_semaphore = xSemaphoreCreateBinary();
       // sampling task execution
-      return createTask("IMU", uxPriority, usStackDepth);
+      return createTask("IMU", IMU_PRIORITY, IMU_STACK_SIZE);
     }
     struct MotionParameter {
       float x, y, z;
