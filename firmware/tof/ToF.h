@@ -13,7 +13,10 @@ class ToF {
     bool begin() {
       Wire.begin(pin_sda, pin_scl);
       sensor.setTimeout(50);
-      if (!sensor.init()) return false;
+      if (!sensor.init()) {
+        log_e("ToF init failed :(");
+        return false;
+      }
       //      sensor.setAddress(0x55);
       sensor.setMeasurementTimingBudget(20000);
       //      sensor.startContinuous();
