@@ -61,7 +61,7 @@ class Reflector : TaskBase {
         portTickType xLastWakeTime = xTaskGetTickCount();
         for (int t = 0; t < ave_count; t++) {
           sum += analogRead(rx_pins[i]);
-          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         }
         offset[i] = sum / ave_count;
       }
@@ -72,7 +72,7 @@ class Reflector : TaskBase {
 
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); //< 同期
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount(); //< 同期
         // Buffer shift
         for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
           for (int j = ave_num - 1; j > 0; j--) {

@@ -20,8 +20,8 @@ extern ToF tof;
 
 class UserInterface {
   private:
-    const float thr_accel = 3 * 9807;
-    const float thr_gyro = 3 * PI;
+    const float thr_accel = 4 * 9807;
+    const float thr_gyro = 4 * PI;
     const float wait_ms = 200;
   public:
     UserInterface() {}
