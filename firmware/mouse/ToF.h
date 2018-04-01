@@ -58,7 +58,7 @@ class ToF {
         {
           uint32_t startAt = millis();
           while (sensor.readReg(VL53L0X::SYSRANGE_START) & 0x01) {
-            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
             passed_ms++;
             if (millis() - startAt > 100) break;
           }
@@ -66,7 +66,7 @@ class ToF {
         {
           uint32_t startAt = millis();
           while ((sensor.readReg(VL53L0X::RESULT_INTERRUPT_STATUS) & 0x07) == 0) {
-            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+            vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
             passed_ms++;
             if (millis() - startAt > 100) break;
           }

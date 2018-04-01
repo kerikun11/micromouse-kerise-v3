@@ -48,7 +48,7 @@ class Logger {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS);
         char str[64];
         //        const int i = 0;
         //        sprintf(str, "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.wheel[i], sc.actual.wheel[i], sc.enconly.wheel[i], sc.Kp * (sc.target.wheel[i] - sc.actual.wheel[i]), sc.Ki * (0 - sc.integral.wheel[i]), sc.Kd * (0 - sc.differential.wheel[i]));

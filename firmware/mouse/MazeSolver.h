@@ -133,34 +133,77 @@ class MazeSolver: TaskBase {
     bool isForceSearch = false;
     bool isRunningFlag = false;
 
+    void queueActions(const std::vector<Dir>& nextDirs) {
+      int straight_count = 0;
+      for (auto nextDir : nextDirs) {
+        Vector nextVec = searchAlgorithm.getCurVec().next(nextDir);
+        switch (Dir(nextDir - searchAlgorithm.getCurDir())) {
+          case Dir::Forward:
+            straight_count++;
+            break;
+          case Dir::Left:
+            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+            straight_count = 0;
+            sr.set_action(SearchRun::TURN_LEFT_90);
+            break;
+          case Dir::Back:
+            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+            straight_count = 0;
+            sr.set_action(SearchRun::TURN_BACK);
+            break;
+          case Dir::Right:
+            if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+            straight_count = 0;
+            sr.set_action(SearchRun::TURN_RIGHT_90);
+            break;
+        }
+        searchAlgorithm.updateCurVecDir(nextVec, nextDir);
+      }
+      if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
+      straight_count = 0;
+    }
+    void stopAndBackup() {
+      sr.set_action(SearchRun::STOP);
+      sr.waitForEnd();
+      sr.disable();
+      backup();
+      bz.play(Buzzer::MAZE_BACKUP);
+      const auto& v = searchAlgorithm.getCurVec();
+      const auto& d = searchAlgorithm.getCurDir();
+      searchAlgorithm.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
+      sr.set_action(SearchRun::RETURN);
+      sr.set_action(SearchRun::GO_HALF);
+      sr.enable();
+    }
+
     bool searchRun(const bool isStartStep = true, const Vector& startVec = Vector(0, 0), const Dir& startDir = Dir::North) {
       searchAlgorithm.reset();
       searchAlgorithm.updateCurVecDir(startVec, startDir);
       searchAlgorithm.calcNextDir();
       if (searchAlgorithm.getState() == SearchAlgorithm::REACHED_START) return true;
       if (isStartStep) {
+        // queue Action::START_STEP
         sr.set_action(SearchRun::START_STEP);
         searchAlgorithm.updateCurVecDir(startVec.next(startDir), startDir);
       }
+      // キューの消化を開始する
       sr.enable();
       while (1) {
-        sr.waitForEnd();
-
         const auto& v = searchAlgorithm.getCurVec();
         const auto& d = searchAlgorithm.getCurDir();
-        printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), searchAlgorithm.stateString(searchAlgorithm.getState()));
-        //        printf("ToF: %d, (passed: %d)\n", tof.getDistance(), tof.passedTimeMs());
-        searchAlgorithm.updateWall(v, d + 1, wd.wall[0]); // left
-        searchAlgorithm.updateWall(v, d + 0, wd.wall[2]); // front
-        searchAlgorithm.updateWall(v, d - 1, wd.wall[1]); // right
-        bz.play(Buzzer::SHORT);
-
         SearchAlgorithm::State prevState = searchAlgorithm.getState();
         uint32_t ms = millis();
-        searchAlgorithm.calcNextDir();
+        searchAlgorithm.calcNextDir(); //< 時間がかかる処理
         printf("searchAlgorithm.calcNextDir(); %lu [ms]\n", millis() - ms);
+        printf("Cur: ( %3d, %3d, %3d), State: %s       \n", v.x, v.y, uint8_t(d), searchAlgorithm.stateString(searchAlgorithm.getState()));
+        printf("nextDirs: ");
+        for (auto d : searchAlgorithm.getNextDirs()) printf("%c", ">^<v"[d]);
+        printf("    \n");
+        printf("nextDirsInAdvance: ");
+        for (auto d : searchAlgorithm.getNextDirsInAdvance()) printf("%c", ">^<v"[d]);
+        printf("    \n");
         SearchAlgorithm::State newState = searchAlgorithm.getState();
-        if (newState != prevState && newState == SearchAlgorithm::REACHED_START) break;
+
         if (newState != prevState && newState == SearchAlgorithm::REACHED_GOAL) {
           /* REACHED_GOAL */
           bz.play(Buzzer::CONFIRM);
@@ -168,29 +211,13 @@ class MazeSolver: TaskBase {
         if (newState != prevState && newState == SearchAlgorithm::SEARCHING_ADDITIONALLY) {
           /* SEARCHING_ADDITIONALLY */
           bz.play(Buzzer::CONFIRM);
-          sr.set_action(SearchRun::STOP);
-          sr.waitForEnd();
-          sr.disable();
-          backup();
-          bz.play(Buzzer::MAZE_BACKUP);
-          searchAlgorithm.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
-          sr.set_action(SearchRun::RETURN);
-          sr.set_action(SearchRun::GO_HALF);
-          sr.enable();
+          stopAndBackup();
           continue;
         }
         if (newState != prevState && newState == SearchAlgorithm::BACKING_TO_START) {
           /* BACKING_TO_START */
           bz.play(Buzzer::COMPLETE);
-          sr.set_action(SearchRun::STOP);
-          sr.waitForEnd();
-          sr.disable();
-          backup();
-          bz.play(Buzzer::MAZE_BACKUP);
-          searchAlgorithm.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
-          sr.set_action(SearchRun::RETURN);
-          sr.set_action(SearchRun::GO_HALF);
-          sr.enable();
+          stopAndBackup();
           continue;
         }
         if (newState != prevState && newState == SearchAlgorithm::GOT_LOST) {
@@ -199,65 +226,48 @@ class MazeSolver: TaskBase {
           sr.set_action(SearchRun::STOP);
           sr.waitForEnd();
           sr.disable();
-          readyToStartWait(6000); //< 回収されるまで待つ
-          //                    maze.reset();           //< 迷子になったので，迷路をリセットして探索を再開する
-          maze = maze_backup.front();
-          while (!maze_backup.empty()) maze_backup.pop_back();
-          searchAlgorithm.updateWall(v, d + 1 + 2, wd.wall[0]); // left
-          searchAlgorithm.updateWall(v, d + 0 + 2, wd.wall[2]); // front
-          searchAlgorithm.updateWall(v, d - 1 + 2, wd.wall[1]); // right
-          searchAlgorithm.updateWall(v, d + 2, false); //< 現在の区画の壁を更新する
-          searchAlgorithm.reset();
-          searchAlgorithm.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
-          sr.set_action(SearchRun::RETURN);
-          sr.set_action(SearchRun::GO_HALF);
-          sr.enable();
-          continue;
-        }
-        auto nextDirs = searchAlgorithm.getNextDirs();
-        if (nextDirs.empty()) {
-          bz.play(Buzzer::ERROR);
-          sr.set_action(SearchRun::STOP);
-          sr.waitForEnd();
-          sr.disable();
           waitForever();
         }
-        {
-          int straight_count = 0;
-          for (auto nextDir : nextDirs) {
-            Vector nextVec = searchAlgorithm.getCurVec().next(nextDir);
-            switch (Dir(nextDir - searchAlgorithm.getCurDir())) {
-              case Dir::East:
-                straight_count++;
-                break;
-              case Dir::North:
-                if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-                straight_count = 0;
-                sr.set_action(SearchRun::TURN_LEFT_90);
-                break;
-              case Dir::West:
-                if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-                straight_count = 0;
-                sr.set_action(SearchRun::TURN_BACK);
-                break;
-              case Dir::South:
-                if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-                straight_count = 0;
-                sr.set_action(SearchRun::TURN_RIGHT_90);
-                break;
-            }
-            searchAlgorithm.updateCurVecDir(nextVec, nextDir);
-          }
-          if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
-          straight_count = 0;
-        }
+
+        // 既知区間移動をキューにつめる
+        const auto& nextDirs = searchAlgorithm.getNextDirs();
+        queueActions(searchAlgorithm.getNextDirs());
+
+        // 探索終了
+        if (searchAlgorithm.getState() == SearchAlgorithm::REACHED_START) break;
+
+        // ここでキューが消化されるまで待つ
+        sr.waitForEnd();
+
+        // 壁を確認
+        //        printf("ToF: %d, (passed: %d)\n", tof.getDistance(), tof.passedTimeMs());
+        //        if (maze.isKnown(v, d + 1) && maze.isWall(v, d + 1) != wd.wall[0]) bz.play(Buzzer::CANCEL);
+        //        if (maze.isKnown(v, d + 0) && maze.isWall(v, d + 0) != wd.wall[2]) bz.play(Buzzer::CANCEL);
+        //        if (maze.isKnown(v, d - 1) && maze.isWall(v, d - 1) != wd.wall[1]) bz.play(Buzzer::CANCEL);
+        searchAlgorithm.updateWall(v, d + 1, wd.wall[0]); // left
+        searchAlgorithm.updateWall(v, d + 0, wd.wall[2]); // front
+        searchAlgorithm.updateWall(v, d - 1, wd.wall[1]); // right
+        bz.play(Buzzer::SHORT);
+        // 候補の中で行ける方向を探す
+        const auto nextDirsInAdvance = searchAlgorithm.getNextDirsInAdvance();
+        const auto nextDirInAdvance = *std::find_if(nextDirsInAdvance.begin(), nextDirsInAdvance.end(), [&](const Dir & dir) {
+          return !maze.isWall(v, dir);
+        });
+        queueActions({nextDirInAdvance});
+
+        // backup the maze
         maze_backup.push_back(maze);
         if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop_front();
       }
       if (searchAlgorithm.getState() != SearchAlgorithm::REACHED_START) return false;
+      // queue Action::START_INIT
       sr.set_action(SearchRun::START_INIT);
+      searchAlgorithm.updateCurVecDir(Vector(0, 0), Dir::North);
+      // move robot here
       sr.waitForEnd();
+      // stop robot here
       sr.disable();
+      // 最短経路が導出できるか確かめる
       if (!searchAlgorithm.calcShortestDirs()) {
         printf("Couldn't solve the maze!\n");
         bz.play(Buzzer::ERROR);
@@ -266,6 +276,7 @@ class MazeSolver: TaskBase {
       bz.play(Buzzer::COMPLETE);
       return true;
     }
+
     void fast_run() {
       auto path = searchAlgorithm.getShortestDirs();
       path.erase(path.begin());
@@ -357,6 +368,7 @@ class MazeSolver: TaskBase {
       }
     }
     void waitForever() {
+      delay(100);
       isRunningFlag = false;
       while (1) delay(1000);
     }

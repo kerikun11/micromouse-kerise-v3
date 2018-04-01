@@ -120,9 +120,16 @@ namespace MazeLib {
 						// となりの区画のステップが注目する区画のステップよりも大きければ更新
 						next = next.next(d); //< となりの区画のステップを取得
 						step_t step = focus_step + straightStepTable[i];
+						#if 1
 						if(getStep(next) <= step) break; //< これより先，更新されることはない
 						setStep(next, step);
 						q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
+						#else
+						if(getStep(next) > step){
+							setStep(next, step);
+							q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
+						}
+						#endif
 					}
 				}
 				for(const auto& d: Dir::All()){
@@ -130,31 +137,45 @@ namespace MazeLib {
 					if(onlyCanGo && !maze.isKnown(focus, d)) continue; //< onlyCanGoで未知壁なら更新はしない
 					{
 						Vector next = focus.next(d);
-						for(int i=1; true; i++){
+						for(int i=1; i<MAZE_SIZE; i++){
 							const Dir next_d = d+(i&1);
 							if(maze.isWall(next, next_d)) break; //< 壁があったら更新はしない
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i]+1;
+							step_t step = focus_step + straightStepTable[i];
+							#if 1
 							if(getStep(next) <= step) break; //< これより先，更新されることはない
 							setStep(next, step);
 							q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
+							#else
+							if(getStep(next) > step){
+								setStep(next, step);
+								q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
+							}
+							#endif
 							// char c; scanf("%c", &c); print();
 						}
 					}
 					{
 						Vector next = focus.next(d);
-						for(int i=1; true; i++){
+						for(int i=1; i<MAZE_SIZE; i++){
 							const Dir next_d = d-(i&1);
 							if(maze.isWall(next, next_d)) break; //< 壁があったら更新はしない
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i]+1;
+							step_t step = focus_step + straightStepTable[i];
+							#if 1
 							if(getStep(next) <= step) break; //< これより先，更新されることはない
 							setStep(next, step);
 							q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
+							#else
+							if(getStep(next) > step){
+								setStep(next, step);
+								q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
+							}
+							#endif
 							// char c; scanf("%c", &c); print();
 						}
 					}
@@ -191,11 +212,29 @@ namespace MazeLib {
 		// }
 		void calcStraightStepTable(){
 			for(int i=0; i<MAZE_SIZE*2; i++){
-				straightStepTable[i] = sqrt((float)i+1) * factor;
+				float x = 90*(i+1);
+				straightStepTable[i] = (sqrt(pow(v0/a,2) + x/a) - v0/a) * factor;
+				// printf("%d: %d\n", i, straightStepTable[i]);
 			}
+			step_t max = 0;
+			step_t min = MAZE_STEP_MAX;
+			for(int i=0; i<MAZE_SIZE*2; i++){
+				float x = 90*(i+1);
+				straightStepTable[i] = (sqrt(pow(v0/a,2) + x/a) - v0/a) * factor;
+				step_t step = straightStepTable[i]+straightStepTable[MAZE_SIZE*2-1-i];
+				// printf("%d: %d\n", i, step);
+				if(max < step) max = step;
+				if(min > step) min = step;
+			}
+			extra = max-min;
+			// printf("factor: %f\n", factor);
+			// printf("min: %d, max: %d, extra: %d\n", min, max, extra);
 		}
 	public:
-		const float factor = 1.0f / (sqrt((float)MAZE_SIZE*2-1) - sqrt((float)MAZE_SIZE*2-2));
+		const float a = 12000;
+		const float v0 = 600;
+		const float factor = 1.0f / (sqrt(pow(v0/a,2) + 90*(MAZE_SIZE*2)/a) - sqrt(pow(v0/a,2) + 90*(MAZE_SIZE*2-1)/a));
+		step_t extra;
 	private:
 		Maze& maze; /**< @brief 使用する迷路の参照 */
 		step_t stepMap[MAZE_SIZE][MAZE_SIZE]; /**< @brief ステップ数 */

@@ -15,7 +15,7 @@ namespace MazeLib {
 	*   true: 全探索
 	*   false: 最短になり得ないところは排除
 	*/
-	#define FIND_ALL_WALL 1
+	#define FIND_ALL_WALL 0
 	/** @def SEARCHING_ADDITIALLY_AT_START
 	*   @brief 追加探索状態で探索を始める(ゴールを急がない)
 	*/
@@ -72,7 +72,7 @@ namespace MazeLib {
 			curVec = Vector(0, 0);
 			curDir = Dir::North;
 			state = IDOLE;
-			// calcNextDir();
+			calcNextDir();
 		}
 		/** @function reset
 		*   @brief ゴール区画を更新し，探索状態をリセットして，現在地をスタート区画にセット
@@ -119,6 +119,7 @@ namespace MazeLib {
 		*/
 		bool calcShortestDirs(){
 			stepMapGoal.update(goal, true);
+			// stepMapGoal.update(goal, false); //< for debug
 			shortestDirs.clear();
 			auto v = start;
 			auto dir = Dir(Dir::North);
@@ -177,6 +178,12 @@ namespace MazeLib {
 		const std::vector<Dir>& getNextDirs() const {
 			return nextDirs;
 		}
+		/** @function getNextDirs
+		*   @brief 次に行くべき方向配列の計算結果を取得
+		*/
+		const std::vector<Dir>& getNextDirsInAdvance() const {
+			return nextDirsInAdvance;
+		}
 		/** @function getCurVec
 		*   @brief 現在区画を取得
 		*/
@@ -201,7 +208,7 @@ namespace MazeLib {
 		*/
 		void printInfo(const bool& showMaze = true) const {
 			if(showMaze){
-				for(int i=0; i<MAZE_SIZE*2+4; i++) printf("\x1b[A");
+				for(int i=0; i<MAZE_SIZE*2+6; i++) printf("\x1b[A");
 				switch(state){
 					case IDOLE:
 					case SEARCHING_FOR_GOAL:
@@ -221,8 +228,14 @@ namespace MazeLib {
 					break;
 				}
 			}
-			printf("Cur: ( %3d, %3d, %3d), State: %s       \n", curVec.x, curVec.y, uint8_t(curDir), stateString(state));
+			printf("Cur: ( %2d, %2d,  %c), State: %s       \n", curVec.x, curVec.y, ">^<v"[curDir], stateString(state));
 			printf("Step: %4d, Forward: %3d, Left: %3d, Right: %3d, Back: %3d, Known: %3d\n", step, f, l, r, b, k);
+			printf("nextDirs: ");
+			for (const auto d : getNextDirs()) printf("%c", ">^<v"[d]);
+			printf("                                               \n");
+			printf("nextDirsInAdvance: ");
+			for(const auto d: getNextDirsInAdvance()) printf("%c", ">^<v"[d]);
+			printf("    \n");
 		}
 		/** @function printPath
 		*   @brief 最短経路の表示
@@ -243,6 +256,7 @@ namespace MazeLib {
 		Vector curVec; /**< 現在の区画座標 */
 		Dir curDir; /**< 現在向いている方向 */
 		std::vector<Dir> nextDirs; /**< 次に行くべき探索方向配列 */
+		std::vector<Dir> nextDirsInAdvance; /**< 最短経路の方向配列 */
 		std::vector<Dir> shortestDirs; /**< 最短経路の方向配列 */
 		std::vector<Vector> candidates; /**< 最短経路上になり得る候補を入れるコンテナ */
 		int step=0,f=0,l=0,r=0,b=0,k=0; /**< 探索の評価のためのカウンタ */
@@ -252,23 +266,36 @@ namespace MazeLib {
 		*   @param stepMap ステップマップの選択
 		*   @return true:成功, false:失敗(迷子)
 		*/
-		const std::vector<Dir> calcNextDirByStepMap(StepMap& stepMap, Vector focus_v, Dir focus_d){
-			std::vector<Dir> nextDirs;
+		bool calcNextDirByStepMap(StepMap& stepMap, const Vector& start_v, const Dir& start_d){
+			nextDirs.clear();
+			auto focus_v = start_v;
+			auto focus_d = start_d;
 			while(1){
 				step_t min_step = MAZE_STEP_MAX;
 				for(const auto& d: Dir::All()){
-					if(!maze.canGo(focus_v, d)) continue;
+					if(maze.isWall(focus_v, d)) continue;
 					step_t next_step = stepMap.getStep(focus_v.next(d));
 					if(min_step > next_step) {
 						min_step = next_step;
 						focus_d = d;
 					}
 				}
+				if(!maze.isKnown(focus_v, focus_d)) break;
 				if(stepMap.getStep(focus_v) <= min_step) break;
 				nextDirs.push_back(focus_d);
 				focus_v = focus_v.next(focus_d);
 			}
-			return nextDirs;
+			if(nextDirs.empty()) focus_d = start_d;
+			else focus_d = nextDirs.back();
+			std::vector<Dir> dirs;
+			for(const auto& d: {focus_d+0, focus_d+1, focus_d-1, focus_d+2})
+			if(!maze.isWall(focus_v, d) && stepMap.getStep(focus_v.next(d))!=MAZE_STEP_MAX) dirs.push_back(d);
+			std::sort(dirs.begin(), dirs.end(), [&](const Dir& d1, const Dir& d2){
+				return stepMap.getStep(focus_v.next(d1)) < stepMap.getStep(focus_v.next(d2));
+			});
+			nextDirsInAdvance = dirs;
+			if(nextDirsInAdvance.empty()) return false;
+			return true;
 		}
 		/** @function findShortestCandidates
 		*   @brief ステップマップにより最短経路上になりうる区画を洗い出す
@@ -295,8 +322,9 @@ namespace MazeLib {
 			for(int i=0; i<MAZE_SIZE; i++){
 				for(int j=0; j<MAZE_SIZE; j++){
 					Vector v(i,j);
-					// if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step+stepMapStart.factor && maze.unknownCount(v)){
-					if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step+MAZE_SIZE && maze.unknownCount(v)){
+					// if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step && maze.unknownCount(v)){
+					if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step+stepMapStart.extra && maze.unknownCount(v)){
+						// if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step+MAZE_SIZE && maze.unknownCount(v)){
 						candidates.push_back(v);
 					}
 				}
@@ -329,8 +357,7 @@ namespace MazeLib {
 				}else{
 					// stepMapGoal.updateSimple(goal);
 					stepMapGoal.update(goal);
-					nextDirs = calcNextDirByStepMap(stepMapGoal, pv, pd);
-					if(nextDirs.empty()) return GOT_LOST;
+					if(!calcNextDirByStepMap(stepMapGoal, pv, pd)) state = GOT_LOST;
 				}
 			}
 
@@ -342,8 +369,7 @@ namespace MazeLib {
 				}else{
 					// stepMapCandidates.updateSimple(candidates);
 					stepMapCandidates.update(candidates);
-					nextDirs = calcNextDirByStepMap(stepMapCandidates, pv, pd);
-					if(nextDirs.empty()) return GOT_LOST;
+					if(!calcNextDirByStepMap(stepMapCandidates, pv, pd)) state = GOT_LOST;
 				}
 			}
 
@@ -355,8 +381,7 @@ namespace MazeLib {
 				}else{
 					// stepMapCandidates.updateSimple(candidates);
 					stepMapCandidates.update(candidates);
-					nextDirs = calcNextDirByStepMap(stepMapCandidates, pv, pd);
-					if(nextDirs.empty()) return GOT_LOST;
+					if(!calcNextDirByStepMap(stepMapCandidates, pv, pd)) state = GOT_LOST;
 				}
 			}
 
@@ -365,8 +390,8 @@ namespace MazeLib {
 					state = REACHED_START;
 				}else{
 					stepMapStart.update({start});
-					nextDirs = calcNextDirByStepMap(stepMapStart, pv, pd);
-					if(nextDirs.empty()) return GOT_LOST;
+					if(!calcNextDirByStepMap(stepMapStart, pv, pd)) state = GOT_LOST;
+					if(nextDirsInAdvance.size() == 1) state = REACHED_START;
 				}
 			}
 
@@ -375,8 +400,8 @@ namespace MazeLib {
 					state = REACHED_START;
 				}else{
 					stepMapStart.update({start}, true);
-					nextDirs = calcNextDirByStepMap(stepMapStart, pv, pd);
-					if(nextDirs.empty()) return GOT_LOST;
+					if(!calcNextDirByStepMap(stepMapStart, pv, pd)) state = GOT_LOST;
+					if(nextDirsInAdvance.size() == 1) state = REACHED_START;
 				}
 			}
 
@@ -386,8 +411,8 @@ namespace MazeLib {
 				r += pd.getRelative(Dir::Right  ) == d;
 				b += pd.getRelative(Dir::Back   ) == d;
 			}
-			step += nextDirs.size();
-			k += nextDirs.size()-1;
+			step += nextDirs.size()+1;
+			k += nextDirs.size();
 			return state;
 		}
 	};

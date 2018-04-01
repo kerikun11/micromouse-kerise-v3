@@ -77,7 +77,7 @@ class Encoder : TaskBase {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
 
         uint8_t rxbuf[4];
         spi_transaction_t tx = {0};
