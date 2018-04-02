@@ -73,6 +73,7 @@ void normal_drive() {
       ms.start();
       btn.flags = 0;
       while (ms.isRunning() && !btn.pressed) delay(100);
+      delay(1000);
       bz.play(Buzzer::CANCEL);
       btn.flags = 0;
       ms.terminate();

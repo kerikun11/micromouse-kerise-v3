@@ -357,8 +357,8 @@ class MazeSolver: TaskBase {
         bz.play(Buzzer::CANCEL);
       }
     }
-    void readyToStartWait(const int wait_ms = 1000) {
-      delay(1000);
+    void readyToStartWait(const int wait_ms = 2000) {
+      delay(200);
       for (int ms = 0; ms < wait_ms; ms++) {
         delay(1);
         if (fabs(imu.accel.z) > 9800 * 1) {
