@@ -127,6 +127,22 @@ namespace MazeLib {
 		}
 	};
 
+	/** @union WallLog
+	*   @brief 区画位置，方向，壁の有無を保持する構造体
+	*/
+	union WallLog {
+		uint16_t all; /**< @brief 全フラグ参照用 */
+		struct {
+			uint8_t x : 6;  /**< @brief 区画のx座標 */
+			uint8_t y : 6;  /**< @brief 区画のx座標 */
+			uint8_t d : 3;  /**< @brief 方向 */
+			uint8_t b : 1;  /**< @brief 壁の有無 */
+		};
+		WallLog(const Vector& v , const Dir& d, const bool b): x(v.x), y(v.y), d(d), b(b) {}
+		WallLog(const uint16_t all): all(all) {}
+		WallLog() {}
+	};
+
 	/** @class Maze
 	*   @brief 迷路の壁情報を管理するクラス
 	*/

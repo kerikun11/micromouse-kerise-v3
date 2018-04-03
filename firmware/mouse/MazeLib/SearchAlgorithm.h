@@ -95,9 +95,7 @@ namespace MazeLib {
 		*   @param v 区画座標
 		*   @param d 絶対方向
 		*/
-		void updateCurVecDir(const Vector& v, const Dir& d){
-			curVec = v; curDir=d;
-		}
+		void updateCurVecDir(const Vector& v, const Dir& d){ curVec = v; curDir=d; }
 		/** @function updateWall
 		*   @brief 絶対座標絶対方向で壁の1枚更新
 		*   @param v 区画座標
@@ -105,6 +103,7 @@ namespace MazeLib {
 		*   @param b 壁の有無
 		*/
 		bool updateWall(const Vector& v, const Dir& d, const bool& b){
+			// 既知の壁と食い違いがあったら未知壁とする
 			if(maze.isKnown(v, d) && maze.isWall(v, d) != b){
 				maze.setWall(v, d, false);
 				maze.setKnown(v, d, false);
@@ -112,6 +111,7 @@ namespace MazeLib {
 			}
 			if(!maze.isKnown(v, d)){
 				maze.updateWall(v, d, b);
+				wallLog.push_back(WallLog(v, d, b));
 			}
 			return true;
 		}
@@ -257,6 +257,9 @@ namespace MazeLib {
 			maze.printPath(Vector(0, 0), shortestDirs);
 			printf("Shortest Step: %d\n", shortestDirs.size()-1);
 		}
+		std::vector<WallLog>& getWallLog(){
+			return wallLog;
+		}
 	private:
 		State state; /**< 現在の探索状態を保持 */
 		Maze& maze; /**< 使用する迷路の参照 */
@@ -272,6 +275,7 @@ namespace MazeLib {
 		std::vector<Dir> shortestDirs; /**< 最短経路の方向配列 */
 		std::vector<Vector> candidates; /**< 最短経路上になり得る候補を入れるコンテナ */
 		int step=0,f=0,l=0,r=0,b=0,k=0; /**< 探索の評価のためのカウンタ */
+		std::vector<WallLog> wallLog;
 
 		/** @function calcNextDirByStepMap
 		*   @brief ステップマップにより次に行くべき方向列を生成する
@@ -334,9 +338,7 @@ namespace MazeLib {
 			for(int i=0; i<MAZE_SIZE; i++){
 				for(int j=0; j<MAZE_SIZE; j++){
 					Vector v(i,j);
-					// if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step && maze.unknownCount(v)){
 					if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step+stepMapStart.extra && maze.unknownCount(v)){
-						// if(stepMapGoal.getStep(i, j) + stepMapStart.getStep(i, j) <= goal_step+MAZE_SIZE && maze.unknownCount(v)){
 						candidates.push_back(v);
 					}
 				}
@@ -372,6 +374,7 @@ namespace MazeLib {
 			}
 
 			if(state == REACHED_GOAL){
+				// ゴール区画をすべて探索
 				candidates.clear();
 				for(const auto& v: goal) if(maze.unknownCount(v)) candidates.push_back(v);
 				if(candidates.empty()){

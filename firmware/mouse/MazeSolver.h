@@ -60,9 +60,7 @@ extern FastRun fr;
 
 class MazeSolver: TaskBase {
   public:
-    MazeSolver(): searchAlgorithm(maze, MAZE_GOAL) {
-      maze_backup.push_back(maze);
-    }
+    MazeSolver(): searchAlgorithm(maze, MAZE_GOAL) {}
     void start(bool isForceSearch = false) {
       this->isForceSearch = isForceSearch;
       terminate();
@@ -97,16 +95,9 @@ class MazeSolver: TaskBase {
         log_e("Can't open file!");
         return false;
       }
-      for (auto b : wall_log) file.write(b);
+      for (const auto& wl : searchAlgorithm.getWallLog()) file.write((uint8_t*)&wl, sizeof(wl));
       log_d("Backup: %d [us]", micros() - us);
       bz.play(Buzzer::MAZE_BACKUP);
-      return true;
-    }
-    bool saveVecDirWall(const Vector& v, const Dir& d, const bool b) {
-      wall_log.push_back((uint8_t)v.x);
-      wall_log.push_back((uint8_t)v.y);
-      wall_log.push_back((uint8_t)d);
-      wall_log.push_back((uint8_t)b);
       return true;
     }
     bool restore() {
@@ -116,19 +107,23 @@ class MazeSolver: TaskBase {
         return false;
       }
       while (file.available() >= 4) {
-        maze.updateWall(Vector(file.read(), file.read()), Dir(file.read()), file.read());
+        WallLog wl;
+        file.read((uint8_t*)&wl, sizeof(WallLog));
+        Vector v = Vector(wl.x, wl.y);
+        Dir d = Dir(wl.d);
+        bool b = wl.b;
+        maze.updateWall(v, d, b);
+        searchAlgorithm.getWallLog().push_back(wl.all);
       }
       searchAlgorithm.reset();
       return true;
     }
   private:
     Maze maze;
-    std::deque<Maze> maze_backup;
-    std::vector<uint8_t> wall_log;
+    std::vector<uint16_t> wall_log;
     SearchAlgorithm searchAlgorithm;
     bool isForceSearch = false;
     bool isRunningFlag = false;
-    size_t addr = 2;
 
     void queueActions(const std::vector<Dir>& nextDirs) {
       int straight_count = 0;
@@ -238,20 +233,14 @@ class MazeSolver: TaskBase {
         searchAlgorithm.updateWall(v, d + 1, wd.wall[0]); // left
         searchAlgorithm.updateWall(v, d + 0, wd.wall[2]); // front
         searchAlgorithm.updateWall(v, d - 1, wd.wall[1]); // right
-        saveVecDirWall(v, d + 1, wd.wall[0]);
-        saveVecDirWall(v, d + 0, wd.wall[2]);
-        saveVecDirWall(v, d - 1, wd.wall[1]);
         bz.play(Buzzer::SHORT);
+
         // 候補の中で行ける方向を探す
         const auto nextDirsInAdvance = searchAlgorithm.getNextDirsInAdvance();
         const auto nextDirInAdvance = *std::find_if(nextDirsInAdvance.begin(), nextDirsInAdvance.end(), [&](const Dir & dir) {
           return !maze.isWall(v, dir);
         });
         queueActions({nextDirInAdvance});
-
-        // backup the maze
-        maze_backup.push_back(maze);
-        if (maze_backup.size() > MAZE_BACKUP_SIZE) maze_backup.pop_front();
       }
       /* queue Action::START_INIT */
       sr.set_action(SearchRun::START_INIT);
