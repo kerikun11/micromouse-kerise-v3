@@ -212,8 +212,12 @@ void normal_drive() {
       sc.disable();
       break;
     //* ログの表示
-    case 14:
+    case 13:
       lg.print();
+      break;
+    //* ログの表示
+    case 14:
+      ms.print();
       break;
     //* リセット
     case 15:

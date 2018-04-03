@@ -95,14 +95,26 @@ namespace MazeLib {
 		*   @param v 区画座標
 		*   @param d 絶対方向
 		*/
-		void updateCurVecDir(const Vector& v, const Dir& d){ curVec = v; curDir=d; }
+		void updateCurVecDir(const Vector& v, const Dir& d){
+			curVec = v; curDir=d;
+		}
 		/** @function updateWall
 		*   @brief 絶対座標絶対方向で壁の1枚更新
 		*   @param v 区画座標
 		*   @param d 絶対方向
 		*   @param b 壁の有無
 		*/
-		void updateWall(const Vector& v, const Dir& d, const bool& b){ maze.updateWall(v, d, b); }
+		bool updateWall(const Vector& v, const Dir& d, const bool& b){
+			if(maze.isKnown(v, d) && maze.isWall(v, d) != b){
+				maze.setWall(v, d, false);
+				maze.setKnown(v, d, false);
+				return false;
+			}
+			if(!maze.isKnown(v, d)){
+				maze.updateWall(v, d, b);
+			}
+			return true;
+		}
 
 		/** @function calcNextDir
 		*   @brief 次に行くべき方向配列を計算
@@ -208,7 +220,7 @@ namespace MazeLib {
 		*/
 		void printInfo(const bool& showMaze = true) const {
 			if(showMaze){
-				for(int i=0; i<MAZE_SIZE*2+6; i++) printf("\x1b[A");
+				for(int i=0; i<MAZE_SIZE*2+7; i++) printf("\x1b[A");
 				switch(state){
 					case IDOLE:
 					case SEARCHING_FOR_GOAL:
@@ -272,7 +284,7 @@ namespace MazeLib {
 			auto focus_d = start_d;
 			while(1){
 				step_t min_step = MAZE_STEP_MAX;
-				for(const auto& d: Dir::All()){
+				for(const auto& d: {focus_d+0, focus_d+1, focus_d-1, focus_d+2}){
 					if(maze.isWall(focus_v, d)) continue;
 					step_t next_step = stepMap.getStep(focus_v.next(d));
 					if(min_step > next_step) {
@@ -353,9 +365,7 @@ namespace MazeLib {
 				// ゴール区画かどうか判定
 				if(std::find(goal.begin(), goal.end(), pv) != goal.end()){
 					state = REACHED_GOAL;
-					state = SEARCHING_ADDITIONALLY;
 				}else{
-					// stepMapGoal.updateSimple(goal);
 					stepMapGoal.update(goal);
 					if(!calcNextDirByStepMap(stepMapGoal, pv, pd)) state = GOT_LOST;
 				}
@@ -367,7 +377,6 @@ namespace MazeLib {
 				if(candidates.empty()){
 					state = SEARCHING_ADDITIONALLY;
 				}else{
-					// stepMapCandidates.updateSimple(candidates);
 					stepMapCandidates.update(candidates);
 					if(!calcNextDirByStepMap(stepMapCandidates, pv, pd)) state = GOT_LOST;
 				}
@@ -379,7 +388,6 @@ namespace MazeLib {
 				if(candidates.empty()){
 					state = BACKING_TO_START;
 				}else{
-					// stepMapCandidates.updateSimple(candidates);
 					stepMapCandidates.update(candidates);
 					if(!calcNextDirByStepMap(stepMapCandidates, pv, pd)) state = GOT_LOST;
 				}
@@ -391,7 +399,10 @@ namespace MazeLib {
 				}else{
 					stepMapStart.update({start});
 					if(!calcNextDirByStepMap(stepMapStart, pv, pd)) state = GOT_LOST;
-					if(nextDirsInAdvance.size() == 1) state = REACHED_START;
+					// auto v = pv;
+					// for(const auto& d: nextDirs) v = v.next(d);
+					// if(v == start) state = REACHED_START;
+					// if(nextDirsInAdvance.size() == 1) state = REACHED_START;
 				}
 			}
 
@@ -401,7 +412,10 @@ namespace MazeLib {
 				}else{
 					stepMapStart.update({start}, true);
 					if(!calcNextDirByStepMap(stepMapStart, pv, pd)) state = GOT_LOST;
-					if(nextDirsInAdvance.size() == 1) state = REACHED_START;
+					// auto v = pv;
+					// for(const auto& d: nextDirs) v = v.next(d);
+					// if(v == start) state = REACHED_START;
+					// if(nextDirsInAdvance.size() == 1) state = REACHED_START;
 				}
 			}
 

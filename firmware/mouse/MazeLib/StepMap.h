@@ -143,9 +143,9 @@ namespace MazeLib {
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i];
+							step_t step = focus_step + straightStepTable[i]+1;
 							#if 1
-							if(getStep(next) <= step) break; //< これより先，更新されることはない
+							if(getStep(next) < step) break; //< これより先，更新されることはない
 							setStep(next, step);
 							q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
 							#else
@@ -165,9 +165,9 @@ namespace MazeLib {
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i];
+							step_t step = focus_step + straightStepTable[i]+1;
 							#if 1
-							if(getStep(next) <= step) break; //< これより先，更新されることはない
+							if(getStep(next) < step) break; //< これより先，更新されることはない
 							setStep(next, step);
 							q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
 							#else
@@ -182,34 +182,6 @@ namespace MazeLib {
 				}
 			}
 		}
-		// void updateSimple(const std::vector<Vector>& dest, const bool& onlyCanGo = false){
-		// 	// 全区画のステップを最大値に設定
-		// 	reset();
-		// 	// となりの区画のステップが更新されたので更新が必要かもしれない区画のキュー
-		// 	std::queue<Vector> q;
-		// 	// destに含まれる区画のステップを0とする
-		// 	for(const auto& v: dest) {
-		// 		setStep(v, 0);
-		// 		q.push(v);
-		// 	}
-		// 	// ステップの更新がなくなるまで更新処理
-		// 	while(!q.empty()){
-		// 		// 注目する区画を取得
-		// 		const Vector& focus = q.front(); q.pop();
-		// 		const step_t& focus_step = getStep(focus);
-		// 		// 4方向更新がないか調べる
-		// 		for(const auto& d: Dir::All()){
-		// 			if(maze.isWall(focus, d)) continue; //< 壁があったら更新はしない
-		// 			if(onlyCanGo && !maze.isKnown(focus, d)) continue; //< onlyCanGoで未知壁なら更新はしない
-		// 			Vector next = focus.next(d);
-		// 			step_t step = focus_step + 1;
-		// 			if(getStep(next) > step){
-		// 				setStep(next, step);
-		// 				q.push(next); //< 再帰的に更新され得るのでキューにプッシュ
-		// 			}
-		// 		}
-		// 	}
-		// }
 		void calcStraightStepTable(){
 			for(int i=0; i<MAZE_SIZE*2; i++){
 				float x = 90*(i+1);

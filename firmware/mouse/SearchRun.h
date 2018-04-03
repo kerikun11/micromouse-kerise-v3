@@ -286,8 +286,8 @@ class SearchRun: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end) {
-      const float accel = 3600;
-      const float decel = 3600;
+      const float accel = 6000;
+      const float decel = 4000;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
@@ -358,10 +358,6 @@ class SearchRun: TaskBase {
     virtual void task() {
       const float velocity = SEARCH_RUN_VELOCITY;
       const float v_max = SEARCH_RUN_V_MAX;
-      // キャリブレーション
-      bz.play(Buzzer::CONFIRM);
-      imu.calibration();
-      bz.play(Buzzer::CANCEL);
       // スタート
       sc.enable();
       while (1) {
