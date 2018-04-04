@@ -41,17 +41,17 @@ extern Logger lg;
 
 #define SEARCH_END_REMAIN           3
 #define SEARCH_ST_LOOK_AHEAD(v)     (6+2*v/100)
-#define SEARCH_ST_FB_GAIN           30
-#define SEARCH_CURVE_FB_GAIN        6.0f
+#define SEARCH_ST_FB_GAIN           20
+#define SEARCH_CURVE_FB_GAIN        5.0f
 
-#define ahead_length                0
+#define ahead_length                5
 
 #define SEARCH_RUN_TASK_PRIORITY    3
 #define SEARCH_RUN_STACK_SIZE       8192
 #define SEARCH_RUN_PERIOD           1000
 
-#define SEARCH_RUN_VELOCITY         240.0f
-#define SEARCH_RUN_V_CURVE          240.0f
+#define SEARCH_RUN_VELOCITY         300.0f
+#define SEARCH_RUN_V_CURVE          300.0f
 #define SEARCH_RUN_V_MAX            1200.0f
 
 //#define printf  lg.printf

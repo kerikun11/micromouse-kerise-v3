@@ -30,8 +30,9 @@ extern Logger lg;
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_END_REMAIN         6
-#define FAST_ST_LOOK_AHEAD(v)   (6+10*v/100)
-#define FAST_ST_FB_GAIN         20
+//#define FAST_ST_LOOK_AHEAD(v)   (6+10*v/100)
+#define FAST_ST_LOOK_AHEAD(v)   30
+#define FAST_ST_FB_GAIN         10
 #define FAST_CURVE_FB_GAIN      3.0f
 
 //#define printf  lg.printf

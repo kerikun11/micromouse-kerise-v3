@@ -143,7 +143,7 @@ namespace MazeLib {
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i]+1;
+							step_t step = focus_step + straightStepTable[i];
 							#if 1
 							if(getStep(next) < step) break; //< これより先，更新されることはない
 							setStep(next, step);
@@ -165,7 +165,7 @@ namespace MazeLib {
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i]+1;
+							step_t step = focus_step + straightStepTable[i];
 							#if 1
 							if(getStep(next) < step) break; //< これより先，更新されることはない
 							setStep(next, step);

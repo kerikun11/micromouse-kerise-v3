@@ -137,9 +137,14 @@ namespace MazeLib {
 			auto dir = Dir(Dir::North);
 			auto prev_dir = dir;
 			while(1){
-				prev_dir = dir;
 				step_t min_step = MAZE_STEP_MAX;
-				for(const auto& d: Dir::All()){
+				// for(const auto& d: Dir::All()){
+				std::vector<Dir> dirs;
+				if(Dir(dir-prev_dir)==Dir::Left) dirs={Dir(dir+3), dir, Dir(dir+1)};
+				else if(Dir(dir-prev_dir)==Dir::Right) dirs={Dir(dir+1), dir, Dir(dir+3)};
+				else dirs={dir, Dir(dir+1), Dir(dir+3)};
+				prev_dir = dir;
+				for(const auto& d: dirs){
 					if(!maze.canGo(v, d)) continue;
 					step_t next_step = stepMapGoal.getStep(v.next(d));
 					if(min_step > next_step) {
@@ -285,26 +290,26 @@ namespace MazeLib {
 		bool calcNextDirByStepMap(StepMap& stepMap, const Vector& start_v, const Dir& start_d){
 			nextDirs.clear();
 			auto focus_v = start_v;
-			auto focus_d = start_d;
+			auto dir = start_d;
 			while(1){
 				step_t min_step = MAZE_STEP_MAX;
-				for(const auto& d: {focus_d+0, focus_d+1, focus_d-1, focus_d+2}){
+				for(const auto& d: {dir+0, dir+1, dir-1, dir+2}){
 					if(maze.isWall(focus_v, d)) continue;
 					step_t next_step = stepMap.getStep(focus_v.next(d));
 					if(min_step > next_step) {
 						min_step = next_step;
-						focus_d = d;
+						dir = d;
 					}
 				}
-				if(!maze.isKnown(focus_v, focus_d)) break;
+				if(!maze.isKnown(focus_v, dir)) break;
 				if(stepMap.getStep(focus_v) <= min_step) break;
-				nextDirs.push_back(focus_d);
-				focus_v = focus_v.next(focus_d);
+				nextDirs.push_back(dir);
+				focus_v = focus_v.next(dir);
 			}
-			if(nextDirs.empty()) focus_d = start_d;
-			else focus_d = nextDirs.back();
+			if(nextDirs.empty()) dir = start_d;
+			else dir = nextDirs.back();
 			std::vector<Dir> dirs;
-			for(const auto& d: {focus_d+0, focus_d+1, focus_d-1, focus_d+2})
+			for(const auto& d: {dir+0, dir+1, dir-1, dir+2})
 			if(!maze.isWall(focus_v, d) && stepMap.getStep(focus_v.next(d))!=MAZE_STEP_MAX) dirs.push_back(d);
 			std::sort(dirs.begin(), dirs.end(), [&](const Dir& d1, const Dir& d2){
 				return stepMap.getStep(focus_v.next(d1)) < stepMap.getStep(focus_v.next(d2));
