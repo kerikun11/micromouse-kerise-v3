@@ -96,7 +96,7 @@ namespace MazeLib {
 		*  @param dest ステップを0とする区画の配列
 		*  @param onlyCanGo true:未知の壁は通貨不可能とする，false:未知の壁はないものとする
 		*/
-		void update(const std::vector<Vector>& dest, const bool& onlyCanGo = false){
+		void update(const std::vector<Vector>& dest, const bool& onlyCanGo = false, const bool& diagonal = true){
 			// 全区画のステップを最大値に設定
 			reset();
 			// となりの区画のステップが更新されたので更新が必要かもしれない区画のキュー
@@ -132,6 +132,7 @@ namespace MazeLib {
 						#endif
 					}
 				}
+				if(!diagonal) continue;
 				for(const auto& d: Dir::All()){
 					if(maze.isWall(focus, d)) continue; //< 壁があったら更新はしない
 					if(onlyCanGo && !maze.isKnown(focus, d)) continue; //< onlyCanGoで未知壁なら更新はしない
@@ -143,7 +144,7 @@ namespace MazeLib {
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i];
+							step_t step = focus_step + straightStepTable[i]+1;
 							#if 1
 							if(getStep(next) < step) break; //< これより先，更新されることはない
 							setStep(next, step);
@@ -165,7 +166,7 @@ namespace MazeLib {
 							if(onlyCanGo && !maze.isKnown(next, next_d)) break; //< onlyCanGoで未知壁なら更新はしない
 							// となりの区画のステップが注目する区画のステップよりも大きければ更新
 							next = next.next(next_d); //< となりの区画のステップを取得
-							step_t step = focus_step + straightStepTable[i];
+							step_t step = focus_step + straightStepTable[i]+1;
 							#if 1
 							if(getStep(next) < step) break; //< これより先，更新されることはない
 							setStep(next, step);

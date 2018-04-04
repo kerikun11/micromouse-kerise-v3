@@ -41,7 +41,7 @@ class Button {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, BUTTON_SAMPLING_MS / portTICK_RATE_MS);
+        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, BUTTON_SAMPLING_MS / portTICK_RATE_MS);
         if (digitalRead(pin) == LOW) {
           if (counter < BUTTON_LONG_PRESS_LEVEL_3 + 1)
             counter++;

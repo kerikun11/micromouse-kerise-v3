@@ -89,14 +89,25 @@ class MazeSolver: TaskBase {
       searchAlgorithm.reset(goal);
     }
     bool backup() {
-      uint32_t us = micros();
-      File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_WRITE);
+      {
+        File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_READ);
+        if (backupCounter < file.size() / sizeof(WallLog)) {
+          file.close();
+          SPIFFS.remove(MAZE_BACKUP_PATH);
+        }
+      }
+      //      for (int i = 0; i < 400; i++) searchAlgorithm.getWallLog().push_back(WallLog(Vector(0, 0), Dir::North, false)); // for debug
+      File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_APPEND);
       if (!file) {
         log_e("Can't open file!");
         return false;
       }
-      for (const auto& wl : searchAlgorithm.getWallLog()) file.write((uint8_t*)&wl, sizeof(wl));
-      log_d("Backup: %d [us]", micros() - us);
+      const auto& wallLog = searchAlgorithm.getWallLog();
+      while (backupCounter < wallLog.size()) {
+        const auto& wl = wallLog[backupCounter];
+        file.write((uint8_t*)&wl, sizeof(wl));
+        backupCounter++;
+      }
       bz.play(Buzzer::MAZE_BACKUP);
       return true;
     }
@@ -106,7 +117,9 @@ class MazeSolver: TaskBase {
         log_e("Can't open file!");
         return false;
       }
-      while (file.available() >= 4) {
+      searchAlgorithm.getWallLog().clear();
+      backupCounter = 0;
+      while (file.available()) {
         WallLog wl;
         file.read((uint8_t*)&wl, sizeof(WallLog));
         Vector v = Vector(wl.x, wl.y);
@@ -114,16 +127,17 @@ class MazeSolver: TaskBase {
         bool b = wl.b;
         maze.updateWall(v, d, b);
         searchAlgorithm.getWallLog().push_back(wl.all);
+        backupCounter++;
       }
       searchAlgorithm.reset();
       return true;
     }
   private:
     Maze maze;
-    std::vector<uint16_t> wall_log;
     SearchAlgorithm searchAlgorithm;
     bool isForceSearch = false;
     bool isRunningFlag = false;
+    int backupCounter = 0;
 
     void queueActions(const std::vector<Dir>& nextDirs) {
       int straight_count = 0;
@@ -141,7 +155,8 @@ class MazeSolver: TaskBase {
           case Dir::Back:
             if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
             straight_count = 0;
-            sr.set_action(SearchRun::TURN_BACK);
+            //            sr.set_action(SearchRun::TURN_BACK);
+            stopAndBackup();
             break;
           case Dir::Right:
             if (straight_count) sr.set_action(SearchRun::GO_STRAIGHT, straight_count);
@@ -159,10 +174,9 @@ class MazeSolver: TaskBase {
       sr.waitForEnd();
       sr.disable();
       backup();
-      delay(100);
-      const auto& v = searchAlgorithm.getCurVec();
-      const auto& d = searchAlgorithm.getCurDir();
-      searchAlgorithm.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
+      //      const auto& v = searchAlgorithm.getCurVec();
+      //      const auto& d = searchAlgorithm.getCurDir();
+      //      searchAlgorithm.updateCurVecDir(v.next(d + 2), d + 2); // u-turn
       sr.set_action(SearchRun::RETURN);
       sr.set_action(SearchRun::GO_HALF);
       sr.enable();
@@ -227,17 +241,14 @@ class MazeSolver: TaskBase {
 
         // 壁を確認
         //        printf("ToF: %d, (passed: %d)\n", tof.getDistance(), tof.passedTimeMs());
-        //        if (maze.isKnown(v, d + 1) && maze.isWall(v, d + 1) != wd.wall[0]) bz.play(Buzzer::CANCEL);
-        //        if (maze.isKnown(v, d + 0) && maze.isWall(v, d + 0) != wd.wall[2]) bz.play(Buzzer::CANCEL);
-        //        if (maze.isKnown(v, d - 1) && maze.isWall(v, d - 1) != wd.wall[1]) bz.play(Buzzer::CANCEL);
         searchAlgorithm.updateWall(v, d + 1, wd.wall[0]); // left
         searchAlgorithm.updateWall(v, d + 0, wd.wall[2]); // front
         searchAlgorithm.updateWall(v, d - 1, wd.wall[1]); // right
         bz.play(Buzzer::SHORT);
 
         // 候補の中で行ける方向を探す
-        const auto nextDirsInAdvance = searchAlgorithm.getNextDirsInAdvance();
-        const auto nextDirInAdvance = *std::find_if(nextDirsInAdvance.begin(), nextDirsInAdvance.end(), [&](const Dir & dir) {
+        const auto& nextDirsInAdvance = searchAlgorithm.getNextDirsInAdvance();
+        const auto& nextDirInAdvance = *std::find_if(nextDirsInAdvance.begin(), nextDirsInAdvance.end(), [&](const Dir & dir) {
           return !maze.isWall(v, dir);
         });
         queueActions({nextDirInAdvance});

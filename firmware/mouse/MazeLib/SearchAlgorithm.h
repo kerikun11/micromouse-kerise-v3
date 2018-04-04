@@ -129,8 +129,8 @@ namespace MazeLib {
 		*   @brief 最短経路を導出
 		*   @return 成功 or 失敗
 		*/
-		bool calcShortestDirs(){
-			stepMapGoal.update(goal, true);
+		bool calcShortestDirs(const bool& diagonal = true){
+			stepMapGoal.update(goal, true, diagonal);
 			// stepMapGoal.update(goal, false); //< for debug
 			shortestDirs.clear();
 			auto v = start;
@@ -225,7 +225,7 @@ namespace MazeLib {
 		*/
 		void printInfo(const bool& showMaze = true) const {
 			if(showMaze){
-				for(int i=0; i<MAZE_SIZE*2+7; i++) printf("\x1b[A");
+				for(int i=0; i<MAZE_SIZE*2+8; i++) printf("\x1b[A");
 				switch(state){
 					case IDOLE:
 					case SEARCHING_FOR_GOAL:
@@ -246,7 +246,6 @@ namespace MazeLib {
 				}
 			}
 			printf("Cur: ( %2d, %2d,  %c), State: %s       \n", curVec.x, curVec.y, ">^<v"[curDir], stateString(state));
-			printf("Step: %4d, Forward: %3d, Left: %3d, Right: %3d, Back: %3d, Known: %3d\n", step, f, l, r, b, k);
 			printf("nextDirs: ");
 			for (const auto d : getNextDirs()) printf("%c", ">^<v"[d]);
 			printf("                                               \n");
@@ -279,7 +278,6 @@ namespace MazeLib {
 		std::vector<Dir> nextDirsInAdvance; /**< 最短経路の方向配列 */
 		std::vector<Dir> shortestDirs; /**< 最短経路の方向配列 */
 		std::vector<Vector> candidates; /**< 最短経路上になり得る候補を入れるコンテナ */
-		int step=0,f=0,l=0,r=0,b=0,k=0; /**< 探索の評価のためのカウンタ */
 		std::vector<WallLog> wallLog;
 
 		/** @function calcNextDirByStepMap
@@ -427,14 +425,6 @@ namespace MazeLib {
 				}
 			}
 
-			for(const auto& d: nextDirs){
-				f += pd.getRelative(Dir::Forward) == d;
-				l += pd.getRelative(Dir::Left   ) == d;
-				r += pd.getRelative(Dir::Right  ) == d;
-				b += pd.getRelative(Dir::Back   ) == d;
-			}
-			step += nextDirs.size()+1;
-			k += nextDirs.size();
 			return state;
 		}
 	};

@@ -31,7 +31,7 @@ class Emergency {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         if (fabs(imu.accel.y) > 10 * 9807 || fabs(imu.gyro.z) > 1800 / 180.0f * PI ) {
           mt.emergency_stop();
           fan.drive(0);
