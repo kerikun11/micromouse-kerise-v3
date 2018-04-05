@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <array>
 #include "TaskBase.h"
+#include "Accumulator.h"
 
 #define REFLECTOR_CH_SIZE     4
 
@@ -50,9 +51,9 @@ class Reflector : TaskBase {
     static const int ave_num = 2;
     const std::array<int8_t, REFLECTOR_CH_SIZE> tx_pins;
     const std::array<int8_t, REFLECTOR_CH_SIZE> rx_pins;
-    int16_t value_buffer[ave_num][REFLECTOR_CH_SIZE];
     int16_t value[REFLECTOR_CH_SIZE];
     int16_t offset[REFLECTOR_CH_SIZE];
+    Accumulator<uint16_t, ave_num> buffer[REFLECTOR_CH_SIZE];
 
     void calibration() {
       for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
@@ -73,12 +74,6 @@ class Reflector : TaskBase {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
         xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-        // Buffer shift
-        for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
-          for (int j = ave_num - 1; j > 0; j--) {
-            value_buffer[j][i] = value_buffer[j - 1][i];
-          }
-        }
         // Sampling
         for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
           digitalWrite(tx_pins[i], LOW);        //< 充電開始
@@ -87,20 +82,11 @@ class Reflector : TaskBase {
           delayMicroseconds(15);                //< 最大振幅になるまでの待ち時間
           int raw = analogRead(rx_pins[i]);     //< サンプリング
           int temp = offset[i] - raw;           //< オフセットとの差をとる
-          value_buffer[0][i] = std::max(temp, 1);//< 0以下にならないように1で飽和
-          delayMicroseconds(50);                 // 放電時間
-        }
-        // LPF
-        for (int8_t i = 0; i < REFLECTOR_CH_SIZE; i++) {
-          int sum = 0;
-          for (int j = 0; j < ave_num; j++) {
-            sum += value_buffer[j][i];
-          }
-          value[i] = sum / ave_num;
+          buffer[i].push(std::max(temp, 1));    //< 0以下にならないように1で飽和して保存
+          delayMicroseconds(50);                // 放電時間
+          value[i] = buffer[i].average();
         }
       }
     }
 };
-
-extern Reflector ref;
 
