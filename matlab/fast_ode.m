@@ -14,13 +14,13 @@ omega_max = 4 * pi;
 % adv_straight: カーブ前の直線部分の長さ [mm]
 % pos_start: 始点位置 [x; y; theta]
 % pos_start: 終点位置 [x; y; theta]
-switch 11
+switch 0
     case 0 % #0 search 90
-        adv_straight = 5;
+        adv_straight = 1;
         pos_start = [0; 0; 0];
         pos_end = [seg_half; seg_half; pi/2];
-        omega_dot = 180 * pi;
-        omega_max = 2 * pi;
+        omega_dot = 240 * pi;
+        omega_max = 3 * pi;
     case 1 % #1 最短 45
         adv_straight = 10;
         pos_start = [0; 0; 0];
