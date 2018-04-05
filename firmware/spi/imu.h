@@ -100,7 +100,7 @@ class IMU : TaskBase {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
         update();
 
         // calculation of angle and velocity from motion sensor
@@ -115,6 +115,7 @@ class IMU : TaskBase {
             MotionParameter accel_sum, gyro_sum;
             const int ave_count = 500;
             for (int i = 0; i < ave_count; i++) {
+              //              xLastWakeTime = xTaskGetTickCount();
               vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
               update();
               accel_sum += accel;

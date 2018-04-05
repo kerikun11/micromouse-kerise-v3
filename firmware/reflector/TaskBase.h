@@ -34,7 +34,7 @@ class TaskBase {
         return false;
       }
       // Taskを生成
-      BaseType_t res = xTaskCreatePinnedToCore(pxTaskCode, pcName, usStackDepth, this, uxPriority, pxCreatedTask, xCoreID);
+      BaseType_t res = xTaskCreatePinnedToCore(pxTaskCode, pcName, usStackDepth, this, uxPriority, &pxCreatedTask, xCoreID);
       if (res != pdPASS) {
         log_w("couldn't create the task %s", pcName);
         return false;
@@ -50,10 +50,11 @@ class TaskBase {
         return;
       }
       vTaskDelete(pxCreatedTask);
+      pxCreatedTask = NULL;
     }
 
   protected:
-    TaskHandle_t* pxCreatedTask;  //< タスクのハンドル
+    TaskHandle_t pxCreatedTask;  //< タスクのハンドル
 
     /** @function task
         @brief FreeRTOSにより実行される関数名
