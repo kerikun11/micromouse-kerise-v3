@@ -356,7 +356,7 @@ class MazeSolver: TaskBase {
       delay(200);
       for (int ms = 0; ms < wait_ms; ms++) {
         delay(1);
-        if (fabs(imu.accel.z) > 9800 * 1) {
+        if (fabs(imu.accel.z) > 9800 * 2) {
           bz.play(Buzzer::CANCEL);
           waitForever();
         }

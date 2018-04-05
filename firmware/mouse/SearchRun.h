@@ -343,7 +343,7 @@ class SearchRun: TaskBase {
       sc.enable(true);
     }
     void uturn() {
-      if (imu.angle.z > 0) {
+      if (imu.angle > 0) {
         wall_attach();
         turn(-M_PI / 2);
         wall_attach();
