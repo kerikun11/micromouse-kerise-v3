@@ -30,8 +30,8 @@ extern Logger lg;
 #define FAST_RUN_PERIOD         1000
 
 #define FAST_END_REMAIN         6
-//#define FAST_ST_LOOK_AHEAD(v)   (6+10*v/100)
-#define FAST_ST_LOOK_AHEAD(v)   30
+#define FAST_ST_LOOK_AHEAD(v)   (6+10*v/100)
+//#define FAST_ST_LOOK_AHEAD(v)   30
 #define FAST_ST_FB_GAIN         10
 #define FAST_CURVE_FB_GAIN      3.0f
 
@@ -294,7 +294,7 @@ class FastRun: TaskBase {
       FAST_TURN_RIGHT_180 = 'U',
     };
     struct RunParameter {
-      RunParameter(const float curve_gain = 0.8, const float max_speed = 1200, const float accel = 6000, const float decel = 6000): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
+      RunParameter(const float curve_gain = 0.7, const float max_speed = 1200, const float accel = 3000, const float decel = 3000): curve_gain(curve_gain), max_speed(max_speed), accel(accel), decel(decel) {}
       float curve_gain;
       float max_speed;
       float accel, decel;

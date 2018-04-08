@@ -44,7 +44,7 @@ extern Logger lg;
 #define SEARCH_ST_FB_GAIN           20
 #define SEARCH_CURVE_FB_GAIN        5.0f
 
-#define ahead_length                5
+#define ahead_length                2
 
 #define SEARCH_RUN_TASK_PRIORITY    3
 #define SEARCH_RUN_STACK_SIZE       8192
@@ -286,8 +286,8 @@ class SearchRun: TaskBase {
       printPosition("Turn End");
     }
     void straight_x(const float distance, const float v_max, const float v_end) {
-      const float accel = 6000;
-      const float decel = 4000;
+      const float accel = 3000;
+      const float decel = 2000;
       int ms = 0;
       float v_start = sc.actual.trans;
       float T = 1.5f * (v_max - v_start) / accel;
