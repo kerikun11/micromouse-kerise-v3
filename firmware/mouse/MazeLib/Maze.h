@@ -67,20 +67,25 @@ namespace MazeLib {
 		operator int8_t() const { return d; }
 		/** @brief 代入演算子のオーバーロード
 		*/
-		const Dir operator=(const Dir& obj) { this->d = obj.d; return *this; }
+		const Dir operator=(const Dir& obj) { d=obj.d; return *this; }
 
 		/** @function getRelative
 		*   @brief 自オブジェクト方向から見た引数方向を返す．
-		*   @param rd 対象方向
-		*   @return 相対方向
+		*   @param rd 相対方向
+		*   @return 絶対方向
 		*/
-		const Dir getRelative(const enum RelativeDir& rd) const { return Dir(rd-d); }
+		const Dir getRelative(const enum RelativeDir& rd) const { return Dir(d+rd); }
 		/** @function ordered
 		*   @brief 「正面，左，右，後」の順序の方向配列を生成する関数
 		*/
-		const std::array<Dir, 4> ordered() const {
-			std::array<Dir, 4> order{d, d+1, d+3, d+2};
-			return order;
+		const std::array<Dir, 4> ordered(const Dir& prev) const {
+			switch (Dir(d-prev)) {
+				case Forward: return std::array<Dir, 4>{d, d+1, d-1, d+2};
+				case Left:    return std::array<Dir, 4>{d-1, d, d+1, d+2};
+				case Right:   return std::array<Dir, 4>{d+1, d, d-1, d+2};
+				case Back:    return std::array<Dir, 4>{d, d+1, d-1, d+2};
+				default:      return std::array<Dir, 4>{d, d+1, d-1, d+2};
+			}
 		}
 		/** @function All
 		*   @brief 全方向の方向配列を生成する静的関数
@@ -99,12 +104,12 @@ namespace MazeLib {
 	union Vector {
 	public:
 		struct{
-			int8_t x : 8; /**< @brief 迷路の区画座標 */
-			int8_t y : 8; /**< @brief 迷路の区画座標 */
+			int8_t x; /**< @brief 迷路の区画座標 */
+			int8_t y; /**< @brief 迷路の区画座標 */
 		};
 		uint16_t all;
 		Vector(int8_t x=0, int8_t y=0) : x(x), y(y) {} /**< @brief コンストラクタ */
-		Vector(const Vector& obj) : x(obj.x), y(obj.y) {} /**< @brief コンストラクタ */
+		Vector(const Vector& obj) : all(obj.all) {} /**< @brief コンストラクタ */
 		/** @brief 演算子のオーバーロード
 		*/
 		const Vector& operator=(const Vector& obj) { all=obj.all; return *this; }
