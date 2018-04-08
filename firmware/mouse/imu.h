@@ -93,7 +93,7 @@ class ICM20602 {
       for (int j = 0; j < 2 ; j++) {
         portTickType xLastWakeTime = xTaskGetTickCount();
         for (int i = 0; i < ave_count; i++) {
-          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+          vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
           update();
           accel_sum += accel;
           gyro_sum += gyro;
@@ -213,7 +213,7 @@ class IMU {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); //< 同期
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount(); //< 同期
         update(); //< データの更新
         xSemaphoreGive(sampling_end_semaphore); //< サンプリング終了を知らせる
 

@@ -23,7 +23,7 @@ class ExternalController {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         while (Serial.available()) {
           char c = Serial.read();
           printf("%c\n", c);

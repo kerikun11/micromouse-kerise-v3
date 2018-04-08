@@ -133,7 +133,7 @@ class WallDetector {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
 
         // detect front wall
         if (tof.getDistance() < WALL_DETECTOR_THRESHOLD_FRONT * 0.95f) wall[2] = true;

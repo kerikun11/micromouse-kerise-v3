@@ -154,7 +154,7 @@ class SpeedController {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         if (enabled == false) continue; //< 有効でなければスルー
 
         // サンプリング終了まで待つ

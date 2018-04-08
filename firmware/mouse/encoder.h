@@ -109,7 +109,7 @@ class Encoder {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         update();
         xSemaphoreGive(sampling_end_semaphore);
       }

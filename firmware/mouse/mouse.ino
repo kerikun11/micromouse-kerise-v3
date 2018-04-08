@@ -14,11 +14,11 @@ void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   //  int prev[2] = {0, 0};
   while (1) {
-    xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    //    ref.csv(); xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
-    //    tof.csv(); xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
-    //    ref.print(); xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    //    wd.print(); xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+    //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+    //    tof.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+    //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+    //    wd.print(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
     //    printf("%d,%d\n", (enc.getPulses(0) - prev[0]) * 1000, (enc.getPulses(1) - prev[1]) * 1000);  prev[0] = enc.getPulses(0); prev[1] = enc.getPulses(1);
     //    printf("%ul,%d,%f", millis(), tof.getDistance(), sc.position.x);
   }
@@ -253,7 +253,7 @@ void trapizoid_test() {
   for (int ms = 0; ms / 1000.0f < T; ms++) {
     float velocity_a = v_start + (v_max - v_start) * 6.0f * (-1.0f / 3 * pow(ms / 1000.0f / T, 3) + 1.0f / 2 * pow(ms / 1000.0f / T, 2));
     sc.set_target(velocity_a, 0);
-    xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
   }
   bz.play(Buzzer::SELECT);
   delay(150);
@@ -322,7 +322,7 @@ void straight_x(const float distance, const float v_max, const float v_end) {
     float theta = atan2f(-cur.y, TEST_LOOK_AHEAD * (1 + velocity / 600)) - cur.theta;
     sc.set_target(velocity, TEST_PROP_GAIN * theta);
     //    if (avoid) wall_avoid();
-    xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
     ms++;
     printf("%f\t[%c %c]\n", cur.x + 6 + MACHINE_TAIL_LENGTH, wd.wall[0] ? 'X' : '_', wd.wall[1] ? 'X' : '_');
   }
@@ -344,11 +344,11 @@ void turn(const float angle) {
     } else {
       sc.set_target(-delta * back_gain, -ms / 1000.0f * accel);
     }
-    xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
     ms++;
   }
   while (1) {
-    xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
     float extra = angle - sc.position.theta;
     if (fabs(sc.actual.rot) < 0.1 && fabs(extra) < 0.1) break;
     float target_speed = sqrt(2 * decel * fabs(extra));

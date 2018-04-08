@@ -446,7 +446,7 @@ class FastRun: TaskBase {
         sc.set_target(velocity, FAST_ST_FB_GAIN * theta);
         wallAvoid();
         wallCut();
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         ms++;
       }
       sc.set_target(v_end, 0);
@@ -459,7 +459,7 @@ class FastRun: TaskBase {
       for (int i = 0; i < 2; i++) prev_wall[i] = wd.wall[i];
       while (1) {
         if (tr.getRemain() < FAST_END_REMAIN) break;
-        xLastWakeTime = xTaskGetTickCount(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         Position dir = tr.getNextDir(getRelativePosition(), velocity);
         sc.set_target(velocity, dir.theta);
         if (fabs(getRelativePosition().theta) < 0.01f * PI) {
