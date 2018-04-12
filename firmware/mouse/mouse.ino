@@ -192,7 +192,11 @@ void normal_drive() {
         int value = ui.waitForSelect(4);
         if (value < 0) return;
         switch (value) {
-          case 0: ms.set_goal({Vector(45, 39)}); break; //4238 * 3638
+          case 0: {
+              int x = ui.waitForSelect(16);
+              int y = ui.waitForSelect(16);
+              ms.set_goal({Vector(x, y)}); break;
+            }
           case 1: ms.set_goal({Vector(1, 0)}); break;
           case 2: ms.set_goal({Vector(4, 4), Vector(4, 5), Vector(5, 4), Vector(5, 5)}); break;
           case 3: ms.set_goal({Vector(15, 15)}); break;
