@@ -219,9 +219,8 @@ void normal_drive() {
     case 13:
       lg.print();
       break;
-    //* ログの表示
     case 14:
-      ms.print();
+      position_test();
       break;
     //* リセット
     case 15:
@@ -232,12 +231,12 @@ void normal_drive() {
 
 void position_test() {
   if (!ui.waitForCover()) return;
+  led = 9;
   delay(1000);
-  bz.play(Buzzer::SELECT);
-  imu.calibration();
-  bz.play(Buzzer::CANCEL);
   sc.enable();
   sc.set_target(0, 0);
+  ui.waitForCover();
+  sc.disable();
 }
 
 void trapizoid_test() {
