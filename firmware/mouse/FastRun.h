@@ -268,6 +268,63 @@ class FS90: public FastTrajectory {
     }
 };
 
+class AccelCurve {
+  public:
+    AccelCurve(const float a_max, const float v_start, const float v_end) {
+      tv = calcTimeVariable(a_max);
+      am = (v_end - v_start > 0) ? a_max : -a_max;
+      v0 = v_start;
+      v3 = v_end;
+      t0 = 0;
+      x0 = 0;
+      tc = (v3 - v0) / am - tv;
+      if (tc > 0) {
+        t1 = t0 + tv;
+        t2 = t1 + tc;
+        t3 = t2 + tv;
+        v1 = v0 + 0.5f * am * tv;
+        v2 = v0 + 0.5f * am * tv + am * tc;
+      } else {
+        t1 = t0 + sqrt(tv / am * (v3 - v0));
+        t2 = t1;
+        t3 = t2 + t1 - t0;
+        v1 = (v0 + v3) / 2;
+        v2 = v1;
+      }
+      x1 = x(t1);
+      x2 = x(t2);
+      x3 = x0 + (v0 + v3) / 2 * (t3 - t0); //< 対称性
+    }
+    const float v(const float t) {
+      if      (t <= t0) return v0;
+      else if (t <= t1) return v0 + 0.50f / tv * am * (t - t0) * (t - t0);
+      else if (t <= t2) return v1 + am * (t - t1);
+      else if (t <= t3) return v0 + am * (tv + tc) - 0.5f / tv * am * (t - t3) * (t - t3);
+      else             return v3;
+      return 0;
+    }
+    const float x(const float t) {
+      if      (t <= t0) return x0 + v0 * (t - t0);
+      else if (t <= t1) return x0 + v0 * (t - t0) + 1.0f / 6 / tv * am * (t - t0) * (t - t0) * (t - t0);
+      else if (t <= t2) return x1 + v1 * (t - t1) + 0.5f * am * (t - t1) * (t - t1);
+      else if (t <= t3) return x2 + (v0 + am * (tv + tc)) * (t - t2) - 1.0f / 6 / tv * am * ((t - t3) * (t - t3) * (t - t3) - (t2 - t3) * (t2 - t3) * (t2 - t3));
+      else              return x3 + v3 * (t - t3);
+    }
+    static const float calcVelocityMax(const float tv, const float am, const float vs, const float ve, const float x) {
+      return (-am * tv + sqrt(am * am * tv * tv - 2 * (vs + ve) * am * tv + 4 * am * x + 2 * (vs * vs + ve * ve))) / 2;
+    }
+    static const float calcTimeVariable(const float am) {
+      return am / 50000;
+    }
+    float am;       //< [mm/s/s]
+    float t0, t1, t2, t3; //< [s]
+    float v0, v1, v2, v3; //< [mm/s]
+    float x0, x1, x2, x3; //< [mm]
+    float tv;  //< [s]
+    float tc;  //< [s]
+  private:
+};
+
 class FastRun: TaskBase {
   public:
     FastRun() {}
