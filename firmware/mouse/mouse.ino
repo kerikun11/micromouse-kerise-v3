@@ -206,21 +206,21 @@ void normal_drive() {
       break;
     //* マス直線
     case 12:
-      if (!ui.waitForCover(true)) return;
-      delay(1000);
-      bz.play(Buzzer::CONFIRM);
-      imu.calibration();
-      bz.play(Buzzer::CANCEL);
-      sc.enable();
-      straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
-      sc.disable();
+      //      if (!ui.waitForCover(true)) return;
+      //      delay(1000);
+      //      bz.play(Buzzer::CONFIRM);
+      //      imu.calibration();
+      //      bz.play(Buzzer::CANCEL);
+      //      sc.enable();
+      //      straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
+      //      sc.disable();
+      position_test();
       break;
     //* ログの表示
     case 13:
       lg.print();
       break;
     case 14:
-      //      position_test();
       straight_test();
       break;
     //* リセット
@@ -283,8 +283,8 @@ void straight_test() {
   fan.drive(0.5);
   delay(500);
   lg.start();
-  sc.position.x = -12;
-  straight_x(24 * 90 - 3 - MACHINE_TAIL_LENGTH, 1500, 0);
+  sc.position.x = 0;
+  straight_x(24 * 90 - 3 - MACHINE_TAIL_LENGTH, 1200, 0);
   sc.set_target(0, 0);
   delay(100);
   lg.end();
@@ -310,44 +310,25 @@ void turn_test() {
 #define TEST_END_REMAIN         6
 #define TEST_ST_LOOK_AHEAD(v)   (6+v/100)
 #define TEST_ST_FB_GAIN         10
+#define TEST_ST_TR_FB_GAIN      0
 
-void straight_x(const float distance, const float v_max, const float ve) {
-  const float am = 9000;
-  const float vs = sc.actual.trans;
-  float tv = AccelCurve::calcTimeVariable(am);
-  float vm = std::min(v_max, AccelCurve::calcVelocityMax(tv, am, vs, ve, distance - TEST_END_REMAIN));
-  AccelCurve ac(am, vs, vm);
-  AccelCurve dc(am, vm, ve);
-  int ms = 0;
+void straight_x(const float distance, const float v_max, const float v_end) {
+  const float a_max = 6000;
+  const float v_start = sc.actual.trans;
+  AccelDesigner ad(a_max, v_start, v_max, v_end, distance - TEST_END_REMAIN);
   portTickType xLastWakeTime = xTaskGetTickCount();
-  while (1) {
-    Position cur = sc.position;
-    if (cur.x > distance - TEST_END_REMAIN - dc.x3) break;
-    const float t = ms * 0.001f;
-    float velocity = ac.v(t);
-    float theta = atan2f(-cur.y, TEST_ST_LOOK_AHEAD(velocity)) - cur.theta;
-    sc.set_target(velocity, TEST_ST_FB_GAIN * theta);
-    //    wallAvoid();
-    //    wallCut();
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
-    ms++;
-  }
-  ms = 0;
-  while (1) {
+  for (float t = 0.0f; true; t += 0.001f) {
     Position cur = sc.position;
     //    if (cur.x > distance - TEST_END_REMAIN) break;
-    const float t = ms * 0.001f;
-    if (t > dc.t3) break;
-    float velocity = dc.v(t) + 10.0f * ((distance - TEST_END_REMAIN - dc.x3 + dc.x(t)) - (cur.x));
-    //        float velocity = dc.v(t);
+    if (t > ad.t_end()) break;
+    float velocity = ad.v(t) + TEST_ST_TR_FB_GAIN * (ad.x(t) - cur.x);
     float theta = atan2f(-cur.y, TEST_ST_LOOK_AHEAD(velocity)) - cur.theta;
     sc.set_target(velocity, TEST_ST_FB_GAIN * theta);
     //    wallAvoid();
     //    wallCut();
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
-    ms++;
   }
-  sc.set_target(ve, 0);
+  sc.set_target(v_end, 0);
   //  updateOrigin(Position(distance, 0, 0));
 }
 
@@ -386,4 +367,3 @@ void turn(const float angle) {
   //  updateOrigin(Position(0, 0, angle));
   //  printPosition("Turn End");
 }
-
