@@ -78,7 +78,9 @@ namespace MazeLib {
 				printf("+\n");
 				for(uint8_t x=0; x<MAZE_SIZE; x++){
 					printf("%s" C_RESET, maze.isKnown(x,y,Dir::West) ? (maze.isWall(x,y,Dir::West)?"|":" ") : C_RED ":");
-					printf("%s%4d" C_RESET, v==Vector(x,y)?C_YELLOW:C_CYAN, stepMap[y][x]);
+					// printf("%s%4d" C_RESET, v==Vector(x,y)?C_YELLOW:C_CYAN, stepMap[y][x]);
+					if(v==Vector(x, y)) printf("%s  %c " C_RESET, C_YELLOW, ">^<v"[d]);
+					else printf("%s%4d" C_RESET, C_CYAN, stepMap[y][x]);
 				}
 				printf("%s" C_RESET, maze.isKnown(MAZE_SIZE-1,y,Dir::East) ? (maze.isWall(MAZE_SIZE-1,y,Dir::East)?"|":" ") : C_RED ":");
 				printf("\n");
@@ -105,7 +107,7 @@ namespace MazeLib {
 			// ステップの更新がなくなるまで更新処理
 			while(!q.empty()){
 				// 注目する区画を取得
-				const Vector& focus = q.front(); q.pop();
+				const Vector focus = q.front(); q.pop();
 				const step_t& focus_step = getStep(focus);
 				// 4方向更新がないか調べる
 				for(const auto& d: Dir::All()){

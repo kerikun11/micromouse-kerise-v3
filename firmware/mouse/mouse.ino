@@ -42,16 +42,21 @@ void setup() {
   em.begin();
   ec.begin();
 
-  xTaskCreate(task, "test", 4096, NULL, 0, NULL); // debug output
-  xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 0, NULL); // debug output
+  xTaskCreate(task, "test", 4096, NULL, 1, NULL); // debug output
+  xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 1, NULL); // debug output
+  xTaskCreate(mainTask, "main", 4096, NULL, 1, NULL); // debug output
 }
 
-void loop() {
-  normal_drive();
-  //  position_test();
-  //  trapizoid_test();
-  //  straight_test();
-  //  turn_test();
+void loop() {}
+
+void mainTask(void* arg) {
+  while (1) {
+    normal_drive();
+    //  position_test();
+    //  trapizoid_test();
+    //  straight_test();
+    //  turn_test();
+  }
 }
 
 void timeKeepTask(void* arg) {
@@ -222,6 +227,7 @@ void normal_drive() {
       break;
     case 14:
       straight_test();
+      //      trapizoid_test();
       break;
     //* リセット
     case 15:
@@ -274,25 +280,6 @@ void trapizoid_test() {
   lg.end();
 }
 
-void straight_test() {
-  if (!ui.waitForCover()) return;
-  delay(1000);
-  bz.play(Buzzer::SELECT);
-  imu.calibration();
-  sc.enable();
-  fan.drive(0.5);
-  delay(500);
-  lg.start();
-  sc.position.x = 0;
-  straight_x(24 * 90 - 3 - MACHINE_TAIL_LENGTH, 1200, 0);
-  sc.set_target(0, 0);
-  delay(100);
-  lg.end();
-  fan.drive(0);
-  delay(500);
-  sc.disable();
-}
-
 void turn_test() {
   if (!ui.waitForCover()) return;
   delay(1000);
@@ -307,13 +294,32 @@ void turn_test() {
   lg.end();
 }
 
+void straight_test() {
+  if (!ui.waitForCover()) return;
+  delay(1000);
+  bz.play(Buzzer::SELECT);
+  imu.calibration();
+  sc.enable();
+  fan.drive(0.5);
+  delay(500);
+  lg.start();
+  sc.position.x = 0;
+  straight_x(12 * 90 - 3 - MACHINE_TAIL_LENGTH, 2400, 0);
+  sc.set_target(0, 0);
+  delay(100);
+  lg.end();
+  fan.drive(0);
+  delay(500);
+  sc.disable();
+}
+
 #define TEST_END_REMAIN         6
 #define TEST_ST_LOOK_AHEAD(v)   (6+v/100)
 #define TEST_ST_FB_GAIN         10
 #define TEST_ST_TR_FB_GAIN      0
 
 void straight_x(const float distance, const float v_max, const float v_end) {
-  const float a_max = 6000;
+  const float a_max = 9000;
   const float v_start = sc.actual.trans;
   AccelDesigner ad(a_max, v_start, v_max, v_end, distance - TEST_END_REMAIN);
   portTickType xLastWakeTime = xTaskGetTickCount();

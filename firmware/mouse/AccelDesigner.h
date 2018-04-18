@@ -65,7 +65,7 @@ public:
     return (-am * tv + sqrt(am * am * tv * tv - 2 * (vs + ve) * am * tv + 4 * am * x + 2 * (vs * vs + ve * ve))) / 2;
   }
   static float calcTimeVariable(const float am) {
-    return am / 50000; //< 経験的
+    return am / 100000; //< 経験的
   }
 private:
   float am; //< max acceleration [mm/s/s]

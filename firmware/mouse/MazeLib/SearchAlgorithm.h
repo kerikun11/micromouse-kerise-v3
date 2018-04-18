@@ -91,7 +91,7 @@ namespace MazeLib {
 					state = SEARCHING_ADDITIONALLY;
 				}else{
 					// ゴールを目指して探索
-					stepMapGoal.update(goal);
+					stepMapGoal.update(goal, false, false);
 					return calcNextDirsByStepMap(stepMapGoal, pv, pd, nextDirs, nextDirsInAdvance);
 				}
 			}
@@ -125,8 +125,6 @@ namespace MazeLib {
 				if(pv == start) {
 					state = REACHED_START;
 				}else{
-					// stepMapStart.update({start}, isForceBackToStart);
-					// stepMapStart.update({start});
 					stepMapStart.update({start}, false, false);
 					return calcNextDirsByStepMap(stepMapStart, pv, pd, nextDirs, nextDirsInAdvance);
 				}
@@ -227,6 +225,7 @@ namespace MazeLib {
 			auto focus_v = start_v;
 			auto dir = start_d;
 			while(1){
+				if(maze.unknownCount(focus_v)) break; //< 未知壁があれば，既知区間は終了
 				// 周囲の区画のうち，最小ステップの方向を求める
 				step_t min_step = MAZE_STEP_MAX;
 				for(const auto& d: {dir+0, dir+1, dir-1, dir+2}){
@@ -237,19 +236,18 @@ namespace MazeLib {
 						dir = d;
 					}
 				}
-				if(maze.unknownCount(focus_v.next(dir))) break; //< 未知壁があれば，既知区間は終了
 				if(stepMap.getStep(focus_v) <= min_step) break; //< 永遠ループ防止
-				nextDirs.push_back(dir);
-				focus_v = focus_v.next(dir);
+				nextDirs.push_back(dir); //< 既知区間移動
+				focus_v = focus_v.next(dir); //< 位置を更新
 			}
 			// ステップマップから未知壁方向の優先順位方向列を生成
-			if(nextDirs.empty()) dir = start_d;
-			else dir = nextDirs.back();
 			std::vector<Dir> dirs;
-			for(const auto& d: {dir+0, dir+1, dir-1, dir+2})
-			if(!maze.isWall(focus_v, d) && stepMap.getStep(focus_v.next(d))!=MAZE_STEP_MAX) dirs.push_back(d);
+			// 方向の候補を抽出
+			for(const auto& d: {dir+0, dir+1, dir-1, dir+2}) if(!maze.isWall(focus_v, d) && stepMap.getStep(focus_v.next(d))!=MAZE_STEP_MAX) dirs.push_back(d);
+			// ステップが小さい順に並べ替え
 			std::sort(dirs.begin(), dirs.end(), [&](const Dir& d1, const Dir& d2){
-				return stepMap.getStep(focus_v.next(d1)) < stepMap.getStep(focus_v.next(d2));
+				if(maze.unknownCount(focus_v.next(d2))) return false; //< 未知壁優先
+				return stepMap.getStep(focus_v.next(d1)) < stepMap.getStep(focus_v.next(d2)); //< 低コスト優先
 			});
 			nextDirsInAdvance = dirs;
 			if(nextDirsInAdvance.empty()) return false;

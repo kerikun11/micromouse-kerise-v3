@@ -18,10 +18,10 @@ namespace MazeLib {
       state = SearchAlgorithm::IDOLE;
       updateCurVecDir(Vector(0, 0), Dir::North);
     }
-		void reset(const std::vector<Vector>& goal) {
+    void reset(const std::vector<Vector>& goal) {
       searchAlgorithm.setGoal(goal);
       reset();
-		}
+    }
     /** @function updateCurVecDir
     *   @brief 現在地を更新
     *   @param v 区画座標
@@ -100,7 +100,7 @@ namespace MazeLib {
     *   @param showMaze true:迷路も表示, false:迷路は非表示
     */
     void printInfo(const bool& showMaze = true) const {
-      for(int i=0; i<8; i++) printf("\x1b[A");
+      for(int i=0; i<9; i++) printf("\x1b[A");
       if(showMaze){
         searchAlgorithm.printMap(state, curVec, curDir);
       }
@@ -110,7 +110,7 @@ namespace MazeLib {
       printf("                                               \n");
       printf("nextDirsInAdvance: ");
       for(const auto d: getNextDirsInAdvance()) printf("%c", ">^<v"[d]);
-      printf("    \n");
+      printf("        \n");
     }
     /** @function printPath
     *   @brief 最短経路の表示

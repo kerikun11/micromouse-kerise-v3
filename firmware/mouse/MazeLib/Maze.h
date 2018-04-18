@@ -112,6 +112,7 @@ namespace MazeLib {
 		Vector(const Vector& obj) : all(obj.all) {} /**< @brief コンストラクタ */
 		/** @brief 演算子のオーバーロード
 		*/
+		const Vector operator+(const Vector& obj) const { return Vector(x+obj.x, y+obj.y); }
 		const Vector& operator=(const Vector& obj) { all=obj.all; return *this; }
 		bool operator==(const Vector& obj) const { return all==obj.all; }
 		bool operator!=(const Vector& obj) const { return all!=obj.all; }
@@ -138,12 +139,13 @@ namespace MazeLib {
 	union WallLog {
 		uint16_t all; /**< @brief 全フラグ参照用 */
 		struct {
-			uint8_t x : 6;  /**< @brief 区画のx座標 */
-			uint8_t y : 6;  /**< @brief 区画のx座標 */
+			int8_t x : 6;  /**< @brief 区画のx座標 */
+			int8_t y : 6;  /**< @brief 区画のx座標 */
 			uint8_t d : 3;  /**< @brief 方向 */
 			uint8_t b : 1;  /**< @brief 壁の有無 */
 		};
 		WallLog(const Vector& v , const Dir& d, const bool b): x(v.x), y(v.y), d(d), b(b) {}
+		WallLog(const int8_t x, const int8_t y, const Dir& d, const bool b): x(x), y(y), d(d), b(b) {}
 		WallLog(const uint16_t all): all(all) {}
 		WallLog() {}
 	};
@@ -388,16 +390,6 @@ namespace MazeLib {
 			for(uint8_t x=0; x<MAZE_SIZE; x++)
 			printf("+%s" C_RESET, isKnown(x,0,Dir::South) ? (isWall(x,0,Dir::South)?"---":"   ") : C_RED " - ");
 			printf("+\n");
-		}
-		int diffKnownWall(const Maze& obj){
-			int diffs = 0;
-			for(int j=0; j<MAZE_SIZE-1; j++){
-				for(int i=0; i<2; i++){
-					wall_size_t bits = known[i][j] & (wall[i][j] ^ obj.wall[i][j]);
-					diffs += popcnt(bits);
-				}
-			}
-			return diffs;
 		}
 	public:
 		/** @function popcnt

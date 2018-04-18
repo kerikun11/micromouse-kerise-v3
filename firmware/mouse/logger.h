@@ -13,12 +13,13 @@ extern Reflector ref;
 #include "tof.h"
 extern ToF tof;
 
-#define LOGGER_TASK_PRIORITY 0
+#define LOGGER_TASK_PRIORITY 1
 #define LOGGER_STACK_SIZE    4096
 
 class Logger {
   public:
     Logger() {
+      log.reserve(4096);
       end();
       xTaskCreate([](void* obj) {
         static_cast<Logger*>(obj)->task();
@@ -68,7 +69,7 @@ class Logger {
     void task() {
       portTickType xLastWakeTime = xTaskGetTickCount();
       while (1) {
-        vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+        vTaskDelayUntil(&xLastWakeTime, 2 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
         if (enabled) {
           printToLog();
         }
