@@ -1,6 +1,6 @@
 clear;
 close all;
-data = csvread('out.txt');
+data = csvread('out.csv');
 % data = data(2:end, :) - data(1:end-1, :);
 plot(data, '-','LineWidth', 4); grid on;
 % xlabel('$t$ [ms]', 'Interpreter', 'Latex', 'FontSize', 14)

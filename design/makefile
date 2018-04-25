@@ -14,7 +14,3 @@ run:
 	make
 	./main
 
-.PHONY: out
-out:
-	make
-	./main > out.txt
