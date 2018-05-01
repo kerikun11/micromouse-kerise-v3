@@ -1,8 +1,18 @@
+/** @file AccelDesigner.h
+*   @author KERI
+*   @date 2018.04.29 created
+*   @date 2018.04.29 modified
+*   @url https://kerikeri.top
+*/
 #pragma once
 
-#include <cmath>
-#include <algorithm>
-#include <complex>
+#include <cmath> //< for std::sqrt, std::cbrt, std::pow
+#include <algorithm> //< for std::max, std::min
+#include <complex> //< for std::complex
+
+/* このファイルに定義されているクラス一覧 */
+class AccelCurve;
+class AccelDesigner;
 
 /** @class 加速曲線を生成するクラス
 *   @brief 引数に従って加速曲線を生成する
@@ -17,6 +27,9 @@ public:
   AccelCurve(const float a_max, const float v_start, const float v_end) {
     reset(a_max, v_start, v_end);
   }
+  /** @constructor
+  *   @brief 空のコンストラクタ．あとで reset() により初期化すること．
+  */
   AccelCurve() {
     am = t0 = t1 = t2 = t3 = v0 = v1 = v2 = v3 = x0 = x1 = x2 = x3 = tc = tm = 0;
   }
@@ -92,21 +105,9 @@ public:
   *   @param am 最大加速度の大きさ
   */
   static float calcTimeCurve(const float am) {
-    return std::abs(am) / 50000; //< 経験的
-    // return 0.3f;
-  }
-  /** @function calcVelocityMax
-  *   @brief 走行距離から達しうる最大速度を算出する関数
-  *   @param am 最大加速度の大きさ [mm/s/s]
-  *   @param vs 始点速度 [mm/s]
-  *   @param ve 終点速度 [mm/s]
-  *   @param d 走行距離 [mm]
-  *   @return vm 最大速度 [mm/s]
-  */
-  static float calcVelocityMax(const float am, const float vs, const float ve, const float d) {
-    const float tc = AccelCurve::calcTimeCurve(am);
-    const float D = am * am * tc * tc - 2 * (vs + ve) * am * tc + 4 * am * d + 2 * (vs * vs + ve * ve);
-    return (-am * tc + std::sqrt(D)) / 2;
+    const float ad = 100000; //< 躍度 [mm/s/s/s]
+    const float tc = std::abs(am) / ad; //< 時間を算出
+    return tc;
   }
   /** @function calcVelocityEnd
   *   @brief 走行距離から達しうる終点速度を算出する関数
@@ -116,28 +117,48 @@ public:
   *   @param d 走行距離 [mm]
   *   @return vm 最大速度 [mm/s]
   */
-  static float calcVelocityEndMax(float am, const float vs, const float vt, const float d) {
+  static float calcVelocityEnd(float am, const float vs, const float vt, const float d) {
     const float tc = AccelCurve::calcTimeCurve(am);
     am = (vt - vs > 0) ? std::abs(am) : -std::abs(am); //< 最大加速度の符号を決定
     const float tm = (vt - vs) / am - tc; //< 等加速度直線運動の時間を決定
-    if (tm > 0) {
-      return (std::sqrt(4*vs*vs - 4*vs*am*tc + am*(tc*tc*am + 8*d)) - am*tc)/2;
-    } else {
+    std::cout << "tm: " << tm << std::endl;
+    float ve;
+    // if (tm > 0) {
+    //   ve = ((am>0?1:-1)*std::sqrt(4*vs*vs - 4*vs*am*tc + am*(tc*tc*am + 8*d)) - am*tc)/2; //< 2次方程式の解
+    // } else {
       const float a = vs;
       const float b = am*d*d/tc;
       const float aaa = a*a*a;
-      const float t0 = 27*(32*aaa*b + 27*b*b);
-      const float t1 = 16*aaa + 27*b;
-      if(t0 >= 0) {
+      const float c0 = 27*(32*aaa*b + 27*b*b);
+      const float c1 = 16*aaa + 27*b;
+      if(c0 >= 0) {
         // ルートの中が非負のとき
-        const float t2 = std::cbrt(std::sqrt(t0) + t1) / 2;
-        return (t2 + 4*a*a/t2 - a) / 3;
+        const float c2 = std::cbrt(std::sqrt(c0) + c1) / 2;
+        ve = (c2 + 4*a*a/c2 - a) / 3; //< 3次方程式の解
+        std::cout << "c2-p: " << c2 << std::endl;
       } else {
         // ルートの中が負のとき
-        const auto t2 = std::pow(std::complex<float>(t1/2,  std::sqrt(-t0)/2), 1.0f/3);
-        return (t2.real()*2 - a) / 3;
+        const auto c2 = std::pow(std::complex<float>(c1/2,  std::sqrt(-c0)/2), 1.0f/3);
+        ve = (c2.real()*2 - a) / 3; //< 3次方程式の解
+        std::cout << "c2-n: " << c2 << std::endl;
       }
-    }
+    // }
+    return (vt > vs) ? std::min(vt, ve) : std::max(vt, ve); //< 加速と減速で飽和方向が異なる
+  }
+  /** @function calcVelocityMax
+  *   @brief 走行距離から達しうる最大速度を算出する関数
+  *   @param am 最大加速度の大きさ [mm/s/s]
+  *   @param vs 始点速度 [mm/s]
+  *   @param ve 終点速度 [mm/s]
+  *   @param d 走行距離 [mm]
+  *   @return vm 最大速度 [mm/s]
+  */
+  static float calcVelocityMax(const float am, const float vs, const float va, const float ve, const float d) {
+    const float tc = AccelCurve::calcTimeCurve(am);
+    const float D = am * am * tc * tc - 2 * (vs + ve) * am * tc + 4 * am * d + 2 * (vs * vs + ve * ve);
+    const float vm = (-am * tc + std::sqrt(D)) / 2; //< 2次方程式の解
+    return std::max({vm, vs, ve}); //< 無駄な減速を避ける
+    return std::min(vm, va); //< 飽和速度で飽和
   }
 private:
   float am; //< 最大加速度 [m/s/s]
@@ -153,71 +174,92 @@ private:
 */
 class AccelDesigner{
 public:
-  AccelDesigner() {
-    t1 = t2 = t3 = 0;
-    x0 = x3 = 0;
-  }
+  /** @constructor
+  *   @param a_max 最大加速度 [mm/s/s]
+  *   @param v_start 始点速度 [mm/s]
+  *   @param v_end 終点速度 [mm/s]
+  */
   AccelDesigner(const float a_max, const float v_start, const float v_sat, const float v_target, const float distance, const float x_start = 0) {
     reset(a_max, v_start, v_sat, v_target, distance, x_start);
   }
+  /** @constructor
+  *   @brief 空のコンストラクタ．あとで reset() により初期化すること．
+  */
+  AccelDesigner() { t1 = t2 = t3 = x0 = x3 = 0; }
+  /** @function reset
+  *   @brief 引数の拘束条件から曲線を生成する．
+  *   この関数によって，すべての変数が初期化される．(漏れはない)
+  */
   void reset(const float a_max, const float v_start, const float v_sat, const float v_target, const float distance, const float x_start = 0) {
-    x0 = x_start;
-    x3 = x_start + distance;
-    // 最大速度$v_m$の計算
-    // 走行距離から最大速度を算出
-    float v_max = AccelCurve::calcVelocityMax(a_max, v_start, v_target, distance);
-    v_max = std::min(v_max, v_sat); //< 飽和速度で飽和
-    // 終点速度$v_e$の計算
-    float v_end = v_target;
-    // 走行距離から終点速度を算出
-    const float v_end_max = AccelCurve::calcVelocityEndMax(a_max, v_start, v_target, distance);
-    // 飽和処理, 加速と減速で飽和方向が異なる
-    v_end = (v_end>v_start) ? std::min(v_end, v_end_max) : std::max(v_end, v_end_max);
-    v_max = std::max(v_max, v_end); //< 終端速度以下まで減速はしたくないので
+    // 走行距離から終点速度$v_e$を算出
+    const float v_end = AccelCurve::calcVelocityEnd(a_max, v_start, v_target, distance);
+    // 走行距離から最大速度$v_m$を算出
+    const float v_max = AccelCurve::calcVelocityMax(a_max, v_start, v_sat, v_end, distance);
     // 曲線を生成
     ac.reset(a_max, v_start, v_max); //< 加速
     dc.reset(a_max,   v_max, v_end); //< 減速
     // 各定数の算出
+    x0 = x_start;
+    x3 = x_start + distance;
     t1 = ac.t_end(); //< 曲線加速終了の時刻
     t2 = ac.t_end() + (distance - ac.x_end() - dc.x_end()) / v_max; //< 等速走行終了の時刻
     t3 = ac.t_end() + (distance - ac.x_end() - dc.x_end()) / v_max + dc.t_end(); //< 曲線減速終了の時刻
     // 表示
-    std::cout << "a_max: " << a_max << " v_start: " << v_start << " v_max: " << v_max << " v_end: " << v_end << " distance: " << distance << std::endl;
+    std::cout << "a_max: " << a_max << " v_start: " << v_start << " v_max: " << v_max << " v_end: " << v_end << " v_target: " << v_target << " distance: " << distance << std::endl;
+    std::cout << "t1: " << t1 << " t2: " << t2 << " t3: " << t3 << std::endl;
+    std::cout << "ac.x_end: " << ac.x_end() << " dc.x_end: " << dc.x_end() << std::endl;
   }
-  float t_end() const {
-    return t3;
-  }
-  float x_end() const {
-    return x3;
-  }
-  float v_end() const {
-    return dc.v_end();
-  }
+  /** @function a
+  *   @brief 時刻$t$における加速度$a$
+  *   @param t 時刻[s]
+  *   @return 加速度[mm/s/s]
+  */
   float a(const float t) const {
     if (t < t2) return ac.a(t);
     else        return dc.a(t - t2);
   }
+  /** @function v
+  *   @brief 時刻$t$における速度$v$
+  *   @param t 時刻[s]
+  *   @return 速度[mm/s]
+  */
   float v(const float t) const {
     if (t < t2) return ac.v(t);
     else        return dc.v(t - t2);
   }
+  /** @function x
+  *   @brief 時刻$t$における位置$x$
+  *   @param t 時刻[s]
+  *   @return 位置[mm]
+  */
   float x(const float t) const {
     if (t < t2) return x0 + ac.x(t);
     else        return x3 - dc.x_end() + dc.x(t - t2);
   }
+  /** @function xx_end
+  *   @brief 終端xx
+  */
+  float t_end() const { return t3; }
+  float v_end() const { return dc.v_end(); }
+  float x_end() const { return x3; }
+  /** @function printCsv
+  *   @brief stdoutに軌道のcsvを出力する関数．
+  */
   void printCsv(const float t_interval = 0.001f) const {
     for (float t = 0; t < t_end(); t += t_interval) {
       printf("%f,%f,%f\n", a(t), v(t), x(t));
     }
   }
+  /** @function printCsv
+  *   @brief std::ofstream に軌道のcsvを出力する関数．
+  */
   void printCsv(std::ofstream& f, const float t_interval = 0.001f) const {
     for (float t = 0; t < t_end(); t += t_interval) {
       f << a(t) << "," << v(t) << "," << x(t) << "\n";
     }
   }
 private:
-  float t1, t2, t3;
-  float x0, x3;
-  AccelCurve ac, dc;
-
+  float t1, t2, t3; //< 境界点の時刻 [s]
+  float x0, x3; //< 境界点の位置 [mm]
+  AccelCurve ac, dc; //< 曲線加速，曲線減速
 };
