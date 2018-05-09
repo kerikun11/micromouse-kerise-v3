@@ -105,7 +105,7 @@ public:
   *   @param am 最大加速度の大きさ
   */
   static float calcTimeCurve(const float am) {
-    const float ad = 100000; //< 躍度 [mm/s/s/s]
+    const float ad = 500000; //< 躍度 [mm/s/s/s]
     const float tc = std::abs(am) / ad; //< 時間を算出
     return tc;
   }

@@ -226,8 +226,9 @@ void normal_drive() {
       lg.print();
       break;
     case 14:
-      straight_test();
+      //      straight_test();
       //      trapizoid_test();
+      accel_test();
       break;
     //* リセット
     case 15:
@@ -244,6 +245,36 @@ void position_test() {
   sc.set_target(0, 0);
   ui.waitForCover();
   sc.disable();
+}
+
+void accel_test() {
+  if (!ui.waitForCover()) return;
+  //  delay(500);
+  //  imu.calibration();
+  //  fan.drive(0.4);
+  //  delay(500);
+  //  lg.start();
+  //  sc.enable();
+  //  const float accel = 15000;
+  //  const float v_max = 3000;
+  //  AccelDesigner ad(accel, 0, v_max, 0, 1500);
+  //  portTickType xLastWakeTime = xTaskGetTickCount();
+  //  for (float t = 0; t < ad.t_end(); t += 0.001f) {
+  //    sc.set_target(ad.v(t), 0);
+  //    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+  //  }
+  //  sc.set_target(0, 0);
+  //  delay(400);
+  //  bz.play(Buzzer::CANCEL);
+  //  sc.disable();
+  //  fan.drive(0);
+  //  lg.end();
+  delay(200);
+  mt.drive(20, 20);
+  delay(200);
+  mt.drive(0, 0);
+  delay(200);
+  mt.free();
 }
 
 void trapizoid_test() {
@@ -321,7 +352,7 @@ void straight_test() {
 void straight_x(const float distance, const float v_max, const float v_end) {
   const float a_max = 9000;
   const float v_start = sc.actual.trans;
-  AccelDesigner ad(a_max, v_start, v_max, v_end, distance - TEST_END_REMAIN);
+  AccelDesigner ad(a_max, v_start, v_max, v_end, sc.position.x, distance - TEST_END_REMAIN);
   portTickType xLastWakeTime = xTaskGetTickCount();
   for (float t = 0.0f; true; t += 0.001f) {
     Position cur = sc.position;
@@ -334,7 +365,7 @@ void straight_x(const float distance, const float v_max, const float v_end) {
     //    wallCut();
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
   }
-  sc.set_target(v_end, 0);
+  sc.set_target(ad.v_end(), 0);
   //  updateOrigin(Position(distance, 0, 0));
 }
 
