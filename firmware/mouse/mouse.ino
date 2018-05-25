@@ -228,7 +228,16 @@ void normal_drive() {
     case 14:
       //      straight_test();
       //      trapizoid_test();
-      accel_test();
+      //      accel_test();
+      if (!ui.waitForCover()) return;
+      delay(500);
+      //      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
+      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
+      //      fr.set_path("ssssssssrlrrlrssssssss");
+      imu.calibration();
+      fr.enable();
+      fr.waitForEnd();
+      fr.disable();
       break;
     //* リセット
     case 15:
