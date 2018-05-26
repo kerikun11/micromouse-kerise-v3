@@ -97,7 +97,7 @@ class MazeSolver: TaskBase {
       File file = SPIFFS.open(MAZE_BACKUP_PATH, FILE_APPEND);
       if (!file) {
         log_e("Can't open file!");
-          bz.play(Buzzer::ERROR);
+        bz.play(Buzzer::ERROR);
         return false;
       }
       const auto& wallLog = agent.getMaze().getWallLogs();
@@ -300,12 +300,12 @@ class MazeSolver: TaskBase {
         if (!searchRun()) waitForever();
       }
       while (1) {
+        readyToStartWait();
         if (!fast_run()) waitForever();
         fr.runParameter.curve_gain *= 1.1f;
         fr.runParameter.max_speed *= 1.21f;
         fr.runParameter.accel *= 1.1f;
         fr.runParameter.decel *= 1.1f;
-        readyToStartWait();
       }
     }
 };

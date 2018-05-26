@@ -232,7 +232,7 @@ void normal_drive() {
       if (!ui.waitForCover()) return;
       delay(500);
       //      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
-      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
+      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrlrssssssssssssssssssslrlrlrlrlrlsssssssslrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
       //      fr.set_path("ssssssssrlrrlrssssssss");
       imu.calibration();
       fr.enable();
