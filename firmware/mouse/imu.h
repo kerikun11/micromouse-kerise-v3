@@ -58,9 +58,14 @@ class ICM20602 {
       return reset();
     }
     bool reset() {
-      writeReg(0x6b, 0x01); //< power management 1
-      writeReg(0x1b, 0x18); //< gyro range
-      writeReg(0x1c, 0x18); //< accel range
+      writeReg(107, 0x81);
+      delay(100);
+      writeReg(17, 0xc9);
+      writeReg(26, 0x00);
+      writeReg(27, 0x18);
+      writeReg(28, 0x18);
+      writeReg(29, 0x04);
+      writeReg(107, 0x01);
       return whoami();
     }
     void update() {

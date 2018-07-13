@@ -243,7 +243,7 @@ class FV90: public FastTrajectory {
 class FS90: public FastTrajectory {
   public:
     FS90(bool mirror = false) : mirror(mirror) {}
-    const float velocity = 345.3346843519961;
+    const float velocity = 270.0f;
     const float straight = 5.0f;
   private:
     bool mirror;

@@ -12,9 +12,17 @@
 
 void task(void* arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
-  //  int prev[2] = {0, 0};
+  float prev[2] = {0, 0};
+  float pres[2] = {0, 0};
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
+    //    std::cout << "-10,10";
+    //    for (int ch = 0; ch < 2; ch++) {
+    //      pres[ch] = enc.position(ch);
+    //      std::cout << "," << (pres[ch] - prev[ch]) / 1e-3;
+    //      prev[ch] = pres[ch];
+    //    }
+    //    std::cout << std::endl;
     //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
     //    tof.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
     //    ref.print(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount();
@@ -22,6 +30,24 @@ void task(void* arg) {
     //    printf("%d,%d\n", (enc.getPulses(0) - prev[0]) * 1000, (enc.getPulses(1) - prev[1]) * 1000);  prev[0] = enc.getPulses(0); prev[1] = enc.getPulses(1);
     //    printf("%ul,%d,%f", millis(), tof.getDistance(), sc.position.x);
   }
+}
+
+void mainTask(void* arg) {
+  while (1) {
+    normal_drive();
+    //  position_test();
+    //  trapizoid_test();
+    //  straight_test();
+    //  turn_test();
+  }
+}
+
+void timeKeepTask(void* arg) {
+  const int searchig_time_ms = 3 * 60 * 1000;
+  while (millis() < searchig_time_ms) delay(1000);
+  bz.play(Buzzer::LOW_BATTERY);
+  ms.forceBackToStart();
+  while (1) delay(1000);
 }
 
 void setup() {
@@ -48,24 +74,6 @@ void setup() {
 }
 
 void loop() {}
-
-void mainTask(void* arg) {
-  while (1) {
-    normal_drive();
-    //  position_test();
-    //  trapizoid_test();
-    //  straight_test();
-    //  turn_test();
-  }
-}
-
-void timeKeepTask(void* arg) {
-  const int searchig_time_ms = 3 * 60 * 1000;
-  while (millis() < searchig_time_ms) delay(1000);
-  bz.play(Buzzer::LOW_BATTERY);
-  ms.forceBackToStart();
-  while (1) delay(1000);
-}
 
 void normal_drive() {
   int mode = ui.waitForSelect(16);

@@ -11,7 +11,17 @@ class ToF {
   public:
     ToF(const int pin_sda, const int pin_scl): pin_sda(pin_sda), pin_scl(pin_scl) {}
     bool begin() {
-      Wire.begin(pin_sda, pin_scl);
+      //      Wire.begin(pin_sda, pin_scl);
+      i2c_config_t conf;
+      conf.mode = I2C_MODE_MASTER;
+      conf.sda_io_num = (gpio_num_t)pin_sda;
+      conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+      conf.scl_io_num = (gpio_num_t)pin_scl;
+      conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+      conf.master.clk_speed = 1000000;
+      i2c_param_config(I2C_PORT_NUM_TOF, &conf);
+      i2c_driver_install(I2C_PORT_NUM_TOF, conf.mode, 0, 0, 0);
+
       sensor.setTimeout(50);
       if (!sensor.init()) {
         log_e("ToF init failed :(");
@@ -74,7 +84,7 @@ class ToF {
         uint16_t range = sensor.readReg16Bit(VL53L0X::RESULT_RANGE_STATUS + 10);
         sensor.writeReg(VL53L0X::SYSTEM_INTERRUPT_CLEAR, 0x01);
         if (range > 5 && range < 1000) {
-          distance = range - 3;
+          distance = range - 34;
           passed_ms = 0;
         }
       }

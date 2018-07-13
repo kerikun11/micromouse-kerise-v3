@@ -281,112 +281,204 @@ bool VL53L0X::init(bool io_2v8)
 // Write an 8-bit register
 void VL53L0X::writeReg(uint8_t reg, uint8_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  Wire.write(value);
-  last_status = Wire.endTransmission();
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  Wire.write(value);
+//  last_status = Wire.endTransmission();
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_write_byte(cmd, value, true);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
 }
 
 // Write a 16-bit register
 void VL53L0X::writeReg16Bit(uint8_t reg, uint16_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  Wire.write((value >> 8) & 0xFF); // value high byte
-  Wire.write( value       & 0xFF); // value low byte
-  last_status = Wire.endTransmission();
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  Wire.write((value >> 8) & 0xFF); // value high byte
+//  Wire.write( value       & 0xFF); // value low byte
+//  last_status = Wire.endTransmission();
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_write_byte(cmd, (value >> 8) & 0xff, true);
+  i2c_master_write_byte(cmd, value & 0xff, true);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
 }
 
 // Write a 32-bit register
 void VL53L0X::writeReg32Bit(uint8_t reg, uint32_t value)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  Wire.write((value >> 24) & 0xFF); // value highest byte
-  Wire.write((value >> 16) & 0xFF);
-  Wire.write((value >>  8) & 0xFF);
-  Wire.write( value        & 0xFF); // value lowest byte
-  last_status = Wire.endTransmission();
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  Wire.write((value >> 24) & 0xFF); // value highest byte
+//  Wire.write((value >> 16) & 0xFF);
+//  Wire.write((value >>  8) & 0xFF);
+//  Wire.write( value        & 0xFF); // value lowest byte
+//  last_status = Wire.endTransmission();
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_write_byte(cmd, (value >> 24) & 0xff, true);
+  i2c_master_write_byte(cmd, (value >> 16) & 0xff, true);
+  i2c_master_write_byte(cmd, (value >> 8) & 0xff, true);
+  i2c_master_write_byte(cmd, value & 0xff, true);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
 }
 
 // Read an 8-bit register
 uint8_t VL53L0X::readReg(uint8_t reg)
 {
+//  uint8_t value;
+//
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  last_status = Wire.endTransmission(false);
+//
+//  Wire.requestFrom(address, (uint8_t)1);
+//  value = Wire.read();
+//
+//  return value;
   uint8_t value;
-
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission(false);
-
-  Wire.requestFrom(address, (uint8_t)1);
-  value = Wire.read();
-
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
+  i2c_master_read_byte(cmd, &value, I2C_MASTER_NACK);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
   return value;
 }
 
 // Read a 16-bit register
 uint16_t VL53L0X::readReg16Bit(uint8_t reg)
 {
-  uint16_t value;
-
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission(false);
-
-  Wire.requestFrom(address, (uint8_t)2);
-  value  = (uint16_t)Wire.read() << 8; // value high byte
-  value |=           Wire.read();      // value low byte
-
-  return value;
+//  uint16_t value;
+//
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  last_status = Wire.endTransmission(false);
+//
+//  Wire.requestFrom(address, (uint8_t)2);
+//  value  = (uint16_t)Wire.read() << 8; // value high byte
+//  value |=           Wire.read();      // value low byte
+//
+//  return value;
+  uint8_t value[2];
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
+  i2c_master_read(cmd, value, 2, I2C_MASTER_LAST_NACK);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
+  return ((uint16_t)value[0] << 8) | value[1];
 }
 
 // Read a 32-bit register
 uint32_t VL53L0X::readReg32Bit(uint8_t reg)
 {
-  uint32_t value;
-
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission(false);
-
-  Wire.requestFrom(address, (uint8_t)4);
-  value  = (uint32_t)Wire.read() << 24; // value highest byte
-  value |= (uint32_t)Wire.read() << 16;
-  value |= (uint16_t)Wire.read() <<  8;
-  value |=           Wire.read();       // value lowest byte
-
-  return value;
+//  uint32_t value;
+//
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  last_status = Wire.endTransmission(false);
+//
+//  Wire.requestFrom(address, (uint8_t)4);
+//  value  = (uint32_t)Wire.read() << 24; // value highest byte
+//  value |= (uint32_t)Wire.read() << 16;
+//  value |= (uint16_t)Wire.read() <<  8;
+//  value |=           Wire.read();       // value lowest byte
+//
+//  return value;
+  uint8_t value[4];
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
+  i2c_master_read(cmd, value, 4, I2C_MASTER_LAST_NACK);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
+  return ((uint32_t)value[0] << 24) | ((uint32_t)value[1] << 16) | ((uint32_t)value[2] << 8) | value[3];
 }
 
 // Write an arbitrary number of bytes from the given array to the sensor,
 // starting at the given register
 void VL53L0X::writeMulti(uint8_t reg, uint8_t const * src, uint8_t count)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-
-  while (count-- > 0)
-  {
-    Wire.write(*(src++));
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//
+//  while (count-- > 0)
+//  {
+//    Wire.write(*(src++));
+//  }
+//
+//  last_status = Wire.endTransmission();
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  while(count-- > 0){
+    i2c_master_write_byte(cmd, *(src++), true);
   }
-
-  last_status = Wire.endTransmission();
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
 }
 
 // Read an arbitrary number of bytes from the sensor, starting at the given
 // register, into the given array
 void VL53L0X::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
 {
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission(false);
-
-  Wire.requestFrom(address, count);
-
-  while (count-- > 0)
-  {
-    *(dst++) = Wire.read();
-  }
+//  Wire.beginTransmission(address);
+//  Wire.write(reg);
+//  last_status = Wire.endTransmission(false);
+//
+//  Wire.requestFrom(address, count);
+//
+//  while (count-- > 0)
+//  {
+//    *(dst++) = Wire.read();
+//  }
+  i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
+  i2c_master_write_byte(cmd, reg, true);
+  i2c_master_start(cmd);
+  i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
+  i2c_master_read(cmd, dst, count, I2C_MASTER_LAST_NACK);
+  i2c_master_stop(cmd);
+  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  i2c_cmd_link_delete(cmd);
+  last_status = (ret == ESP_OK) ? 0 : -1;
 }
 
 // Set the return signal rate limit check value in units of MCPS (mega counts

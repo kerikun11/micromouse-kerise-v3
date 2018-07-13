@@ -2,6 +2,8 @@
 #define VL53L0X_h
 
 #include <Arduino.h>
+#include <driver/i2c.h>
+#define I2C_PORT_NUM_TOF I2C_NUM_0
 
 class VL53L0X
 {
@@ -99,7 +101,9 @@ class VL53L0X
     VL53L0X(void);
 
     void setAddress(uint8_t new_addr);
-    inline uint8_t getAddress(void) { return address; }
+    inline uint8_t getAddress(void) {
+      return address;
+    }
 
     bool init(bool io_2v8 = true);
 
@@ -127,8 +131,12 @@ class VL53L0X
     uint16_t readRangeContinuousMillimeters(void);
     uint16_t readRangeSingleMillimeters(void);
 
-    inline void setTimeout(uint16_t timeout) { io_timeout = timeout; }
-    inline uint16_t getTimeout(void) { return io_timeout; }
+    inline void setTimeout(uint16_t timeout) {
+      io_timeout = timeout;
+    }
+    inline uint16_t getTimeout(void) {
+      return io_timeout;
+    }
     bool timeoutOccurred(void);
 
     uint8_t stop_variable; // read by init and used when starting measurement; is StopVariable field of VL53L0X_DevData_t structure in API
