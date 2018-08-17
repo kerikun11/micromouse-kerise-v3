@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "config.h"
 
-#include "Buzzer.h"
+#include "buzzer.h"
 extern Buzzer bz;
 #include "imu.h"
 extern IMU imu;
