@@ -1,19 +1,25 @@
 /**
-  KERISE v3-2
-  Author:  kerikun11 (Github: kerikun11)
-  Date:    2017.10.25
-*/
+ * @file    mouse.ino.cpp
+ * @author  KERI (Github: kerikun11)
+ * @date    2017.10.25
+ */
 
 #include "global.h"
 #include <SPIFFS.h>
 #include <WiFi.h>
+#include <cstdio>
+#include <iostream>
+#include <sstream>
 
 void mainTask(void *arg);
 void printTask(void *arg);
 void timeKeepTask(void *arg);
+std::stringstream logstream;
 
 void setup() {
   WiFi.mode(WIFI_OFF);
+  for (auto p : CONFIG_SPI_CS_PINS)
+    pinMode(p, INPUT_PULLUP);
   printf("\n**************** KERISE ****************\n");
   if (!bz.begin())
     bz.play(Buzzer::ERROR);
@@ -37,23 +43,27 @@ void setup() {
   if (!wd.begin())
     bz.play(Buzzer::ERROR);
   em.begin();
-  ec.begin();
 
   xTaskCreate(printTask, "print", 4096, NULL, 1, NULL);
   // xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 1, NULL);
   xTaskCreate(mainTask, "main", 4096, NULL, 1, NULL);
 }
 
-void loop() {}
+void loop() { delay(1000); }
 
 void printTask(void *arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
     // ref.csv();
-    // tof.csv(); vTaskDelayUntil(&xLastWakeTime, 99 / portTICK_RATE_MS);
-    // ref.print();
+    // tof.csv();
+    // imu.print();
     // wd.print();
+    // printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans,
+    //        sc.actual.trans, sc.enconly.trans, sc.Kp * sc.proportional.trans,
+    //        sc.Ki * sc.integral.trans, sc.Kd * sc.differential.trans,
+    //        sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans +
+    //            sc.Kd * sc.differential.trans);
   }
 }
 
@@ -151,33 +161,52 @@ void position_test() {
 void accel_test() {
   if (!ui.waitForCover())
     return;
-  //  delay(500);
-  //  imu.calibration();
-  //  fan.drive(0.4);
-  //  delay(500);
-  //  lg.start();
-  //  sc.enable();
-  //  const float accel = 15000;
-  //  const float v_max = 3000;
-  //  AccelDesigner ad(accel, 0, v_max, 0, 1500);
-  //  portTickType xLastWakeTime = xTaskGetTickCount();
-  //  for (float t = 0; t < ad.t_end(); t += 0.001f) {
-  //    sc.set_target(ad.v(t), 0);
-  //    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime =
-  //    xTaskGetTickCount();
-  //  }
-  //  sc.set_target(0, 0);
-  //  delay(400);
-  //  bz.play(Buzzer::CANCEL);
-  //  sc.disable();
-  //  fan.drive(0);
-  //  lg.end();
-  delay(200);
-  mt.drive(20, 20);
-  delay(200);
-  mt.drive(0, 0);
-  delay(200);
-  mt.free();
+  delay(500);
+  logstream.flush();
+  auto printLog = []() {
+    logstream << "0";
+    logstream << "," << sc.target.trans;
+    logstream << "," << sc.actual.trans;
+    logstream << "," << sc.enconly.trans;
+    logstream << "," << sc.Kp * sc.proportional.trans;
+    logstream << "," << sc.Ki * sc.integral.trans;
+    logstream << "," << sc.Kd * sc.differential.trans;
+    logstream << ","
+              << sc.Kp * sc.proportional.trans + sc.Ki * sc.integral.trans +
+                     sc.Kd * sc.differential.trans;
+    logstream << std::endl;
+  };
+  imu.calibration();
+  fan.drive(0.4);
+  delay(500);
+  sc.enable();
+  const float accel = 6000;
+  const float v_max = 1200;
+  AccelDesigner ad(accel, 0, v_max, 0, 90 * 4);
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  for (float t = 0; t < ad.t_end() + 0.2f; t += 0.001f) {
+    sc.set_target(ad.v(t), 0);
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    xLastWakeTime = xTaskGetTickCount();
+    printLog();
+  }
+  sc.set_target(0, 0);
+  bz.play(Buzzer::CANCEL);
+  sc.disable();
+  fan.drive(0);
+}
+
+void turn_test() {
+  if (!ui.waitForCover())
+    return;
+  delay(1000);
+  imu.calibration();
+  bz.play(Buzzer::CONFIRM);
+  sc.enable();
+  turn(-10 * 2 * PI);
+  turn(10 * 2 * PI);
+  sc.disable();
+  bz.play(Buzzer::CANCEL);
 }
 
 void trapizoid_test() {
@@ -187,7 +216,6 @@ void trapizoid_test() {
   imu.calibration();
   fan.drive(0.5);
   delay(500);
-  lg.start();
   sc.enable();
   const float accel = 15000;
   const float decel = 12000;
@@ -215,22 +243,6 @@ void trapizoid_test() {
   bz.play(Buzzer::CANCEL);
   sc.disable();
   fan.drive(0);
-  lg.end();
-}
-
-void turn_test() {
-  if (!ui.waitForCover())
-    return;
-  delay(1000);
-  imu.calibration();
-  bz.play(Buzzer::CONFIRM);
-  lg.start();
-  sc.enable();
-  turn(-10 * 2 * PI);
-  turn(10 * 2 * PI);
-  sc.disable();
-  bz.play(Buzzer::CANCEL);
-  lg.end();
 }
 
 void straight_test() {
@@ -242,16 +254,56 @@ void straight_test() {
   sc.enable();
   fan.drive(0.5);
   delay(500);
-  lg.start();
   sc.position.x = 0;
   straight_x(12 * 90 - 3 - MACHINE_TAIL_LENGTH, 2400, 0);
   sc.set_target(0, 0);
   delay(100);
-  lg.end();
   fan.drive(0);
   delay(500);
   sc.disable();
 }
+
+void log_test() {
+  if (!ui.waitForCover())
+    return;
+  delay(1000);
+  logstream.flush();
+  auto printLog = []() {
+    logstream << enc.position(0) << ",";
+    logstream << enc.position(1) << ",";
+    logstream << imu.gyro.z << ",";
+    logstream << imu.accel.y << ",";
+    logstream << std::endl;
+  };
+  bz.play(Buzzer::SELECT);
+  imu.calibration();
+  bz.play(Buzzer::CANCEL);
+  portTickType xLastWakeTime = xTaskGetTickCount();
+  for (int i = 0; i < 500; i++) {
+    mt.drive(i, i);
+    printLog();
+    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+  }
+  mt.drive(0, 0);
+  vTaskDelay(500 / portTICK_RATE_MS);
+  mt.free();
+}
+
+void petitcon() {
+  if (!ui.waitForCover())
+    return;
+  delay(500);
+  //      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
+  fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrl"
+              "rlrlrlrlrssssssssssssssssssslrlrlrlrlrlsssssssslrlrlrlrlrlssss"
+              "slrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
+  //      fr.set_path("ssssssssrlrrlrssssssss");
+  imu.calibration();
+  fr.enable();
+  fr.waitForEnd();
+  fr.disable();
+}
+
 void normal_drive() {
   int mode = ui.waitForSelect(16);
   switch (mode) {
@@ -288,7 +340,6 @@ void normal_drive() {
     case 3:
       fr.runParameter = FastRun::RunParameter(0.7, 2100, 6000, 6000);
       break;
-
     case 4:
       fr.runParameter = FastRun::RunParameter(0.8, 1200, 3000, 3000);
       break;
@@ -301,7 +352,6 @@ void normal_drive() {
     case 7:
       fr.runParameter = FastRun::RunParameter(0.8, 2100, 6000, 6000);
       break;
-
     case 8:
       fr.runParameter = FastRun::RunParameter(0.9, 1200, 3000, 3000);
       break;
@@ -314,7 +364,6 @@ void normal_drive() {
     case 11:
       fr.runParameter = FastRun::RunParameter(0.9, 2100, 6000, 6000);
       break;
-
     case 12:
       fr.runParameter = FastRun::RunParameter(1.0, 1200, 3000, 3000);
       break;
@@ -383,6 +432,10 @@ void normal_drive() {
   }
     bz.play(Buzzer::SUCCESSFUL);
     break;
+  //* 宴会芸
+  case 5:
+    position_test();
+    break;
   //* 迷路データの復元
   case 7:
     bz.play(Buzzer::MAZE_RESTORE);
@@ -450,49 +503,39 @@ void normal_drive() {
   } break;
   //* マス直線
   case 12:
-    //      if (!ui.waitForCover(true)) return;
-    //      delay(1000);
-    //      bz.play(Buzzer::CONFIRM);
-    //      imu.calibration();
-    //      bz.play(Buzzer::CANCEL);
-    //      sc.enable();
-    //      straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
-    //      sc.disable();
-    position_test();
+    if (!ui.waitForCover(true))
+      return;
+    delay(1000);
+    bz.play(Buzzer::CONFIRM);
+    imu.calibration();
+    bz.play(Buzzer::CANCEL);
+    sc.enable();
+    straight_x(9 * 90 - 6 - MACHINE_TAIL_LENGTH, 300, 0);
+    sc.disable();
+    break;
+    //* テスト
+  case 13:
+    // log_test();
+    // trapizoid_test();
+    accel_test();
+    // straight_test();
+    // petitcon();
     break;
   //* ログの表示
-  case 13:
-    lg.print();
-    break;
   case 14:
-    //      straight_test();
-    //      trapizoid_test();
-    //      accel_test();
-    if (!ui.waitForCover())
-      return;
-    delay(500);
-    //      fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrlrlrlrlrsssssssssssssssslrlrlrlrlsssssssslrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
-    fr.set_path("sssssssrlrlrlrlrlrlssssslrlrlrlrlrlrsssssrlrlrlrlrlrssssssssrl"
-                "rlrlrlrlrssssssssssssssssssslrlrlrlrlrlsssssssslrlrlrlrlrlssss"
-                "slrlrlrlrlrlrsssssrlrlrlrlrlrlssssss");
-    //      fr.set_path("ssssssssrlrrlrssssssss");
-    imu.calibration();
-    fr.enable();
-    fr.waitForEnd();
-    fr.disable();
+    std::cout << logstream.str();
     break;
   //* リセット
   case 15:
+    ms.print();
     ESP.restart();
     break;
   }
 }
+
 void mainTask(void *arg) {
   while (1) {
     normal_drive();
-    //  position_test();
-    //  trapizoid_test();
-    //  straight_test();
-    //  turn_test();
+    delay(1);
   }
 }

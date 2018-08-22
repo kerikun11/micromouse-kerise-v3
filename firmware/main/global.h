@@ -35,8 +35,6 @@ extern SpeedController sc;
 extern WallDetector wd;
 #include "Emergency.h"
 extern Emergency em;
-#include "ExternalController.h"
-extern ExternalController ec;
 #include "Logger.h"
 extern Logger lg;
 
@@ -47,4 +45,3 @@ extern SearchRun sr;
 extern FastRun fr;
 #include "MazeSolver.h"
 extern MazeSolver ms;
-
