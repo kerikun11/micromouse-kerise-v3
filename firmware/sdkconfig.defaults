@@ -3,6 +3,16 @@
 #
 
 #
+# Arduino Configuration
+#
+
+#
+# Debug Log Configuration
+#
+CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL_DEBUG=y
+CONFIG_ARDUHAL_LOG_COLORS=y
+
+#
 # Serial flasher config
 #
 CONFIG_ESPTOOLPY_BAUD_2MB=y
