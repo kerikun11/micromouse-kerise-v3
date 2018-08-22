@@ -13,9 +13,7 @@ void printTask(void *arg);
 void timeKeepTask(void *arg);
 
 void setup() {
-  WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
-  // Serial.begin(2000000);
   printf("\n**************** KERISE ****************\n");
   if (!bz.begin())
     bz.play(Buzzer::ERROR);
@@ -41,9 +39,9 @@ void setup() {
   em.begin();
   ec.begin();
 
-  xTaskCreate(printTask, "print", 4096, NULL, 1, NULL); // debug output
-  // xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 1, NULL); // debug output
-  xTaskCreate(mainTask, "main", 4096, NULL, 1, NULL); // debug output
+  xTaskCreate(printTask, "print", 4096, NULL, 1, NULL);
+  // xTaskCreate(timeKeepTask, "TimeKeep", 4096, NULL, 1, NULL);
+  xTaskCreate(mainTask, "main", 4096, NULL, 1, NULL);
 }
 
 void loop() {}
@@ -52,17 +50,10 @@ void printTask(void *arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    xLastWakeTime = xTaskGetTickCount();
-    //    ref.csv(); vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
-    //    xLastWakeTime = xTaskGetTickCount(); tof.csv();
-    //    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime =
-    //    xTaskGetTickCount(); ref.print(); vTaskDelayUntil(&xLastWakeTime, 1 /
-    //    portTICK_RATE_MS); xLastWakeTime = xTaskGetTickCount(); wd.print();
-    //    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS); xLastWakeTime =
-    //    xTaskGetTickCount(); printf("%d,%d\n", (enc.getPulses(0) - prev[0]) *
-    //    1000, (enc.getPulses(1) - prev[1]) * 1000);  prev[0] =
-    //    enc.getPulses(0); prev[1] = enc.getPulses(1); printf("%ul,%d,%f",
-    //    millis(), tof.getDistance(), sc.position.x);
+    // ref.csv();
+    // tof.csv(); vTaskDelayUntil(&xLastWakeTime, 99 / portTICK_RATE_MS);
+    // ref.print();
+    // wd.print();
   }
 }
 
@@ -503,6 +494,5 @@ void mainTask(void *arg) {
     //  trapizoid_test();
     //  straight_test();
     //  turn_test();
-    delay(1);
   }
 }

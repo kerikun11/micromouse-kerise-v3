@@ -29,7 +29,7 @@ class UserInterface {
       uint8_t value = 0;
       led = value;
       while (1) {
-        delay(1);
+        delay(10);
         if (imu.gyro.y > thr_gyro) {
           value += range - 1;
           value %= range;
