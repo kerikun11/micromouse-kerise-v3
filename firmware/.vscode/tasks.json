@@ -1,0 +1,34 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "flash",
+            "type": "shell",
+            "command": "make flash",
+            "group": "test"
+        },
+        {
+            "label": "monitor",
+            "type": "shell",
+            "command": "make monitor",
+            "group": "test"
+        },
+        {
+            "label": "flash monitor",
+            "type": "shell",
+            "command": "make flash monitor",
+            "group": "test"
+        }
+    ]
+}

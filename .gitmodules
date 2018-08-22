@@ -1,0 +1,3 @@
+[submodule "firmware/components/arduino"]
+	path = firmware/components/arduino
+	url = https://github.com/espressif/arduino-esp32
