@@ -1,29 +1,15 @@
 {
     "configurations": [
         {
-            "name": "Win32",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}/**",
-                    "${workspaceFolder}/commponents/**",
-                    "C:/Users/kerikun11/OneDrive/Espressif/esp-idf/commponents/**",
-                    "${localappdata}/Packages/CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc/LocalState/rootfs/usr/local/bin/xtensa-esp32-elf/**"
-                ],
-                "limitSymbolsToIncludedHeaders": true
-            },
+            "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/commponents/**",
-                "C:/Users/kerikun11/OneDrive/Espressif/esp-idf/commponents/**",
-                "${localappdata}/Packages/CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc/LocalState/rootfs/usr/local/bin/xtensa-esp32-elf/**"
+                "${IDF_PATH}/**"
             ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
-            "cppStandard": "c++14",
+            "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
         }
     ],
