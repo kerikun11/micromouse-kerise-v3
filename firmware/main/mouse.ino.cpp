@@ -23,6 +23,8 @@ void setup() {
   printf("\n**************** KERISE ****************\n");
   if (!bz.begin())
     bz.play(Buzzer::ERROR);
+  if (!I2C::install(I2C_PORT_NUM, I2C_SDA_PIN, I2C_SCL_PIN))
+    bz.play(Buzzer::ERROR);
   if (!led.begin())
     bz.play(Buzzer::ERROR);
   ui.batteryCheck();
@@ -30,11 +32,12 @@ void setup() {
 
   if (!SPIFFS.begin(true))
     bz.play(Buzzer::ERROR);
-  if (!imu.begin(ICM20602_SPI_HOST, ICM20602_CS_PIN, true, ICM20602_SCLK_PIN,
-                 ICM20602_MISO_PIN, ICM20602_MOSI_PIN, ICM20602_SPI_DMA_CHAIN))
+  if (!SPI::busInit(CONFIG_SPI_HOST, CONFIG_SPI_SCLK_PIN, CONFIG_SPI_MISO_PIN,
+                    CONFIG_SPI_MOSI_PIN, CONFIG_SPI_DMA_CHAIN))
     bz.play(Buzzer::ERROR);
-  if (!enc.begin(AS5048A_SPI_HOST, AS5048A_CS_PIN, false, AS5048A_SCLK_PIN,
-                 AS5048A_MISO_PIN, AS5048A_MOSI_PIN, AS5048A_SPI_DMA_CHAIN))
+  if (!imu.begin(ICM20602_SPI_HOST, ICM20602_CS_PIN))
+    bz.play(Buzzer::ERROR);
+  if (!enc.begin(AS5048A_SPI_HOST, AS5048A_CS_PIN))
     bz.play(Buzzer::ERROR);
   if (!ref.begin())
     bz.play(Buzzer::ERROR);

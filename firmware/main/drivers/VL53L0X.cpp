@@ -4,7 +4,7 @@
 // VL53L0X datasheet.
 
 #include "VL53L0X.h"
-#include <Wire.h>
+// #include <Wire.h>
 
 // Defines /////////////////////////////////////////////////////////////////////
 
@@ -34,8 +34,9 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-VL53L0X::VL53L0X(void)
-  : address(ADDRESS_DEFAULT)
+VL53L0X::VL53L0X(i2c_port_t i2c_port)
+  : i2c_port(i2c_port)
+  , address(ADDRESS_DEFAULT)
   , io_timeout(0) // no timeout
   , did_timeout(false)
 {
@@ -291,7 +292,7 @@ void VL53L0X::writeReg(uint8_t reg, uint8_t value)
   i2c_master_write_byte(cmd, reg, true);
   i2c_master_write_byte(cmd, value, true);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
 }
@@ -311,7 +312,7 @@ void VL53L0X::writeReg16Bit(uint8_t reg, uint16_t value)
   i2c_master_write_byte(cmd, (value >> 8) & 0xff, true);
   i2c_master_write_byte(cmd, value & 0xff, true);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
 }
@@ -335,7 +336,7 @@ void VL53L0X::writeReg32Bit(uint8_t reg, uint32_t value)
   i2c_master_write_byte(cmd, (value >> 8) & 0xff, true);
   i2c_master_write_byte(cmd, value & 0xff, true);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
 }
@@ -362,7 +363,7 @@ uint8_t VL53L0X::readReg(uint8_t reg)
   i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
   i2c_master_read_byte(cmd, &value, I2C_MASTER_NACK);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
   return value;
@@ -391,7 +392,7 @@ uint16_t VL53L0X::readReg16Bit(uint8_t reg)
   i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
   i2c_master_read(cmd, value, 2, I2C_MASTER_LAST_NACK);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
   return ((uint16_t)value[0] << 8) | value[1];
@@ -422,7 +423,7 @@ uint32_t VL53L0X::readReg32Bit(uint8_t reg)
   i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
   i2c_master_read(cmd, value, 4, I2C_MASTER_LAST_NACK);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
   return ((uint32_t)value[0] << 24) | ((uint32_t)value[1] << 16) | ((uint32_t)value[2] << 8) | value[3];
@@ -449,7 +450,7 @@ void VL53L0X::writeMulti(uint8_t reg, uint8_t const * src, uint8_t count)
     i2c_master_write_byte(cmd, *(src++), true);
   }
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
 }
@@ -476,7 +477,7 @@ void VL53L0X::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
   i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_READ, true);
   i2c_master_read(cmd, dst, count, I2C_MASTER_LAST_NACK);
   i2c_master_stop(cmd);
-  esp_err_t ret = i2c_master_cmd_begin(I2C_PORT_NUM_TOF, cmd, 1 / portTICK_RATE_MS);
+  esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1 / portTICK_RATE_MS);
   i2c_cmd_link_delete(cmd);
   last_status = (ret == ESP_OK) ? 0 : -1;
 }
