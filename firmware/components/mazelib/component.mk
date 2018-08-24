@@ -1,0 +1,4 @@
+COMPONENT_ADD_INCLUDEDIRS := MazeLib/inc
+COMPONENT_SRCDIRS := MazeLib/src
+CXXFLAGS += -std=c++14 -O3
+# $(info CXXFLAGS: $(CXXFLAGS))
