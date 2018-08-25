@@ -31,8 +31,6 @@ extern ToF tof;
 extern SpeedController sc;
 #include "WallDetector.h"
 extern WallDetector wd;
-#include "Logger.h"
-extern Logger lg;
 
 #define SEARCH_WALL_ATTACH_ENABLED true
 #define SEARCH_WALL_CUT_ENABLED true
@@ -53,8 +51,6 @@ extern Logger lg;
 #define SEARCH_RUN_VELOCITY 240.0f
 #define SEARCH_RUN_V_CURVE 240.0f
 #define SEARCH_RUN_V_MAX 1200.0f
-
-//#define printf  lg.printf
 
 class SearchTrajectory {
 public:

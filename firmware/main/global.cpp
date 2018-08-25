@@ -35,8 +35,6 @@ SpeedController sc;
 WallDetector wd;
 #include "Emergency.h"
 Emergency em;
-#include "Logger.h"
-Logger lg;
 
 /* Conductor */
 #include "SearchRun.h"

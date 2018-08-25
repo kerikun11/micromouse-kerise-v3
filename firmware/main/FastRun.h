@@ -23,9 +23,6 @@ extern SpeedController sc;
 #include "WallDetector.h"
 extern WallDetector wd;
 
-#include "Logger.h"
-extern Logger lg;
-
 #define FAST_RUN_TASK_PRIORITY 3
 #define FAST_RUN_STACK_SIZE 8192
 #define FAST_RUN_PERIOD 1000
@@ -35,8 +32,6 @@ extern Logger lg;
 //#define FAST_ST_LOOK_AHEAD(v)   30
 #define FAST_ST_FB_GAIN 10
 #define FAST_CURVE_FB_GAIN 3.0f
-
-//#define printf  lg.printf
 
 class FastTrajectory {
 public:
@@ -1008,18 +1003,18 @@ private:
       led = 9;
     }
     // 45 [deg] の倍数
-    if (wallAvoid45Flag &&
-        (int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2) {
-      const float gain = 0.001f;
-      const int16_t threashold = 480;
-      if (ref.side(0) > threashold)
-        sc.position += Position(0, (ref.side(0) - threashold) * gain, 0)
-                           .rotate(origin.theta);
-      if (ref.side(1) > threashold)
-        sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0)
-                           .rotate(origin.theta);
-      led = 6;
-    }
+    //   if (wallAvoid45Flag &&
+    //       (int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2) {
+    //     const float gain = 0.001f;
+    //     const int16_t threashold = 480;
+    //     if (ref.side(0) > threashold)
+    //       sc.position += Position(0, (ref.side(0) - threashold) * gain, 0)
+    //                          .rotate(origin.theta);
+    //     if (ref.side(1) > threashold)
+    //       sc.position -= Position(0, (ref.side(1) - threashold) * gain, 0)
+    //                          .rotate(origin.theta);
+    //     led = 6;
+    //   }
   }
   void wallCut() {
     if (wallCutFlag) {
@@ -1059,17 +1054,18 @@ private:
         }
       }
       // 45 [deg] の倍数 かつ，ズレが +/-15度以内
-      //        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2 &&
-      //        fabs(origin.theta - sc.position.theta) < PI / 48) {
+      //        if ((int)(fabs(origin.theta) * 180.0f / PI + 45 + 1) % 90 < 2
+      //        && fabs(origin.theta - sc.position.theta) < PI / 48) {
       //          for (int i = 0; i < 2; i++) {
       //            if (prev_wall[i] && !wd.wall[i]) {
       //              Position prev = sc.position;
       //              Position fix = sc.position.rotate(-origin.theta);
       //              const float extra = 40;
       //              if (i == 0) {
-      //                fix.x = floor((fix.x + extra) / SEGMENT_DIAGONAL_WIDTH)
-      //                * SEGMENT_DIAGONAL_WIDTH + SEGMENT_DIAGONAL_WIDTH / 2 +
-      //                extra;
+      //                fix.x = floor((fix.x + extra) /
+      //                SEGMENT_DIAGONAL_WIDTH)
+      //                * SEGMENT_DIAGONAL_WIDTH + SEGMENT_DIAGONAL_WIDTH / 2
+      //                + extra;
       //              } else {
       //                fix.x = floor((fix.x + SEGMENT_DIAGONAL_WIDTH / 2 +
       //                extra) / SEGMENT_DIAGONAL_WIDTH) *
@@ -1081,8 +1077,8 @@ private:
       //                sc.position = fix;
       //              printf("WallCutDiag[%d] X_ (%.1f, %.1f, %.1f) => (%.1f,
       //              %.1f, %.1f)\n", i, prev.x, prev.y, prev.theta * 180.0f /
-      //              PI, sc.position.x, sc.position.y, sc.position.theta * 180
-      //              / PI);
+      //              PI, sc.position.x, sc.position.y, sc.position.theta *
+      //              180 / PI);
       //            }
       //            prev_wall[i] = wd.wall[i];
       //          }

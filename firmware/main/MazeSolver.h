@@ -43,7 +43,7 @@ extern FastRun fr;
 #define MAZE_SOLVER_TASK_PRIORITY 2
 #define MAZE_SOLVER_STACK_SIZE 8192
 
-#define GOAL 0
+#define GOAL 1
 #if GOAL == 0
 #define MAZE_GOAL                                                              \
   { Vector(1, 0) }
