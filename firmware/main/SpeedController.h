@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Accumulator.h"
-#include <Arduino.h>
+#include <cmath>
 
 #include "motor.h"
 extern Motor mt;

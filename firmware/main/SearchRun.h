@@ -32,10 +32,10 @@ extern SpeedController sc;
 #include "WallDetector.h"
 extern WallDetector wd;
 
-#define SEARCH_WALL_ATTACH_ENABLED true
-#define SEARCH_WALL_CUT_ENABLED true
-#define SEARCH_WALL_FRONT_ENABLED true
-#define SEARCH_WALL_AVOID_ENABLED true
+#define SEARCH_WALL_ATTACH_ENABLED 1
+#define SEARCH_WALL_CUT_ENABLED 1
+#define SEARCH_WALL_FRONT_ENABLED 1
+#define SEARCH_WALL_AVOID_ENABLED 1
 
 #define SEARCH_END_REMAIN 3
 #define SEARCH_ST_LOOK_AHEAD(v) (6 + 2 * v / 100)
