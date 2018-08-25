@@ -991,13 +991,13 @@ private:
       if (ref.side(0) > 60)
         sc.position +=
             Position(
-                0, std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu),
+                0, std::max(std::min(wd.distance.side[0] * gain, satu), -satu),
                 0)
                 .rotate(origin.theta);
       if (ref.side(1) > 60)
         sc.position -=
             Position(
-                0, std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu),
+                0, std::max(std::min(wd.distance.side[1] * gain, satu), -satu),
                 0)
                 .rotate(origin.theta);
       led = 9;

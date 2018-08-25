@@ -265,9 +265,9 @@ private:
         const float end = 2.0f;
         SpeedController::WheelParameter wp;
         wp.wheel[0] =
-            -std::max(std::min(wd.wall_diff.front[0] * gain, satu), -satu);
+            -std::max(std::min(wd.distance.front[0] * gain, satu), -satu);
         wp.wheel[1] =
-            -std::max(std::min(wd.wall_diff.front[1] * gain, satu), -satu);
+            -std::max(std::min(wd.distance.front[1] * gain, satu), -satu);
         wp.wheel2pole();
         if (fabs(wp.wheel[0]) + fabs(wp.wheel[1]) < end)
           break;
@@ -290,10 +290,10 @@ private:
       const float satu = 0.2f;    //< [mm]
       if (ref.side(0) > 60)
         sc.position.y +=
-            std::max(std::min(wd.wall_diff.side[0] * gain, satu), -satu);
+            std::max(std::min(wd.distance.side[0] * gain, satu), -satu);
       if (ref.side(1) > 60)
         sc.position.y -=
-            std::max(std::min(wd.wall_diff.side[1] * gain, satu), -satu);
+            std::max(std::min(wd.distance.side[1] * gain, satu), -satu);
     }
 #endif
 #if SEARCH_WALL_CUT_ENABLED

@@ -13,7 +13,7 @@ public:
   Encoder() { sampling_end_semaphore = xSemaphoreCreateBinary(); }
   bool begin(spi_host_device_t spi_host, int8_t pin_cs) {
     // ESP-IDF SPI device initialization
-    spi_device_interface_config_t dev_cfg = {0};
+    static spi_device_interface_config_t dev_cfg;
     dev_cfg.command_bits = 1;
     dev_cfg.address_bits = 0;
     dev_cfg.dummy_bits = 0;
@@ -72,7 +72,7 @@ private:
 
   void update() {
     uint8_t rxbuf[4];
-    spi_transaction_t tx = {0};
+    static spi_transaction_t tx;
     tx.flags |= SPI_TRANS_USE_TXDATA;
     tx.tx_data[0] = 0xFF;
     tx.tx_data[1] = 0xFF;

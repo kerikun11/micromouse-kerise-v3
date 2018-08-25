@@ -50,7 +50,7 @@ public:
 public:
   bool begin(spi_host_device_t spi_host, int8_t pin_cs) {
     // ESP-IDF SPI device initialization
-    spi_device_interface_config_t dev_cfg = {0};
+    static spi_device_interface_config_t dev_cfg;
     dev_cfg.command_bits = 0;
     dev_cfg.address_bits = 8;
     dev_cfg.dummy_bits = 0;
@@ -139,7 +139,7 @@ private:
     return true;
   }
   void writeReg(uint8_t reg, uint8_t data) {
-    static spi_transaction_t tx = {0};
+    static spi_transaction_t tx;
     tx.flags |= SPI_TRANS_USE_TXDATA;
     tx.addr = reg;
     tx.tx_data[0] = data;
@@ -147,7 +147,7 @@ private:
     ESP_ERROR_CHECK(spi_device_transmit(spi_handle, &tx));
   }
   uint8_t readReg(const uint8_t reg) {
-    static spi_transaction_t tx = {0};
+    static spi_transaction_t tx;
     tx.flags |= SPI_TRANS_USE_RXDATA;
     tx.addr = 0x80 | reg;
     tx.length = 8;
@@ -155,7 +155,7 @@ private:
     return tx.rx_data[0];
   }
   void readReg(const uint8_t reg, uint8_t *rx_buffer, size_t length) {
-    static spi_transaction_t tx = {0};
+    static spi_transaction_t tx;
     tx.addr = 0x80 | reg;
     tx.tx_buffer = NULL;
     tx.rx_buffer = rx_buffer;

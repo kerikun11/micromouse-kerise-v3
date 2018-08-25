@@ -85,8 +85,6 @@ public:
     float wheel[2]; //< wheel position [mm], wheel[0]:left, wheel[1]:right
   public:
     WheelParameter() {}
-    WheelParameter(const WheelParameter &obj)
-        : trans(obj.trans), rot(obj.rot), wheel({obj.wheel[0], obj.wheel[1]}) {}
     void pole2wheel() {
       wheel[0] = trans - MACHINE_ROTATION_RADIUS * rot;
       wheel[1] = trans + MACHINE_ROTATION_RADIUS * rot;
