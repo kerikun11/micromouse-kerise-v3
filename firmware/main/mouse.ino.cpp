@@ -57,9 +57,9 @@ void loop() { delay(1000); }
 void printTask(void *arg) {
   portTickType xLastWakeTime = xTaskGetTickCount();
   while (1) {
-    vTaskDelayUntil(&xLastWakeTime, 1 / portTICK_RATE_MS);
+    vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     // ref.csv();
-    // tof.csv();
+    tof.csv();
     // imu.print();
     // wd.print();
     // printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans,

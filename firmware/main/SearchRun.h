@@ -48,9 +48,9 @@ extern WallDetector wd;
 #define SEARCH_RUN_STACK_SIZE 8192
 #define SEARCH_RUN_PERIOD 1000
 
-#define SEARCH_RUN_VELOCITY 240.0f
-#define SEARCH_RUN_V_CURVE 240.0f
-#define SEARCH_RUN_V_MAX 1200.0f
+#define SEARCH_RUN_VELOCITY 210.0f
+#define SEARCH_RUN_V_CURVE 210.0f
+#define SEARCH_RUN_V_MAX 900.0f
 
 class SearchTrajectory {
 public:
@@ -262,7 +262,7 @@ private:
       while (1) {
         const float gain = 0.2f;
         const float satu = 60.0f;
-        const float end = 2.0f;
+        const float end = 5.0f;
         SpeedController::WheelParameter wp;
         wp.wheel[0] =
             -std::max(std::min(wd.distance.front[0] * gain, satu), -satu);

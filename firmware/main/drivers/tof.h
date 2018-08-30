@@ -6,7 +6,7 @@
 #define TOF_TASK_PRIORITY 1
 #define TOF_TASK_STACK_SIZE 4096
 
-#define TOF_DISTANCE_OFFSET (-34)
+#define TOF_DISTANCE_OFFSET (-26)
 
 class ToF {
 public:
