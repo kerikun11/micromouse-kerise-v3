@@ -48,8 +48,8 @@ extern WallDetector wd;
 #define SEARCH_RUN_STACK_SIZE 8192
 #define SEARCH_RUN_PERIOD 1000
 
-#define SEARCH_RUN_VELOCITY 210.0f
-#define SEARCH_RUN_V_CURVE 210.0f
+#define SEARCH_RUN_VELOCITY 270.0f
+#define SEARCH_RUN_V_CURVE 270.0f
 #define SEARCH_RUN_V_MAX 900.0f
 
 class SearchTrajectory {
