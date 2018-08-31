@@ -913,7 +913,7 @@ public:
     FAST_TURN_RIGHT_180 = 'U',
   };
   struct RunParameter {
-    RunParameter(const float curve_gain = 0.7, const float max_speed = 1200,
+    RunParameter(const float curve_gain = 0.6, const float max_speed = 1200,
                  const float accel = 3000, const float decel = 3000)
         : curve_gain(curve_gain), max_speed(max_speed), accel(accel),
           decel(decel) {}

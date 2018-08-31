@@ -59,7 +59,7 @@ void printTask(void *arg) {
   while (1) {
     vTaskDelayUntil(&xLastWakeTime, 100 / portTICK_RATE_MS);
     // ref.csv();
-    tof.csv();
+    // tof.csv();
     // imu.print();
     // wd.print();
     // printf("%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f\n", sc.target.trans,
@@ -331,54 +331,22 @@ void normal_drive() {
     if (preset < 0)
       return;
     switch (preset) {
-    case 0:
-      fr.runParameter = FastRun::RunParameter(0.7, 1200, 3000, 3000);
-      break;
-    case 1:
-      fr.runParameter = FastRun::RunParameter(0.7, 1500, 3600, 3600);
-      break;
-    case 2:
-      fr.runParameter = FastRun::RunParameter(0.7, 1800, 4500, 4500);
-      break;
-    case 3:
-      fr.runParameter = FastRun::RunParameter(0.7, 2100, 6000, 6000);
-      break;
-    case 4:
-      fr.runParameter = FastRun::RunParameter(0.8, 1200, 3000, 3000);
-      break;
-    case 5:
-      fr.runParameter = FastRun::RunParameter(0.8, 1500, 3600, 3600);
-      break;
-    case 6:
-      fr.runParameter = FastRun::RunParameter(0.8, 1800, 4500, 4500);
-      break;
-    case 7:
-      fr.runParameter = FastRun::RunParameter(0.8, 2100, 6000, 6000);
-      break;
-    case 8:
-      fr.runParameter = FastRun::RunParameter(0.9, 1200, 3000, 3000);
-      break;
-    case 9:
-      fr.runParameter = FastRun::RunParameter(0.9, 1500, 3600, 3600);
-      break;
-    case 10:
-      fr.runParameter = FastRun::RunParameter(0.9, 1800, 4500, 4500);
-      break;
-    case 11:
-      fr.runParameter = FastRun::RunParameter(0.9, 2100, 6000, 6000);
-      break;
-    case 12:
-      fr.runParameter = FastRun::RunParameter(1.0, 1200, 3000, 3000);
-      break;
-    case 13:
-      fr.runParameter = FastRun::RunParameter(1.0, 1500, 3600, 3600);
-      break;
-    case 14:
-      fr.runParameter = FastRun::RunParameter(1.0, 1800, 4500, 4500);
-      break;
-    case 15:
-      fr.runParameter = FastRun::RunParameter(1.0, 2100, 6000, 6000);
-      break;
+    case 0: fr.runParameter = FastRun::RunParameter(0.7, 1200, 3000, 3000); break;
+    case 1: fr.runParameter = FastRun::RunParameter(0.7, 1500, 3600, 3600); break;
+    case 2: fr.runParameter = FastRun::RunParameter(0.7, 1800, 4500, 4500); break;
+    case 3: fr.runParameter = FastRun::RunParameter(0.7, 2100, 6000, 6000); break;
+    case 4: fr.runParameter = FastRun::RunParameter(0.8, 1200, 3000, 3000); break;
+    case 5: fr.runParameter = FastRun::RunParameter(0.8, 1500, 3600, 3600); break;
+    case 6: fr.runParameter = FastRun::RunParameter(0.8, 1800, 4500, 4500); break;
+    case 7: fr.runParameter = FastRun::RunParameter(0.8, 2100, 6000, 6000); break;
+    case 8: fr.runParameter = FastRun::RunParameter(0.9, 1200, 3000, 3000); break;
+    case 9: fr.runParameter = FastRun::RunParameter(0.9, 1500, 3600, 3600); break;
+    case 10: fr.runParameter = FastRun::RunParameter(0.9, 1800, 4500, 4500); break;
+    case 11: fr.runParameter = FastRun::RunParameter(0.9, 2100, 6000, 6000); break;
+    case 12: fr.runParameter = FastRun::RunParameter(1.0, 1200, 3000, 3000); break;
+    case 13: fr.runParameter = FastRun::RunParameter(1.0, 1500, 3600, 3600); break;
+    case 14: fr.runParameter = FastRun::RunParameter(1.0, 1800, 4500, 4500); break;
+    case 15: fr.runParameter = FastRun::RunParameter(1.0, 2100, 6000, 6000); break;
     }
   }
     bz.play(Buzzer::SUCCESSFUL);
