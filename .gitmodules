@@ -3,4 +3,4 @@
 	url = https://github.com/espressif/arduino-esp32
 [submodule "firmware/components/mazelib/MazeLib"]
 	path = firmware/components/mazelib/MazeLib
-	url = https://github.com/kerikun11/MazeLib.git
+	url = https://github.com/kerikun11/micromouse-maze-library.git
