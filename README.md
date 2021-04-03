@@ -2,7 +2,7 @@
 
 ハーフサイズマイクロマウス
 
-![KERISE v3](images/kerise-v3-2.jpg)
+<img src="images/kerise-v3-2.jpg" alt="KERISE v3" width="240px"/>
 
 ## 戦績
 
